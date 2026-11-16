@@ -1,0 +1,45 @@
+import { createRequire } from 'node:module';
+import path from 'node:path';
+
+import { PrismaClient, type Prisma } from '@prisma/client';
+
+/**
+ * Cliente de Prisma sin contexto de negocio.
+ *
+ * **No se exporta fuera de este paquete.** Con él se puede leer la tabla de
+ * negocios y abrir las transacciones que fijan `app.tenant_id`; todo lo demás
+ * pasa por `prisma` y `transaccion` (ver index.ts), que sí llevan el negocio.
+ *
+ * Modo WASM (`WL_PRISMA_WASM=1`): para entornos que no pueden descargar los
+ * motores nativos de Prisma. Ver scripts/prisma-wasm.mjs.
+ */
+export function crearCliente(url?: string): PrismaClient {
+  const log: ('warn' | 'error')[] = ['warn', 'error'];
+
+  if (process.env.WL_PRISMA_WASM === '1') {
+    const require = createRequire(import.meta.url);
+    const raiz = path.dirname(require.resolve('@prisma/client/package.json'));
+    const generado = require(path.join(raiz, '..', '..', '.prisma', 'client', 'wasm.js')) as {
+      PrismaClient: new (opciones: object) => PrismaClient;
+    };
+    const { PrismaPg } = require('@prisma/adapter-pg') as typeof import('@prisma/adapter-pg');
+    const { Pool } = require('pg') as typeof import('pg');
+    const pool = new Pool({ connectionString: url ?? process.env.DATABASE_URL, max: 5 });
+    return new generado.PrismaClient({ adapter: new PrismaPg(pool), log });
+  }
+
+  const opciones: Prisma.PrismaClientOptions = url ? { log, datasourceUrl: url } : { log };
+  return new PrismaClient(opciones);
+}
+
+/**
+ * Singleton. En desarrollo, Next.js recarga módulos en cada cambio; sin esto
+ * se abren decenas de conexiones y se agota el pool en minutos.
+ */
+const global = globalThis as unknown as { wlPrismaBase?: PrismaClient };
+
+export const base: PrismaClient = global.wlPrismaBase ?? crearCliente();
+
+if (process.env.NODE_ENV !== 'production') {
+  global.wlPrismaBase = base;
+}

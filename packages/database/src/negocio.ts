@@ -1,0 +1,297 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+
+import { ZONA_HORARIA_POR_OMISION, esPrefijoCodigo, esZonaHorariaValida } from '@wl/domain';
+
+import { base } from './cliente';
+
+/**
+ * El negocio (tenant) al que pertenece lo que se está haciendo.
+ *
+ * Toda consulta de este paquete corre «dentro» de un negocio. De dónde sale:
+ *
+ * 1. `conNegocio(negocio, fn)`: quien llama lo fija a mano. Lo usan las tareas
+ *    programadas (que recorren todos los negocios), el servicio web de Apple
+ *    Wallet (que recibe el id en la ruta), la siembra y las pruebas.
+ * 2. El resolutor registrado con `fijarResolutorDeNegocio`: la aplicación web
+ *    registra uno que lee el subdominio de la petición.
+ *
+ * Si no hay negocio, la consulta **falla**; nunca corre «sin filtro». Y aunque
+ * corriera, la base no devolvería nada: RLS exige `app.tenant_id`.
+ */
+
+// ---------------------------------------------------------------------------
+// Marca y ajustes
+// ---------------------------------------------------------------------------
+
+export interface ColoresMarca {
+  /** Fondo de la tarjeta, de la cabecera y de los pases. */
+  readonly fondo: string;
+  /** Texto sobre `fondo`. */
+  readonly sobreFondo: string;
+  /** Acento decorativo (etiquetas, sellos). No es color de acción. */
+  readonly acento: string;
+  /** Fondo de la página. */
+  readonly papel: string;
+  /** Texto principal sobre `papel`. */
+  readonly tinta: string;
+}
+
+export interface MarcaNegocio {
+  /** Va bajo el nombre en la portada. */
+  readonly frase: string;
+  readonly colores: ColoresMarca;
+  /** Logotipo para fondos oscuros (cabecera). Null: se escribe el nombre. */
+  readonly logoClaroUrl: string | null;
+  /** Logotipo para fondos claros (cartel, correos). */
+  readonly logoUrl: string | null;
+  /** Isotipo cuadrado (ícono de la app, pases). */
+  readonly iconoUrl: string | null;
+  readonly contacto: {
+    readonly correo: string | null;
+    /** E.164 sin signos: "522281234567". Es lo que consume wa.me. */
+    readonly whatsapp: string | null;
+    readonly sitio: string | null;
+  };
+  readonly redes: {
+    readonly instagram: string | null;
+    readonly facebook: string | null;
+  };
+  /** Para los términos y el aviso de privacidad (plantillas a revisar con abogado). */
+  readonly legal: {
+    readonly razonSocial: string | null;
+    readonly domicilio: string | null;
+    readonly correoPrivacidad: string | null;
+  };
+}
+
+/** Qué hacer con el folio o la foto del ticket al registrar una visita. */
+export type ReglaComprobante = 'PEDIDO' | 'OBLIGATORIO';
+
+export interface AjustesNegocio {
+  /**
+   * Con el QR del cliente a la vista. PEDIDO: la caja lo pide siempre, pero si
+   * no se captura la visita se acredita igual (queda anotado y esa visita no
+   * se puede cruzar con la compra). OBLIGATORIO: sin folio ni foto no acredita.
+   */
+  readonly comprobanteConQr: ReglaComprobante;
+  /** Sin el QR (cliente identificado por celular o correo). */
+  readonly comprobanteSinTarjeta: ReglaComprobante;
+  /** Estampas totales a partir de las cuales migrar la tarjeta física exige foto, celular y correo. */
+  readonly umbralEvidenciaMigracion: number;
+  /** Lugares que deben quedar libres al migrar: con 2, una tarjeta de 10 admite hasta 8 visitas migradas. */
+  readonly margenMigracion: number;
+  /** Días que se conservan las fotos de ticket y de tarjeta física. */
+  readonly diasConservacionFotos: number;
+}
+
+export const MARCA_POR_OMISION: MarcaNegocio = {
+  frase: '',
+  colores: {
+    fondo: '#14100c',
+    sobreFondo: '#fbf7f1',
+    acento: '#d9a05b',
+    papel: '#f3ece1',
+    tinta: '#14100c',
+  },
+  logoClaroUrl: null,
+  logoUrl: null,
+  iconoUrl: null,
+  contacto: { correo: null, whatsapp: null, sitio: null },
+  redes: { instagram: null, facebook: null },
+  legal: { razonSocial: null, domicilio: null, correoPrivacidad: null },
+};
+
+export const AJUSTES_POR_OMISION: AjustesNegocio = {
+  comprobanteConQr: 'PEDIDO',
+  comprobanteSinTarjeta: 'OBLIGATORIO',
+  umbralEvidenciaMigracion: 5,
+  margenMigracion: 2,
+  diasConservacionFotos: 90,
+};
+
+type Desconocido = Record<string, unknown>;
+const objeto = (v: unknown): Desconocido =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) ? (v as Desconocido) : {};
+const texto = (v: unknown): string | null =>
+  typeof v === 'string' && v.trim() !== '' ? v.trim() : null;
+const color = (v: unknown, respaldo: string): string =>
+  typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : respaldo;
+const entero = (v: unknown, respaldo: number, min: number, max: number): number =>
+  typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max ? v : respaldo;
+const regla = (v: unknown, respaldo: ReglaComprobante): ReglaComprobante =>
+  v === 'PEDIDO' || v === 'OBLIGATORIO' ? v : respaldo;
+
+/** Lee la marca guardada en la base; lo que falte o venga mal toma su valor por omisión. */
+export function leerMarca(json: unknown): MarcaNegocio {
+  const m = objeto(json);
+  const c = objeto(m.colores);
+  const contacto = objeto(m.contacto);
+  const redes = objeto(m.redes);
+  const legal = objeto(m.legal);
+  const d = MARCA_POR_OMISION;
+  return {
+    frase: texto(m.frase) ?? '',
+    colores: {
+      fondo: color(c.fondo, d.colores.fondo),
+      sobreFondo: color(c.sobreFondo, d.colores.sobreFondo),
+      acento: color(c.acento, d.colores.acento),
+      papel: color(c.papel, d.colores.papel),
+      tinta: color(c.tinta, d.colores.tinta),
+    },
+    logoClaroUrl: texto(m.logoClaroUrl),
+    logoUrl: texto(m.logoUrl),
+    iconoUrl: texto(m.iconoUrl),
+    contacto: {
+      correo: texto(contacto.correo),
+      whatsapp: texto(contacto.whatsapp),
+      sitio: texto(contacto.sitio),
+    },
+    redes: { instagram: texto(redes.instagram), facebook: texto(redes.facebook) },
+    legal: {
+      razonSocial: texto(legal.razonSocial),
+      domicilio: texto(legal.domicilio),
+      correoPrivacidad: texto(legal.correoPrivacidad),
+    },
+  };
+}
+
+/** Lee los ajustes guardados en la base, con los valores por omisión en lo que falte. */
+export function leerAjustes(json: unknown): AjustesNegocio {
+  const a = objeto(json);
+  const d = AJUSTES_POR_OMISION;
+  return {
+    comprobanteConQr: regla(a.comprobanteConQr, d.comprobanteConQr),
+    comprobanteSinTarjeta: regla(a.comprobanteSinTarjeta, d.comprobanteSinTarjeta),
+    umbralEvidenciaMigracion: entero(a.umbralEvidenciaMigracion, d.umbralEvidenciaMigracion, 1, 30),
+    margenMigracion: entero(a.margenMigracion, d.margenMigracion, 1, 10),
+    diasConservacionFotos: entero(a.diasConservacionFotos, d.diasConservacionFotos, 1, 3650),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Negocio
+// ---------------------------------------------------------------------------
+
+export interface Negocio {
+  readonly id: string;
+  readonly slug: string;
+  readonly nombre: string;
+  readonly activo: boolean;
+  readonly zonaHoraria: string;
+  /** Prefijo del código de las tarjetas: "WL". */
+  readonly prefijoCodigo: string;
+  readonly marca: MarcaNegocio;
+  readonly ajustes: AjustesNegocio;
+}
+
+interface FilaNegocio {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  timezone: string;
+  codePrefix: string;
+  brand: unknown;
+  settings: unknown;
+}
+
+const SELECCION = {
+  id: true,
+  slug: true,
+  name: true,
+  status: true,
+  timezone: true,
+  codePrefix: true,
+  brand: true,
+  settings: true,
+} as const;
+
+function aNegocio(f: FilaNegocio): Negocio {
+  return {
+    id: f.id,
+    slug: f.slug,
+    nombre: f.name,
+    activo: f.status === 'ACTIVO',
+    zonaHoraria: esZonaHorariaValida(f.timezone) ? f.timezone : ZONA_HORARIA_POR_OMISION,
+    prefijoCodigo: esPrefijoCodigo(f.codePrefix) ? f.codePrefix : 'WL',
+    marca: leerMarca(f.brand),
+    ajustes: leerAjustes(f.settings),
+  };
+}
+
+const SLUG = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** El negocio de un subdominio, o null si no existe. Incluye los suspendidos. */
+export async function negocioPorSlug(slug: string): Promise<Negocio | null> {
+  const limpio = slug.trim().toLowerCase();
+  if (!SLUG.test(limpio)) return null;
+  const fila = await base.tenant.findUnique({ where: { slug: limpio }, select: SELECCION });
+  return fila ? aNegocio(fila) : null;
+}
+
+/** El negocio por su id, o null. */
+export async function negocioPorId(id: string): Promise<Negocio | null> {
+  if (!UUID.test(id)) return null;
+  const fila = await base.tenant.findUnique({ where: { id }, select: SELECCION });
+  return fila ? aNegocio(fila) : null;
+}
+
+/** Todos los negocios activos, para las tareas programadas. */
+export async function negociosActivos(): Promise<Negocio[]> {
+  const filas = await base.tenant.findMany({
+    where: { status: 'ACTIVO' },
+    orderBy: { slug: 'asc' },
+    select: SELECCION,
+  });
+  return filas.map(aNegocio);
+}
+
+// ---------------------------------------------------------------------------
+// Contexto
+// ---------------------------------------------------------------------------
+
+const almacen = new AsyncLocalStorage<Negocio>();
+
+type Resolutor = () => Promise<Negocio | null> | Negocio | null;
+const global = globalThis as unknown as { wlResolutorNegocio?: Resolutor };
+
+/** Ejecuta `fn` dentro de un negocio. Manda sobre el resolutor registrado. */
+export function conNegocio<T>(negocio: Negocio, fn: () => Promise<T>): Promise<T> {
+  // El `await` va dentro a propósito: las consultas de Prisma son perezosas y
+  // no arrancan hasta que alguien las espera. Si se esperaran fuera, correrían
+  // ya sin negocio.
+  return almacen.run(negocio, async () => await fn());
+}
+
+/**
+ * Registra de dónde sale el negocio cuando nadie lo fijó con `conNegocio`.
+ * La aplicación web registra uno que lee el subdominio de la petición.
+ */
+export function fijarResolutorDeNegocio(resolutor: Resolutor): void {
+  global.wlResolutorNegocio = resolutor;
+}
+
+export class SinNegocioError extends Error {
+  constructor() {
+    super(
+      'Esta operación necesita un negocio y no hay ninguno en contexto. ' +
+        'Usa conNegocio(negocio, fn) o registra un resolutor con fijarResolutorDeNegocio.',
+    );
+    this.name = 'SinNegocioError';
+  }
+}
+
+/** El negocio en contexto, o null. */
+export async function negocioSiHay(): Promise<Negocio | null> {
+  const fijado = almacen.getStore();
+  if (fijado) return fijado;
+  return (await global.wlResolutorNegocio?.()) ?? null;
+}
+
+/** El negocio en contexto. Lanza `SinNegocioError` si no hay. */
+export async function negocioActual(): Promise<Negocio> {
+  const negocio = await negocioSiHay();
+  if (!negocio) throw new SinNegocioError();
+  return negocio;
+}

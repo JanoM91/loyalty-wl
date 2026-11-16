@@ -1,0 +1,721 @@
+// =============================================================================
+// Loyalty WL — modelo de datos
+//
+// Una sola base para todos los negocios. Cada tabla de negocio lleva
+// `tenant_id` y una política RLS (en la migración SQL) que solo deja ver y
+// escribir las filas del negocio fijado en `app.tenant_id`. La aplicación se
+// conecta con un rol que no es dueño de las tablas; las migraciones, con el
+// dueño (`DIRECT_URL`). Ver docs/02-aislamiento.md.
+//
+// Lo que Prisma no sabe declarar vive en la migración: índices parciales,
+// políticas RLS y permisos del rol de la aplicación.
+// =============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// -----------------------------------------------------------------------------
+// Negocios (tabla de plataforma: sin RLS)
+// -----------------------------------------------------------------------------
+
+enum TenantStatus {
+  ACTIVO
+  /// El negocio no opera: sus pantallas muestran un aviso y nada se acredita.
+  SUSPENDIDO
+}
+
+/// Un negocio con su propio programa de lealtad.
+model Tenant {
+  id         String       @id @default(uuid()) @db.Uuid
+  /// Subdominio del negocio: `{slug}.<dominio de plataforma>`.
+  slug       String       @unique @db.VarChar(63)
+  name       String       @db.VarChar(160)
+  status     TenantStatus @default(ACTIVO)
+  /// Zona horaria IANA con la que se decide qué día es «hoy» en caja.
+  timezone   String       @default("America/Mexico_City") @db.VarChar(64)
+  /// Prefijo del código público de las tarjetas: "WL-XXXX-XXXX".
+  codePrefix String       @default("WL") @map("code_prefix") @db.VarChar(4)
+  /// Marca: frase, colores, logotipos, contacto, redes y datos legales.
+  /// La forma la define `MarcaNegocio` en src/negocio.ts.
+  brand      Json         @default("{}")
+  /// Reglas del negocio que no son el programa: comprobante, migración de
+  /// tarjeta física, vigencias. La forma la define `AjustesNegocio`.
+  settings   Json         @default("{}")
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  branchs Branch[]
+  userAccounts UserAccount[]
+  adminSessions AdminSession[]
+  adminPasswordTokens AdminPasswordToken[]
+  loginAttempts LoginAttempt[]
+  auditLogs AuditLog[]
+  loyaltyCards LoyaltyCard[]
+  loyaltyAccruals LoyaltyAccrual[]
+  loyaltyRewards LoyaltyReward[]
+  loyaltySessions LoyaltySession[]
+  loyaltyCodes LoyaltyCode[]
+  loyaltyLoginAttempts LoyaltyLoginAttempt[]
+  loyaltyAccessRequests LoyaltyAccessRequest[]
+  loyaltyPrograms LoyaltyProgram[]
+  walletDevices WalletDevice[]
+  walletRegistrations WalletRegistration[]
+
+  @@map("tenant")
+}
+
+// -----------------------------------------------------------------------------
+// Tablas de negocio (todas con tenant_id y RLS)
+// -----------------------------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  /// Dueño del negocio. Mismos permisos que GERENTE; se distingue en bitácora.
+  DUENO
+  GERENTE
+  SUCURSAL
+  MARKETING
+  LECTOR
+}
+
+/// Para qué se emitió un enlace de contraseña del panel.
+enum AdminTokenPurpose {
+  /// Lo genera administración: primera contraseña de una cuenta nueva o
+  /// restablecimiento. Vence en 72 horas.
+  INVITACION
+  /// Lo pide la propia persona desde la pantalla de acceso. Vence en una hora.
+  RECUPERACION
+}
+
+enum LoyaltyRewardStatus {
+  DISPONIBLE
+  ENTREGADO
+}
+
+/// Estado de una visita registrada en caja.
+///
+/// PENDIENTE: contingencia o revisión central; todavía no suma estampas.
+/// ACREDITADA: ya sumó. RECHAZADA: administración la descartó con motivo.
+enum LoyaltyAccrualStatus {
+  PENDIENTE
+  ACREDITADA
+  RECHAZADA
+}
+
+enum LoyaltyCodePurpose {
+  VERIFICAR_CORREO
+  ACCESO
+  /// Arranque de la tarjeta instalada como aplicación (manifest). Dura 30
+  /// días y no cuenta para el tope por hora de los enlaces de acceso.
+  ACCESO_APP
+}
+
+model Branch {
+  id                String   @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  slug              String @db.VarChar(120)
+  name              String   @db.VarChar(160)
+  addressLine       String   @map("address_line") @db.VarChar(250)
+  neighborhood      String   @db.VarChar(120)
+  city              String   @default("") @db.VarChar(120)
+  state             String   @default("") @db.VarChar(120)
+  postalCode        String   @map("postal_code") @db.VarChar(10)
+  phone             String?  @db.VarChar(20)
+  /// En formato E.164 sin signos: "522281234567". Es lo que consume wa.me,
+  /// y no siempre coincide con el teléfono fijo de la sucursal.
+  whatsapp          String?  @db.VarChar(20)
+  isActive          Boolean  @default(true) @map("is_active")
+
+  /// Si la sucursal acredita estampas y entrega premios del programa de
+  /// lealtad. Empieza apagado: cada sucursal se enciende desde el panel el
+  /// día que su personal ya recibió la capacitación.
+  loyaltyEnabled    Boolean  @default(false) @map("loyalty_enabled")
+  loyaltySince      DateTime? @map("loyalty_since") @db.Date
+
+
+  users             UserAccount[]
+
+  loyaltyCards      LoyaltyCard[]
+  loyaltyAccruals   LoyaltyAccrual[]
+  loyaltyRedemptions LoyaltyReward[] @relation("RedeemedAt")
+  loyaltyAccessRequests LoyaltyAccessRequest[]
+
+
+  @@unique([tenantId, slug])
+  @@map("branch")
+}
+
+model UserAccount {
+  id           String    @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email        String @db.VarChar(255)
+  name         String    @db.VarChar(160)
+  role         UserRole
+  /// Null para roles globales. Obligatorio para el rol SUCURSAL.
+  branchId     String?   @map("branch_id") @db.Uuid
+  branch       Branch?   @relation(fields: [branchId], references: [id])
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  /// Hash scrypt de la contraseña, en el formato "scrypt$N$r$p$sal$hash".
+  /// Null significa que la cuenta existe pero todavía no puede entrar: se
+  /// crea por invitación y la persona fija su contraseña con un enlace de un solo uso,
+  /// para que nunca viaje por un chat, un correo ni el historial de git.
+  passwordHash String?   @map("password_hash") @db.VarChar(255)
+
+  /// Cuándo se fijó la contraseña vigente. Los intentos fallidos anteriores
+  /// ya no cuentan para el bloqueo de 15 minutos.
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz
+
+  /// Cuándo se comprobó que esta persona recibe correo en `email`: al usar un
+  /// enlace que le llegó por correo. Sin esto no se le manda un enlace de
+  /// recuperación, porque el correo podría ser de relleno o de otra persona.
+  /// Se borra al cambiar el correo.
+  emailVerifiedAt   DateTime? @map("email_verified_at") @db.Timestamptz
+
+  auditLogs      AuditLog[]
+  sessions       AdminSession[]
+  passwordTokens AdminPasswordToken[]
+
+  loyaltyAccruals    LoyaltyAccrual[] @relation("CreatedBy")
+  loyaltyReviews     LoyaltyAccrual[] @relation("ReviewedBy")
+  loyaltyRedemptions LoyaltyReward[]  @relation("RedeemedBy")
+  loyaltyPrograms    LoyaltyProgram[] @relation("ProgramCreatedBy")
+  loyaltyEnrollments LoyaltyCard[]    @relation("EnrolledBy")
+  loyaltyAccessRequests LoyaltyAccessRequest[] @relation("AccessRequestResolvedBy")
+
+  @@index([role])
+  @@unique([tenantId, email])
+  @@map("user_account")
+}
+
+/// Sesión abierta en el panel de administración.
+///
+/// Se guarda en la base, y no solo en una cookie autofirmada, para que
+/// desactivar a una persona la saque de verdad. Con una cookie autónoma
+/// seguiría dentro hasta que expirara, que es justo lo que no se quiere el
+/// día que alguien deja de trabajar en el negocio.
+///
+/// Lo que viaja en la cookie es el token en claro; aquí se guarda su hash.
+/// Así, una fuga de la base no entrega sesiones utilizables.
+model AdminSession {
+  id           String      @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// SHA-256 del token que lleva la cookie.
+  tokenHash    String      @unique @map("token_hash") @db.VarChar(64)
+  userId       String      @map("user_id") @db.Uuid
+  user         UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime    @map("expires_at") @db.Timestamptz
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  lastSeenAt   DateTime    @default(now()) @map("last_seen_at") @db.Timestamptz
+  userAgent    String?     @map("user_agent") @db.VarChar(255)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([tenantId])
+  @@map("admin_session")
+}
+
+/// Enlace de un solo uso para fijar la contraseña del panel.
+///
+/// En la base solo queda el SHA-256 del token; el token viaja en el enlace.
+/// Emitir uno nuevo invalida los anteriores de la misma persona.
+model AdminPasswordToken {
+  id          String            @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId      String            @map("user_id") @db.Uuid
+  user        UserAccount       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose     AdminTokenPurpose
+  tokenHash   String            @unique @map("token_hash") @db.VarChar(64)
+  /// True si el enlace se mandó por correo (y no se mostró en pantalla). Solo
+  /// así, al usarlo, queda demostrado que la persona recibe ese correo.
+  sentByEmail Boolean           @default(false) @map("sent_by_email")
+  expiresAt   DateTime          @map("expires_at") @db.Timestamptz
+  consumedAt  DateTime?         @map("consumed_at") @db.Timestamptz
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([tenantId])
+  @@map("admin_password_token")
+}
+
+/// Intento de acceso al panel, exitoso o no.
+///
+/// Sirve para frenar a quien pruebe contraseñas a ciegas: si de un mismo
+/// correo o una misma IP llegan demasiados fallos seguidos, se rechaza sin
+/// siquiera comprobar la contraseña. Sin esto, un formulario de acceso en
+/// internet abierto es una invitación.
+model LoginAttempt {
+  id        String   @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email     String   @db.VarChar(255)
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  succeeded Boolean
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email, createdAt(sort: Desc)])
+  @@index([ipAddress, createdAt(sort: Desc)])
+  @@index([tenantId])
+  @@map("login_attempt")
+}
+
+/// Bitácora inmutable. Los permisos de base de datos impiden UPDATE y DELETE.
+model AuditLog {
+  id         String      @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId     String?     @map("user_id") @db.Uuid
+  user       UserAccount? @relation(fields: [userId], references: [id])
+  action     String      @db.VarChar(80)
+  entityType String      @map("entity_type") @db.VarChar(60)
+  entityId   String?     @map("entity_id") @db.VarChar(100)
+  metadata   Json?
+  ipAddress  String?     @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([entityType, entityId])
+  @@index([createdAt(sort: Desc)])
+  @@index([tenantId])
+  @@map("audit_log")
+}
+
+/// Tarjeta de lealtad de una persona.
+///
+/// La tarjeta guarda su propio contacto (celular o correo): alguien puede
+/// darse de alta solo con su correo.
+model LoyaltyCard {
+  id               String    @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// Código que lleva el QR: "WL-XXXX-XXXX" (el prefijo es del negocio). No contiene datos personales.
+  publicCode       String @map("public_code") @db.VarChar(16)
+
+  /// Al menos uno de los dos. Se guardan normalizados para que una misma
+  /// persona no termine con dos tarjetas por escribir distinto su correo.
+  phone            String? @db.VarChar(20)
+  email            String? @db.VarChar(255)
+  /// Canjear premios exige un contacto verificado: el correo (código o enlace
+  /// que llegó a ese buzón) o el celular (enlace que la caja mandó por
+  /// WhatsApp a ese número y la persona abrió).
+  emailVerifiedAt  DateTime? @map("email_verified_at") @db.Timestamptz
+  phoneVerifiedAt  DateTime? @map("phone_verified_at") @db.Timestamptz
+
+  name             String?   @db.VarChar(120)
+  /// Cumpleaños sin año: no hace falta para felicitar y es un dato menos.
+  birthDay         Int?      @map("birth_day")
+  birthMonth       Int?      @map("birth_month")
+
+  /// Estampas en la tarjeta actual y número de tarjeta. Se actualizan en la
+  /// misma transacción que la acreditación que las cambia.
+  stamps           Int       @default(0)
+  cycle            Int       @default(1)
+
+  termsVersion     String    @map("terms_version") @db.VarChar(20)
+  termsAcceptedAt  DateTime  @map("terms_accepted_at") @db.Timestamptz
+  /// Promociones por el medio de contacto. Separado de los avisos de la
+  /// tarjeta, que siempre se mandan. Evidencia del consentimiento (LFPDPPP).
+  marketingOptIn   Boolean   @default(false) @map("marketing_opt_in")
+  marketingOptInAt DateTime? @map("marketing_opt_in_at") @db.Timestamptz
+
+  enrolledBranchId String?   @map("enrolled_branch_id") @db.Uuid
+  enrolledBranch   Branch?   @relation(fields: [enrolledBranchId], references: [id])
+  /// Quien la dio de alta en caja («Nuevo cliente leal»). Null si fue la
+  /// propia persona desde la web.
+  enrolledById     String?   @map("enrolled_by_id") @db.Uuid
+  enrolledBy       UserAccount? @relation("EnrolledBy", fields: [enrolledById], references: [id])
+
+  /// Migración de la tarjeta física (una sola vez por tarjeta): cuándo y
+  /// cuántas visitas traía. La foto de la tarjeta, cuando se exigió, va en la
+  /// acreditación MIGRACION y se borra a los 90 días como las de ticket.
+  physicalMigratedAt     DateTime? @map("physical_migrated_at") @db.Timestamptz
+  physicalMigratedStamps Int?      @map("physical_migrated_stamps")
+
+
+  isActive         Boolean   @default(true) @map("is_active")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  /// Contraseña de la tarjeta, una sola para entrar con el correo o con el
+  /// celular. Hash scrypt con sal propia, mismo formato que el panel
+  /// ("scrypt$N$r$p$sal$hash"). Null: todavía no la crea; entra con enlaces.
+  ///
+  passwordHash      String?   @map("password_hash") @db.VarChar(255)
+  /// Cuándo se fijó la contraseña vigente. Los fallos anteriores ya no
+  /// cuentan para el bloqueo de 15 minutos.
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz
+
+  /// Apple Wallet. El token identifica al pase ante nuestro servicio web; la
+  /// fecha es la del último cambio que el pase debe mostrar (estampas,
+  /// premios, nombre). Wallet pregunta "¿qué cambió desde X?" con ella.
+  walletAuthToken  String?   @unique @map("wallet_auth_token") @db.VarChar(64)
+  walletUpdatedAt  DateTime  @default(now()) @map("wallet_updated_at") @db.Timestamptz
+  /// Google Wallet: cuándo se creó (o se volvió a pedir) el objeto en la API
+  /// de Google. Null si esta tarjeta nunca pidió el pase de Google.
+  googleWalletObjectAt DateTime? @map("google_wallet_object_at") @db.Timestamptz
+
+  /// La tarjeta instalada como app (pantalla de inicio) se abrió por primera
+  /// y por última vez. Lo registra /lealtad/app, que solo se abre desde la
+  /// app instalada (`start_url` del manifest). Es el «sí la tiene a la mano»
+  /// que miden las campañas.
+  appFirstOpenedAt     DateTime? @map("app_first_opened_at") @db.Timestamptz
+  appLastOpenedAt      DateTime? @map("app_last_opened_at") @db.Timestamptz
+  /// Pidió no recibir más campañas (enlace «darme de baja»). Los avisos
+  /// operativos (códigos, enlaces de acceso) se siguen mandando.
+  campaignOptOutAt     DateTime? @map("campaign_opt_out_at") @db.Timestamptz
+  /// El correo rebotó o lo marcaron como spam: no se le vuelve a escribir
+  /// por campaña hasta que cambie de correo.
+  emailUndeliverableAt DateTime? @map("email_undeliverable_at") @db.Timestamptz
+
+  /// Enlace personal permanente («Mi tarjeta»): abre la tarjeta en cualquier
+  /// celular sin contraseña. Va en la bienvenida, en el perfil y en el reverso
+  /// de los pases de Wallet. Se guarda en claro, como `walletAuthToken`,
+  /// porque el pase lo lleva escrito y se arma de nuevo en cada descarga.
+  /// Regenerarlo invalida el anterior.
+  personalLinkToken     String?   @unique @map("personal_link_token") @db.VarChar(64)
+  personalLinkCreatedAt DateTime? @map("personal_link_created_at") @db.Timestamptz
+  /// Último mensaje para los pases de Wallet (push). Apple avisa en la
+  /// pantalla bloqueada al cambiar este texto; Google lo recibe con
+  /// `addMessage`. `walletMessageId` es el mensaje de campaña que lo mandó,
+  /// para atribuir el clic del enlace que acompaña al texto.
+  walletMessage         String?   @map("wallet_message") @db.VarChar(200)
+  walletMessageAt       DateTime? @map("wallet_message_at") @db.Timestamptz
+  walletMessageId       String?   @map("wallet_message_id") @db.Uuid
+
+  accruals         LoyaltyAccrual[]
+  rewards          LoyaltyReward[]
+  sessions         LoyaltySession[]
+  codes            LoyaltyCode[]
+  walletRegistrations WalletRegistration[]
+  loginAttempts       LoyaltyLoginAttempt[]
+  accessRequests      LoyaltyAccessRequest[]
+
+  @@index([enrolledBranchId])
+  @@index([createdAt])
+  @@unique([tenantId, publicCode])
+  @@unique([tenantId, phone])
+  @@unique([tenantId, email])
+  @@map("loyalty_card")
+}
+
+/// Una visita registrada en caja con su ticket.
+///
+/// Las dos restricciones de unicidad son las reglas del programa escritas en
+/// la base: una visita por tarjeta, sucursal y fecha de compra (índice parcial:
+/// las visitas migradas de la tarjeta física no cuentan para ese límite), y un
+/// ticket una sola vez. Así se cumplen aunque dos tabletas registren a la vez.
+model LoyaltyAccrual {
+  id              String               @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cardId          String               @map("card_id") @db.Uuid
+  card            LoyaltyCard          @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  branchId        String               @map("branch_id") @db.Uuid
+  branch          Branch               @relation(fields: [branchId], references: [id])
+  status          LoyaltyAccrualStatus
+  /// Fecha local de compra en la zona del negocio, la que dice el ticket.
+  purchaseDate    DateTime             @map("purchase_date") @db.Date
+  ticketFolio     String               @map("ticket_folio") @db.VarChar(40)
+  ticketRegister  String               @map("ticket_register") @db.VarChar(10)
+  /// sucursal|caja|fecha|folio normalizado. Ver claveTicket() en el dominio.
+  ticketKey       String @map("ticket_key") @db.VarChar(120)
+  totalCents      Int                  @map("total_cents")
+  tipCents        Int                  @default(0) @map("tip_cents")
+  discountCents   Int                  @default(0) @map("discount_cents")
+  eligibleCents   Int                  @map("eligible_cents")
+  /// Estampas que sumó. Cero mientras está pendiente o si se rechazó.
+  stampsAwarded   Int                  @default(0) @map("stamps_awarded")
+  programVersion  String               @map("program_version") @db.VarChar(20)
+  /// MANUAL, IA o MIGRACION (visitas traídas de la tarjeta física).
+  captureSource   String               @default("MANUAL") @map("capture_source") @db.VarChar(20)
+  photoUrl        String?              @map("photo_url") @db.VarChar(500)
+  /// Por qué quedó pendiente (contingencia, fuera de plazo) o por qué se rechazó.
+  note            String?              @db.VarChar(300)
+
+  createdById     String?              @map("created_by_id") @db.Uuid
+  createdBy       UserAccount?         @relation("CreatedBy", fields: [createdById], references: [id])
+  reviewedById    String?              @map("reviewed_by_id") @db.Uuid
+  reviewedBy      UserAccount?         @relation("ReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?            @map("reviewed_at") @db.Timestamptz
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz
+
+  rewards         LoyaltyReward[]
+
+  /// Una visita por tarjeta, sucursal y fecha. Es un índice único parcial en
+  /// la base (excluye MIGRACION), que Prisma no sabe declarar; por eso aquí es
+  /// un índice normal y la regla se consulta con findFirst.
+  @@index([cardId, branchId, purchaseDate])
+  @@index([branchId, createdAt(sort: Desc)])
+  @@index([status, createdAt])
+  @@unique([tenantId, ticketKey])
+  @@map("loyalty_accrual")
+}
+
+/// Premio ganado. Se entrega una sola vez.
+model LoyaltyReward {
+  id               String              @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cardId           String              @map("card_id") @db.Uuid
+  card             LoyaltyCard         @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  /// Clave del premio en el programa con el que se ganó ("CORTESIA").
+  kind             String              @db.VarChar(40)
+  /// Nombre del premio tal como se prometió al ganarlo. El programa puede
+  /// cambiar después; lo que se debe entregar es esto.
+  title            String?             @db.VarChar(80)
+  /// Estampa en la que se ganó (5 o 10) y número de tarjeta.
+  milestone        Int
+  cycle            Int
+  status           LoyaltyRewardStatus @default(DISPONIBLE)
+  accrualId        String?             @map("accrual_id") @db.Uuid
+  accrual          LoyaltyAccrual?     @relation(fields: [accrualId], references: [id])
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz
+
+  redeemedAt       DateTime?           @map("redeemed_at") @db.Timestamptz
+  redeemedBranchId String?             @map("redeemed_branch_id") @db.Uuid
+  redeemedBranch   Branch?             @relation("RedeemedAt", fields: [redeemedBranchId], references: [id])
+  redeemedById     String?             @map("redeemed_by_id") @db.Uuid
+  redeemedBy       UserAccount?        @relation("RedeemedBy", fields: [redeemedById], references: [id])
+
+  /// Un premio por posición y tarjeta: generar dos veces el mismo es imposible.
+  @@unique([cardId, cycle, milestone])
+  @@index([status, createdAt])
+  @@index([tenantId])
+  @@map("loyalty_reward")
+}
+
+/// Sesión de la tarjeta en el navegador del cliente.
+///
+/// Igual que en el panel: la cookie lleva el token y aquí se guarda su hash.
+model LoyaltySession {
+  id         String      @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tokenHash  String      @unique @map("token_hash") @db.VarChar(64)
+  cardId     String      @map("card_id") @db.Uuid
+  card       LoyaltyCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime    @map("expires_at") @db.Timestamptz
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  lastSeenAt DateTime    @default(now()) @map("last_seen_at") @db.Timestamptz
+  userAgent  String?     @map("user_agent") @db.VarChar(255)
+
+  @@index([cardId])
+  @@index([expiresAt])
+  @@index([tenantId])
+  @@map("loyalty_session")
+}
+
+/// Código de un solo uso: verificar el correo o recuperar la tarjeta.
+model LoyaltyCode {
+  id          String             @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cardId      String             @map("card_id") @db.Uuid
+  card        LoyaltyCard        @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  purpose     LoyaltyCodePurpose
+  /// Correo al que se envió. Al verificar, es el que queda verificado.
+  email       String             @db.VarChar(255)
+  codeHash    String             @unique @map("code_hash") @db.VarChar(64)
+  /// Celular al que la caja mandó este enlace por WhatsApp. Al usarlo, si la
+  /// tarjeta sigue con ese celular, el celular queda verificado.
+  sentToPhone    String?            @map("sent_to_phone") @db.VarChar(20)
+  /// Enlace de «Olvidé mi contraseña»: obliga a crear una contraseña nueva
+  /// aunque la tarjeta ya tenga una.
+  resetsPassword Boolean            @default(false) @map("resets_password")
+  attempts    Int                @default(0)
+  expiresAt   DateTime           @map("expires_at") @db.Timestamptz
+  consumedAt  DateTime?          @map("consumed_at") @db.Timestamptz
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  accessRequests LoyaltyAccessRequest[]
+
+  @@index([cardId, purpose, createdAt(sort: Desc)])
+  @@index([tenantId])
+  @@map("loyalty_code")
+}
+
+/// Intento de entrar a una tarjeta con contraseña, exitoso o no.
+///
+/// Es lo que sostiene el bloqueo de 15 minutos tras 5 fallos, por tarjeta y
+/// por IP. Va en la base y no en memoria porque cada petición puede caer en
+/// una función serverless distinta. `identifierHash` es el SHA-256 del dato
+/// escrito (normalizado): así un dato que no es de ninguna tarjeta también
+/// se bloquea, y el mensaje de bloqueo no revela qué contactos existen.
+model LoyaltyLoginAttempt {
+  id             String       @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cardId         String?      @map("card_id") @db.Uuid
+  card           LoyaltyCard? @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  identifierHash String       @map("identifier_hash") @db.VarChar(64)
+  ipAddress      String?      @map("ip_address") @db.VarChar(45)
+  succeeded      Boolean
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([cardId, createdAt(sort: Desc)])
+  @@index([identifierHash, createdAt(sort: Desc)])
+  @@index([ipAddress, createdAt(sort: Desc)])
+  @@index([tenantId])
+  @@map("loyalty_login_attempt")
+}
+
+/// «Olvidé mi contraseña» de una tarjeta que solo tiene celular.
+///
+/// La app no manda SMS ni WhatsApp: la sucursal donde se dio de alta la
+/// tarjeta ve la solicitud en su caja y manda el enlace por WhatsApp a mano.
+/// Una sola abierta por tarjeta (índice parcial en la migración) y vence a
+/// las 48 horas. Estados: ABIERTA, ENVIADA, DESCARTADA, VENCIDA.
+model LoyaltyAccessRequest {
+  id           String       @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cardId       String       @map("card_id") @db.Uuid
+  card         LoyaltyCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  /// Sucursal que la atiende: la de alta de la tarjeta. Null si no se sabe;
+  /// entonces solo la ve Administración, Dueño o Gerencia.
+  branchId     String?      @map("branch_id") @db.Uuid
+  branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  status       String       @default("ABIERTA") @db.VarChar(12)
+  ipAddress    String?      @map("ip_address") @db.VarChar(45)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt    DateTime     @map("expires_at") @db.Timestamptz
+  resolvedAt   DateTime?    @map("resolved_at") @db.Timestamptz
+  resolvedById String?      @map("resolved_by_id") @db.Uuid
+  resolvedBy   UserAccount? @relation("AccessRequestResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  /// Enlace que se mandó por WhatsApp al atenderla.
+  codeId       String?      @map("code_id") @db.Uuid
+  code         LoyaltyCode? @relation(fields: [codeId], references: [id], onDelete: SetNull)
+
+  @@index([branchId, status, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([ipAddress, createdAt(sort: Desc)])
+  @@index([tenantId])
+  @@map("loyalty_access_request")
+}
+
+/// Versión del programa de lealtad: tarjeta, premios y regla de acumulación.
+///
+/// Solo una fila está activa a la vez (índice parcial en la migración). Cada
+/// cambio desde el panel crea una versión nueva y desactiva la anterior; las
+/// acreditaciones guardan `programVersion`, así que lo ya ganado no se toca.
+/// La forma de `hitos` y `tramos` la define `ProgramaLealtad` en el dominio.
+model LoyaltyProgram {
+  id                      String       @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  version                 String @db.VarChar(20)
+  positions               Int
+  /// VISITA o IMPORTE.
+  mode                    String       @db.VarChar(10)
+  milestones              Json
+  tiers                   Json
+  contingencyWindowDays   Int          @map("contingency_window_days")
+  isActive                Boolean      @default(false) @map("is_active")
+  note                    String?      @db.VarChar(300)
+  createdById             String?      @map("created_by_id") @db.Uuid
+  createdBy               UserAccount? @relation("ProgramCreatedBy", fields: [createdById], references: [id])
+  createdAt               DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  activatedAt             DateTime?    @map("activated_at") @db.Timestamptz
+
+  @@unique([tenantId, version])
+  @@map("loyalty_program")
+}
+
+/// Un iPhone (o reloj) con al menos un pase del negocio en Wallet.
+///
+/// Apple identifica al dispositivo con `deviceLibraryIdentifier` y nos da un
+/// token de notificaciones para avisarle cuando una tarjeta cambie. El token
+/// cambia con el tiempo: se guarda el último que mandó.
+model WalletDevice {
+  id              String               @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deviceLibraryId String @map("device_library_id") @db.VarChar(64)
+  pushToken       String               @map("push_token") @db.VarChar(255)
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+
+  registrations   WalletRegistration[]
+
+  @@unique([tenantId, deviceLibraryId])
+  @@map("wallet_device")
+}
+
+/// Qué tarjetas tiene instaladas cada dispositivo. Se borra cuando la persona
+/// quita el pase de Wallet (Apple nos avisa) o cuando la tarjeta se elimina.
+model WalletRegistration {
+  id        String       @id @default(uuid()) @db.Uuid
+  /// Negocio dueño de la fila. Lo pone la base a partir de `app.tenant_id`,
+  /// que la aplicación fija en cada transacción; RLS impide ver o escribir
+  /// filas de otro negocio.
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deviceId  String       @map("device_id") @db.Uuid
+  device    WalletDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  cardId    String       @map("card_id") @db.Uuid
+  card      LoyaltyCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([deviceId, cardId])
+  @@index([cardId])
+  @@index([tenantId])
+  @@map("wallet_registration")
+}
