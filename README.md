@@ -22,10 +22,10 @@ son fases siguientes.
 
 ## Ponerlo a andar en tu computadora
 
-Necesitas Node 22, pnpm 9 y una base PostgreSQL (Neon sirve) con **dos roles**.
+Necesitas Node 22.9 o más nuevo, pnpm 9 y una base PostgreSQL (Neon sirve) con **dos roles**.
 
 1. En la terminal, dentro de esta carpeta: `pnpm install`
-2. Copia `.env.example` como `.env.local` y pon `DIRECT_URL` (rol dueño de la base).
+2. Copia `.env.example` como `.env.local` **en esta misma carpeta raíz** y pon `DIRECT_URL` (rol dueño de la base). Todos los comandos y la aplicación leen ese único archivo.
 3. Crea las tablas: `pnpm db:generate` y luego `pnpm db:migrate`
    - Resultado esperado: «All migrations have been successfully applied».
 4. Crea el rol de la aplicación. En el editor SQL de tu base, con el rol dueño:

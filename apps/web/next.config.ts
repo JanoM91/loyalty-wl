@@ -1,4 +1,14 @@
 import type { NextConfig } from 'next';
+import path from 'node:path';
+
+// Un solo archivo de variables para todo el proyecto: `.env.local` en la raíz.
+// Next solo busca en apps/web, así que aquí se carga el de la raíz. En Vercel
+// no existe ese archivo y las variables vienen del panel: no pasa nada.
+try {
+  process.loadEnvFile(path.join(process.cwd(), '../../.env.local'));
+} catch {
+  // Sin archivo: se usan las variables del entorno.
+}
 
 const config: NextConfig = {
   reactStrictMode: true,

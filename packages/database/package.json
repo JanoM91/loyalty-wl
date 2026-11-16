@@ -12,19 +12,19 @@
   "scripts": {
     "generate": "prisma generate",
     "generate:wasm": "node scripts/prisma-wasm.mjs",
-    "migrate": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy",
-    "seed": "tsx prisma/seed.ts",
-    "studio": "prisma studio",
+    "migrate": "node --env-file-if-exists=../../.env.local ./node_modules/prisma/build/index.js migrate dev",
+    "migrate:deploy": "node --env-file-if-exists=../../.env.local ./node_modules/prisma/build/index.js migrate deploy",
+    "seed": "tsx --env-file-if-exists=../../.env.local prisma/seed.ts",
+    "studio": "node --env-file-if-exists=../../.env.local ./node_modules/prisma/build/index.js studio",
     "build": "node scripts/generar.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist .turbo",
-    "invitar": "tsx scripts/invitar.ts",
-    "plataforma:usuario": "tsx scripts/plataforma-usuario.ts"
+    "invitar": "tsx --env-file-if-exists=../../.env.local scripts/invitar.ts",
+    "plataforma:usuario": "tsx --env-file-if-exists=../../.env.local scripts/plataforma-usuario.ts"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx --env-file-if-exists=../../.env.local prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
