@@ -1,0 +1,9 @@
+# Lo que no debe subirse a Vercel.
+.env
+.env.*
+!.env.example
+docs
+tests
+PROMPT-MAESTRO.md
+**/coverage
+**/.turbo

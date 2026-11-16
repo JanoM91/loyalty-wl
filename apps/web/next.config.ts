@@ -15,6 +15,9 @@ const config: NextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: '4mb' },
   },
+  // Monorepo: al empaquetar para Vercel hay que seguir los archivos desde la
+  // raíz del repositorio (ahí vive el motor de Prisma), no desde apps/web.
+  outputFileTracingRoot: path.join(process.cwd(), '../../'),
   transpilePackages: ['@wl/domain', '@wl/database'],
   // Prisma y el adaptador pg (modo WASM) se cargan con require en el servidor.
   serverExternalPackages: ['@prisma/client', '.prisma/client', '@prisma/adapter-pg', 'pg'],
