@@ -10,6 +10,8 @@ export default tseslint.config(
       '**/.next/**',
       '**/node_modules/**',
       '**/coverage/**',
+      // Experimentos de la Fase 0: evidencia, no código del producto.
+      'docs/**',
       // Generado por Next.js en cada build. No se edita a mano.
       '**/next-env.d.ts',
     ],

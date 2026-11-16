@@ -1,0 +1,35 @@
+== RLS con rol de aplicación (no dueño) ==
+PASA  | 1 sin tenant fijado no se ve nada (falla cerrado)
+PASA  | 2 con tenant A se ven solo las 2000 de A
+PASA  | 3 A no puede leer por id una tarjeta de B
+PASA  | 4 A no puede actualizar una tarjeta de B (0 filas)
+PASA  | 5 A no puede borrar tarjetas de B (0 filas)
+PASA  | 6 A no puede insertar con tenant_id de B (WITH CHECK) → card\"", severity: "ERROR", detail: None, column: None, hint: None }), transient: false })
+PASA  | 7 $queryRaw dentro de la transacción también queda filtrado
+PASA  | 8 SELECT … FOR UPDATE (como bloquearTarjeta) funciona bajo RLS
+PASA  | 9 insertar sin tenant fijado se rechaza
+== El ajuste no se filtra entre peticiones que comparten conexión ==
+PASA  | 10 tras cerrar la transacción, la misma conexión ya no ve nada
+PASA  | 11 dos tenants alternando sobre 1 conexión no se cruzan → A=2000 B=0
+PASA  | 12 tras un rollback tampoco queda fijado
+== El dueño de las tablas se salta RLS ==
+PASA  | 13 el rol dueño ve todo sin fijar tenant (RLS no le aplica)
+PASA  | 14 con FORCE ROW LEVEL SECURITY el dueño también queda filtrado
+== Unicidad por negocio ==
+PASA  | 15 mismo celular dos veces en el mismo negocio se rechaza (P2002) → P2002
+PASA  | 16 el mismo celular existe en A y en B sin conflicto
+== Capa (a) sola: extensión de cliente, conectada como dueño (sin RLS) ==
+PASA  | 17 count solo ve A
+PASA  | 18 findUnique por id de B devuelve null
+PASA  | 19 findUnique por clave compuesta
+PASA  | 20 updateMany sobre fila de B no cambia nada
+PASA  | 21 update por id de B lanza «no encontrado» → P2025
+PASA  | 22 create con tenantId de B termina guardado en A (la extensión pisa el valor)
+PASA  | 23 HUECO ESPERADO: $queryRaw NO pasa por la extensión (ve todo) → n=4001
+PASA  | 24 dentro de $transaction interactiva la extensión sigue aplicando → n=2001
+== Latencia (local, sin red: mide el costo de los viajes extra, no Neon) ==
+   consulta directa (sin RLS):            p50 1.16 ms · p95 2.16 ms
+   transacción interactiva + set_config:  p50 4.99 ms · p95 7.27 ms
+   transacción por lote [set_config, q]:  p50 3.01 ms · p95 4.25 ms
+
+24/24 comprobaciones pasan

@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model Tenant {
+  id    String @id @default(uuid()) @db.Uuid
+  slug  String @unique
+  cards Card[]
+  @@map("tenant")
+}
+model Card {
+  id         String  @id @default(uuid()) @db.Uuid
+  tenantId   String  @map("tenant_id") @db.Uuid
+  tenant     Tenant  @relation(fields: [tenantId], references: [id])
+  publicCode String  @map("public_code")
+  phone      String?
+  stamps     Int     @default(0)
+  @@unique([tenantId, publicCode])
+  @@unique([tenantId, phone])
+  @@map("card")
+}
