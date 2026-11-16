@@ -52,7 +52,7 @@ El recorrido (`tests/e2e/recorrido.mjs`) hace en Chrome: alta web → el dueño 
 ## Pendiente conocido (no bloquea, sí hay que decidir o hacer)
 
 - **Fechas del panel** se muestran en hora del centro de México para todos; las reglas (una visita por día) sí usan la zona de cada negocio.
-- **Fotos**: van a Blob público con dirección no adivinable, separadas por negocio, como en LAPANA. Hacerlas privadas requiere otra versión de la librería: no se hizo.
+- **Fotos**: van a Blob público con dirección no adivinable, separadas por negocio, como en LAPANA. Hacerlas privadas (corrección 7 de la Fase 0) no se hizo: falta revisar qué ofrece hoy Vercel Blob para almacenamiento privado.
 - **Marca, ajustes y sucursales nuevas** se cambian por código o base; el panel de plataforma es la Fase 3.
 - **Términos y aviso de privacidad** son plantillas: cada negocio debe revisarlas con su abogado.
 - **Un solo remitente de correo** de plataforma con el nombre del negocio; falta definir dominio y dirección.
