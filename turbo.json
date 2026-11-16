@@ -1,0 +1,25 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "WL_DOMINIO_RAIZ",
+    "WL_PRUEBAS_BD",
+    "WL_PRISMA_WASM",
+    "BLOB_READ_WRITE_TOKEN",
+    "RESEND_API_KEY",
+    "RESEND_FROM_EMAIL",
+    "CRON_SECRET"
+  ],
+  "globalDependencies": ["**/.env.*local", "packages/config/**"],
+  "tasks": {
+    "build": { "dependsOn": ["^build"], "inputs": ["$TURBO_DEFAULT$", ".env*"], "outputs": [".next/**", "!.next/cache/**", "dist/**"] },
+    "dev": { "cache": false, "persistent": true },
+    "typecheck": { "dependsOn": ["^build"] },
+    "test": { "dependsOn": ["^build"], "outputs": ["coverage/**"] },
+    "test:coverage": { "dependsOn": ["^build"], "outputs": ["coverage/**"] },
+    "generate": { "cache": false }
+  }
+}

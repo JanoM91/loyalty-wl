@@ -1,0 +1,33 @@
+{
+  "name": "loyalty-wl",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Loyalty WL: programas de lealtad white label para negocios (Exkalibur Consulting)",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "eslint .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "format": "prettier --write \"**/*.{ts,tsx,json,mjs}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,mjs}\"",
+    "db:generate": "pnpm --filter @wl/database generate",
+    "db:migrate": "pnpm --filter @wl/database migrate:deploy",
+    "db:seed": "pnpm --filter @wl/database seed"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/node": "^22.9.0",
+    "eslint": "^9.15.0",
+    "prettier": "^3.3.3",
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.15.0"
+  }
+}
