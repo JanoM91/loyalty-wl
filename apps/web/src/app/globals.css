@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+/**
+ * Tokens de plataforma expuestos como utilidades de Tailwind.
+ *
+ * Tailwind genera clases como `bg-ink` y `text-cream` y además publica cada
+ * token como variable CSS. Eso permite que la marca de cada negocio los
+ * reemplace en tiempo de ejecución (ver `estiloDeMarca` en lib/marca.ts) sin
+ * recompilar nada. Los valores de aquí son los de un negocio sin marca.
+ *
+ * Qué pinta cada uno:
+ * - ink: superficies oscuras (cabecera, tarjeta) y texto sobre claro.
+ * - cream: texto sobre ink y superficies claras.
+ * - crumb: fondo de la página.
+ * - crust-light: acento sobre ink (etiquetas, sellos). Decora; no es color de acción.
+ */
+@theme {
+  --color-ink: #14100c;
+  --color-ink-soft: #4a3a2c;
+  --color-muted: #6b5c4e;
+
+  --color-crust: #b0632b;
+  --color-crust-dark: #8e4e1f;
+  --color-crust-light: #d9a05b;
+  --color-accent: var(--color-crust);
+
+  --color-crumb: #f3ece1;
+  --color-cream: #fbf7f1;
+  --color-rule: #e0d4c2;
+
+  --color-forest: #3e5641;
+  --color-success: #4a7a3a;
+  --color-warning: #c9821f;
+  --color-danger: #a34a3a;
+
+  /* Estados con significado (listo, aviso, error). No cambian con la marca. */
+  --color-disponible: #2f6b3f;
+  --color-vuelve: #1e5a82;
+  --color-agotado: #9a5518;
+
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    /* Nunca por debajo de 16 px. */
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    line-height: 1.15;
+  }
+
+  /* El foco siempre es visible. Nunca outline: none. */
+  :focus-visible {
+    outline: 2px solid var(--color-crust);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/**
+ * Programa de lealtad: el sello nuevo «cae» sobre la tarjeta. Es la única
+ * animación del programa y marca el momento que importa: la estampa que se
+ * acaba de ganar. Sin movimiento para quien lo pidió así.
+ */
+@keyframes lp-sellar {
+  0% {
+    transform: scale(1.7) rotate(-24deg);
+    opacity: 0;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.lp-sello-nuevo {
+  animation: lp-sellar 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-sello-nuevo {
+    animation: none;
+  }
+}

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: wl_dueno
+          POSTGRES_PASSWORD: dueno
+          POSTGRES_DB: wl_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U wl_dueno -d wl_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Credenciales de usar y tirar del Postgres de esta misma corrida.
+      DIRECT_URL: postgresql://wl_dueno:dueno@localhost:5432/wl_ci
+      DATABASE_URL: postgresql://wl_web:web@localhost:5432/wl_ci
+      WL_PRUEBAS_BD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate
+      - name: Migraciones (rol dueño)
+        run: pnpm db:migrate
+      - name: Rol de la aplicación (sin BYPASSRLS, miembro de wl_app)
+        run: psql "$DIRECT_URL" -v ON_ERROR_STOP=1 -c "CREATE ROLE wl_web LOGIN PASSWORD 'web' IN ROLE wl_app"
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      # Incluye las pruebas de fuga entre negocios: si fallan, no se fusiona.
+      - run: pnpm test
+      - run: pnpm build

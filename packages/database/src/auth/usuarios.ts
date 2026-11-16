@@ -5,7 +5,7 @@ import type { AdminTokenPurpose, UserRole } from '@prisma/client';
 
 import { prisma, transaccion, lote } from '../index';
 import { hashContrasena, validarContrasena, verificarContrasena } from './password';
-import { esRol } from './roles';
+import { ROLES_USUARIOS, esRol } from './roles';
 import { cerrarOtrasSesiones } from './sesion';
 
 /**
@@ -260,16 +260,21 @@ export async function actualizarUsuario(
     return {
       ok: false,
       error:
-        'No puedes cambiar tu propio rol ni desactivar tu cuenta. Pídeselo a otra persona con rol Administración.',
+        'No puedes cambiar tu propio rol ni desactivar tu cuenta. Pídeselo a otra persona que administre usuarios.',
     };
   }
 
-  if (actual.role === 'ADMIN' && actual.isActive && (v.rol !== 'ADMIN' || !datos.activo)) {
+  const administra = (rol: UserRole) => ROLES_USUARIOS.includes(rol);
+  if (administra(actual.role) && actual.isActive && (!administra(v.rol) || !datos.activo)) {
     const otros = await prisma.userAccount.count({
-      where: { role: 'ADMIN', isActive: true, id: { not: id } },
+      where: { role: { in: [...ROLES_USUARIOS] }, isActive: true, id: { not: id } },
     });
     if (otros === 0) {
-      return { ok: false, error: 'Debe quedar al menos una cuenta activa con rol Administración.' };
+      return {
+        ok: false,
+        error:
+          'Debe quedar al menos una cuenta activa que administre usuarios (Administración o Dueño).',
+      };
     }
   }
 

@@ -89,13 +89,13 @@ describe.skipIf(!ACTIVA)('usuarios del panel contra la base', () => {
     expect(u?.sucursal?.id).toBe(ids.sucursal);
 
     const repetido = await db.crearUsuario(
-      { email: correo('caja').toUpperCase(), nombre: 'Otra', rol: 'LECTOR' },
+      { email: correo('caja').toUpperCase(), nombre: 'Otra', rol: 'GERENTE' },
       actor(),
     );
     expect(repetido.ok).toBe(false);
 
     // Un rol global no guarda sucursal aunque llegue una.
-    const lector = await alta('lector', 'LECTOR', ids.sucursal);
+    const lector = await alta('lector', 'GERENTE', ids.sucursal);
     expect((await db.leerUsuario(lector))?.sucursal).toBeNull();
   });
 
@@ -174,7 +174,7 @@ describe.skipIf(!ACTIVA)('usuarios del panel contra la base', () => {
   });
 
   it('cambiar el correo apaga la recuperación y anula los enlaces pendientes', async () => {
-    const id = await alta('marketing', 'MARKETING');
+    const id = await alta('marketing', 'GERENTE');
     const e = await db.emitirEnlaceContrasena(id, { porCorreo: true }, actor());
     if (!e.ok) throw new Error(e.error);
     await db.definirContrasenaConEnlace(e.token, CLAVE);
@@ -185,7 +185,7 @@ describe.skipIf(!ACTIVA)('usuarios del panel contra la base', () => {
 
     const r = await db.actualizarUsuario(
       id,
-      { email: correo('marketing-2'), nombre: 'Persona marketing', rol: 'MARKETING', activo: true },
+      { email: correo('marketing-2'), nombre: 'Persona marketing', rol: 'GERENTE', activo: true },
       actor(),
     );
     expect(r).toEqual({ ok: true, cambios: 1 });
@@ -236,7 +236,8 @@ describe.skipIf(!ACTIVA)('usuarios del panel contra la base', () => {
       );
       expect(r2).toEqual({
         ok: false,
-        error: 'Debe quedar al menos una cuenta activa con rol Administración.',
+        error:
+          'Debe quedar al menos una cuenta activa que administre usuarios (Administración o Dueño).',
       });
     } finally {
       await db.prisma.userAccount.updateMany({

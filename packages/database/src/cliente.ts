@@ -1,4 +1,3 @@
-import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import type { PrismaPg } from '@prisma/adapter-pg';
@@ -19,7 +18,26 @@ export function crearCliente(url?: string): PrismaClient {
   const log: ('warn' | 'error')[] = ['warn', 'error'];
 
   if (process.env.WL_PRISMA_WASM === '1') {
-    const require = createRequire(import.meta.url);
+    // Se resuelve desde la carpeta de este paquete, encontrada en tiempo de
+    // ejecución: así funciona igual en las pruebas y dentro del servidor de
+    // Next, cuyo empaquetador no debe intentar seguir estos `require`.
+    // `getBuiltinModule` en vez de `import`: el empaquetador reconoce
+    // `createRequire` importado y trata de seguirlo.
+    const { createRequire } = (
+      process as unknown as {
+        getBuiltinModule(id: 'node:module'): {
+          createRequire(desde: string): NodeJS.Require;
+        };
+      }
+    ).getBuiltinModule('node:module');
+    const aqui = createRequire(path.join(process.cwd(), 'noop.js'));
+    let raizPaquete = process.cwd();
+    try {
+      raizPaquete = path.dirname(aqui.resolve('@wl/database/package.json'));
+    } catch {
+      // Ya estamos dentro del paquete (pruebas, siembra).
+    }
+    const require = createRequire(path.join(raizPaquete, 'noop.js'));
     const raiz = path.dirname(require.resolve('@prisma/client/package.json'));
     const generado = require(path.join(raiz, '..', '..', '.prisma', 'client', 'wasm.js')) as {
       PrismaClient: new (opciones: object) => PrismaClient;

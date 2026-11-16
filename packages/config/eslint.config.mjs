@@ -27,7 +27,7 @@ export default tseslint.config(
   },
   {
     // Scripts de Node: usan los globales de Node y escriben en la terminal.
-    files: ['**/scripts/**/*.mjs', '**/*.config.mjs'],
+    files: ['**/scripts/**/*.mjs', '**/*.config.mjs', 'tests/e2e/**/*.mjs'],
     languageOptions: {
       globals: { process: 'readonly', console: 'readonly', WebAssembly: 'readonly' },
     },
