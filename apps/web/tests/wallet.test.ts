@@ -121,7 +121,11 @@ describe('Apple: pass.json por negocio', () => {
   });
 
   it('muestra las estampas sobre las posiciones del programa del negocio', () => {
-    const ocho = { ...PROGRAMA_BASE, posiciones: 8, hitos: [{ ...PROGRAMA_BASE.hitos[0]!, posicion: 8 }] };
+    const ocho = {
+      ...PROGRAMA_BASE,
+      posiciones: 8,
+      hitos: [{ ...PROGRAMA_BASE.hitos[0]!, posicion: 8 }],
+    };
     const p = construirPassJson(tarjeta({ estampas: 3 }), cafe, identidad, ocho);
     expect(p.storeCard.headerFields[0]!.value).toBe('3 de 8');
   });

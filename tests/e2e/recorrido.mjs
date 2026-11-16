@@ -227,7 +227,6 @@ try {
   console.log(`${slug}: ${pasos.length - mal} de ${pasos.length} pasos bien`);
 }
 
-
 /**
  * Apple Wallet de punta a punta contra el servidor, haciendo de iPhone:
  * descarga el pase con la sesión de la tarjeta, lo abre, comprueba la firma y
@@ -254,9 +253,15 @@ async function probarAppleWallet(cliente) {
   const archivos = execSync(`ls ${dir}/abierto`).toString().split('\n').filter(Boolean);
   paso(
     'Wallet: el pase trae manifiesto, firma e imágenes en tres tamaños',
-    ['manifest.json', 'signature', 'icon.png', 'icon@2x.png', 'logo@2x.png', 'strip@2x.png', 'strip@3x.png'].every(
-      (a) => archivos.includes(a),
-    ),
+    [
+      'manifest.json',
+      'signature',
+      'icon.png',
+      'icon@2x.png',
+      'logo@2x.png',
+      'strip@2x.png',
+      'strip@3x.png',
+    ].every((a) => archivos.includes(a)),
     archivos.join(' '),
   );
   let firma = '';
@@ -267,7 +272,11 @@ async function probarAppleWallet(cliente) {
   } catch (e) {
     firma = String(e.stdout ?? e);
   }
-  paso('Wallet: la firma del manifiesto es válida', /Verification successful/i.test(firma), firma.trim().slice(0, 120));
+  paso(
+    'Wallet: la firma del manifiesto es válida',
+    /Verification successful/i.test(firma),
+    firma.trim().slice(0, 120),
+  );
   paso(
     'Wallet: el pase lleva 1 estampa, el QR de la web y el servicio web del negocio',
     /^1 de \d+$/.test(pase.storeCard.headerFields[0].value) &&
@@ -282,7 +291,8 @@ async function probarAppleWallet(cliente) {
   const serie = pase.serialNumber;
   const dispositivo = `e2e${Date.now().toString(36)}`;
   const auth = { Authorization: `ApplePass ${pase.authenticationToken}` };
-  const pedir = (ruta, o = {}) => cliente.request.fetch(`${servicio}${ruta}`, { failOnStatusCode: false, ...o });
+  const pedir = (ruta, o = {}) =>
+    cliente.request.fetch(`${servicio}${ruta}`, { failOnStatusCode: false, ...o });
 
   const sinToken = await pedir(`/passes/${tipo}/${serie}`);
   // El mismo pase, pedido en el servicio web de otro negocio: no debe existir ahí.

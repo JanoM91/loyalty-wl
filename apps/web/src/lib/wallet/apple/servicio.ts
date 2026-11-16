@@ -69,7 +69,8 @@ export async function responderPase(
     'Cache-Control': 'private, no-store',
   };
   if (comoDescarga) {
-    cabeceras['Content-Disposition'] = `attachment; filename="${pase.negocio}-${pase.codigo}.pkpass"`;
+    cabeceras['Content-Disposition'] =
+      `attachment; filename="${pase.negocio}-${pase.codigo}.pkpass"`;
   }
   return new Response(new Uint8Array(pase.archivo), { status: 200, headers: cabeceras });
 }

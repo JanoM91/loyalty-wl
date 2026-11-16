@@ -36,7 +36,9 @@ export interface ProgramaImagen {
 /** Huella corta de lo que define el diseño. Va en las direcciones de Google. */
 export function huellaDeDiseno(marca: MarcaImagen, programa: ProgramaImagen): string {
   return createHash('sha256')
-    .update(JSON.stringify([VERSION_DIBUJO, marca, programa.posiciones, [...programa.hitos].sort()]))
+    .update(
+      JSON.stringify([VERSION_DIBUJO, marca, programa.posiciones, [...programa.hitos].sort()]),
+    )
     .digest('hex')
     .slice(0, 12);
 }
@@ -214,13 +216,7 @@ function ImagenCentrada(p: {
         backgroundColor: p.fondo ?? 'transparent',
       }}
     >
-      <img
-        src={p.url}
-        alt=""
-        width={p.ancho}
-        height={p.alto}
-        style={{ objectFit: 'contain' }}
-      />
+      <img src={p.url} alt="" width={p.ancho} height={p.alto} style={{ objectFit: 'contain' }} />
     </div>
   );
 }
@@ -236,7 +232,11 @@ export function tira(
   const n = Math.min(Math.max(Math.trunc(estampas), 0), programa.posiciones);
   const clave = `tira:${huellaDeDiseno(marca, programa)}:${n}:${ancho}x${alto}`;
   return recordar(clave, () =>
-    png(<Tira ancho={ancho} alto={alto} estampas={n} marca={marca} programa={programa} />, ancho, alto),
+    png(
+      <Tira ancho={ancho} alto={alto} estampas={n} marca={marca} programa={programa} />,
+      ancho,
+      alto,
+    ),
   );
 }
 
@@ -270,7 +270,12 @@ export function logoApple(marca: MarcaImagen, escala: 1 | 2 | 3): Promise<Buffer
     if (marca.logoUrl) {
       try {
         return await png(
-          <ImagenCentrada url={marca.logoUrl} ancho={160 * escala} alto={50 * escala} fondo={null} />,
+          <ImagenCentrada
+            url={marca.logoUrl}
+            ancho={160 * escala}
+            alto={50 * escala}
+            fondo={null}
+          />,
           160 * escala,
           50 * escala,
         );

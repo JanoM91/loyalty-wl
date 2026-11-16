@@ -76,8 +76,8 @@ export async function subirLogo(_previo: EstadoLogo, form: FormData): Promise<Es
     const r = await guardarLogo(tipo, null, { userId: sesion.userId });
     if (!r.ok) return { ok: false, error: r.error };
     revalidatePath('/', 'layout');
-  // Los pases de Wallet llevan la marca: se les pide que tomen la nueva.
-  after(() => actualizarTodosLosPases());
+    // Los pases de Wallet llevan la marca: se les pide que tomen la nueva.
+    after(() => actualizarTodosLosPases());
     return { ok: true, error: null };
   }
 
