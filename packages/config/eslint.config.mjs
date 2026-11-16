@@ -26,6 +26,14 @@ export default tseslint.config(
     },
   },
   {
+    // Scripts de Node: usan los globales de Node y escriben en la terminal.
+    files: ['**/scripts/**/*.mjs', '**/*.config.mjs'],
+    languageOptions: {
+      globals: { process: 'readonly', console: 'readonly', WebAssembly: 'readonly' },
+    },
+    rules: { 'no-console': 'off' },
+  },
+  {
     // packages/domain no debe importar frameworks ni SDKs.
     // Las reglas de negocio se prueban sin base ni servidor.
     files: ['packages/domain/**/*.ts'],

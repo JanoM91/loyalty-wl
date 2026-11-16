@@ -1,8 +1,20 @@
-import { PROGRAMA_BASE, esPrefijoCodigo, esZonaHorariaValida, type ProgramaLealtad } from '@wl/domain';
+import {
+  PROGRAMA_BASE,
+  esPrefijoCodigo,
+  esZonaHorariaValida,
+  type ProgramaLealtad,
+} from '@wl/domain';
 import type { Prisma, PrismaClient } from '@prisma/client';
 
 import { crearCliente } from './cliente';
-import { conNegocio, negocioPorId, type AjustesNegocio, type MarcaNegocio, type Negocio } from './negocio';
+import {
+  conNegocio,
+  negocioPorId,
+  type AjustesNegocio,
+  type MarcaNegocio,
+  type Negocio,
+} from './negocio';
+import { emitirEnlaceContrasena } from './auth/usuarios';
 import { prisma } from './index';
 
 /**
@@ -52,8 +64,7 @@ export interface NegocioNuevo {
 }
 
 export type ResultadoNegocio =
-  | { readonly ok: true; readonly negocio: Negocio }
-  | { readonly ok: false; readonly error: string };
+  { readonly ok: true; readonly negocio: Negocio } | { readonly ok: false; readonly error: string };
 
 const SLUG = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
 /** Subdominios que no pueden ser un negocio. */
@@ -125,6 +136,46 @@ export async function crearNegocio(d: NegocioNuevo): Promise<ResultadoNegocio> {
   });
 
   return { ok: true, negocio };
+}
+
+export type ResultadoInvitacion =
+  | { readonly ok: true; readonly usuarioId: string; readonly token: string; readonly expira: Date }
+  | { readonly ok: false; readonly error: string };
+
+/**
+ * Crea la cuenta del dueño de un negocio y le emite el enlace de un solo uso
+ * con el que fija su contraseña (`/admin/contrasena/<token>`). Nadie más
+ * conoce esa contraseña. Si la cuenta ya existe, emite un enlace nuevo.
+ */
+export async function invitarDuenio(
+  negocio: Negocio,
+  d: { readonly email: string; readonly nombre: string },
+): Promise<ResultadoInvitacion> {
+  return conNegocio(negocio, async () => {
+    const email = d.email.trim().toLowerCase();
+    let usuario = await prisma.userAccount.findFirst({ where: { email }, select: { id: true } });
+    if (!usuario) {
+      usuario = await prisma.userAccount.create({
+        data: { email, name: d.nombre.trim(), role: 'DUENO' },
+        select: { id: true },
+      });
+      await prisma.auditLog.create({
+        data: {
+          action: 'plataforma.invitar_duenio',
+          entityType: 'user_account',
+          entityId: usuario.id,
+          metadata: { email },
+        },
+      });
+    }
+    const enlace = await emitirEnlaceContrasena(
+      usuario.id,
+      { porCorreo: false },
+      { userId: usuario.id },
+    );
+    if (!enlace.ok) return { ok: false, error: enlace.error };
+    return { ok: true, usuarioId: usuario.id, token: enlace.token, expira: enlace.expira };
+  });
 }
 
 /** Suspende o reactiva un negocio. */

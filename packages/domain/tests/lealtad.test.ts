@@ -273,11 +273,13 @@ describe('próximo premio', () => {
   });
 
   it('lo dice en español, en singular y en plural', () => {
-    expect(textoProximoPremio(4, PROGRAMA_BASE)).toBe('Te falta 1 estampa para tu premio de cortesía.');
-    expect(textoProximoPremio(1, PROGRAMA_BASE)).toBe('Te faltan 4 estampas para tu premio de cortesía.');
-    expect(textoProximoPremio(7, PROGRAMA_BASE)).toBe(
-      'Te faltan 3 estampas para tu premio mayor.',
+    expect(textoProximoPremio(4, PROGRAMA_BASE)).toBe(
+      'Te falta 1 estampa para tu premio de cortesía.',
     );
+    expect(textoProximoPremio(1, PROGRAMA_BASE)).toBe(
+      'Te faltan 4 estampas para tu premio de cortesía.',
+    );
+    expect(textoProximoPremio(7, PROGRAMA_BASE)).toBe('Te faltan 3 estampas para tu premio mayor.');
     expect(textoProximoPremio(10, PROGRAMA_BASE)).toBe('Tarjeta completa.');
   });
 });
@@ -443,9 +445,7 @@ describe('código de tarjeta', () => {
   });
 
   it('extrae el código del QR, del lector o de lo que se teclea', () => {
-    expect(extraerCodigoTarjeta('https://cafe.ejemplo.mx/t/WL-ABCD-EFGH')).toBe(
-      'WL-ABCD-EFGH',
-    );
+    expect(extraerCodigoTarjeta('https://cafe.ejemplo.mx/t/WL-ABCD-EFGH')).toBe('WL-ABCD-EFGH');
     expect(extraerCodigoTarjeta('wl-abcd-efgh')).toBe('WL-ABCD-EFGH');
     expect(extraerCodigoTarjeta('ABCDEFGH')).toBe('WL-ABCD-EFGH');
     expect(extraerCodigoTarjeta(' WL ABCD EFGH ')).toBe('WL-ABCD-EFGH');

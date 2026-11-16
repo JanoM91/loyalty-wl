@@ -148,7 +148,12 @@ describe.skipIf(!CON_BD)('aislamiento entre negocios', () => {
     await expect(
       en(a, () =>
         prisma.loyaltyCard.create({
-          data: { publicCode: 'WL-ZZZZ-ZZZZ', phone: CELULAR, termsVersion: 'x', termsAcceptedAt: new Date() },
+          data: {
+            publicCode: 'WL-ZZZZ-ZZZZ',
+            phone: CELULAR,
+            termsVersion: 'x',
+            termsAcceptedAt: new Date(),
+          },
         }),
       ),
     ).rejects.toMatchObject({ code: 'P2002' });
@@ -165,7 +170,8 @@ describe.skipIf(!CON_BD)('aislamiento entre negocios', () => {
   it('A no puede modificar ni borrar filas de B', async () => {
     await en(a, async () => {
       expect(
-        (await prisma.loyaltyCard.updateMany({ where: { id: tarjetaB }, data: { stamps: 9 } })).count,
+        (await prisma.loyaltyCard.updateMany({ where: { id: tarjetaB }, data: { stamps: 9 } }))
+          .count,
       ).toBe(0);
       await expect(
         prisma.loyaltyCard.update({ where: { id: tarjetaB }, data: { stamps: 9 } }),
@@ -184,7 +190,12 @@ describe.skipIf(!CON_BD)('aislamiento entre negocios', () => {
     await expect(
       en(a, () =>
         prisma.loyaltyCard.create({
-          data: { tenantId: b.id, publicCode: 'WL-AAAA-AAAA', termsVersion: 'x', termsAcceptedAt: new Date() },
+          data: {
+            tenantId: b.id,
+            publicCode: 'WL-AAAA-AAAA',
+            termsVersion: 'x',
+            termsAcceptedAt: new Date(),
+          },
         }),
       ),
     ).rejects.toThrow();
@@ -195,7 +206,10 @@ describe.skipIf(!CON_BD)('aislamiento entre negocios', () => {
   });
 
   it('el SQL directo también queda acotado al negocio', async () => {
-    const [n] = await en(a, () => prisma.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM loyalty_card`);
+    const [n] = await en(
+      a,
+      () => prisma.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM loyalty_card`,
+    );
     expect(n?.n).toBe(1);
     const cambiadas = await en(
       a,
@@ -220,7 +234,13 @@ describe.skipIf(!CON_BD)('aislamiento entre negocios', () => {
           SELECT id FROM loyalty_card WHERE public_code = ${CODIGO} FOR UPDATE`;
         const ajenas = await tx.loyaltyCard.count({ where: { id: tarjetaB } });
         const nueva = await tx.loyaltyReward.create({
-          data: { cardId: filas[0]!.id, kind: 'CORTESIA', title: 'Cortesía', milestone: 5, cycle: 1 },
+          data: {
+            cardId: filas[0]!.id,
+            kind: 'CORTESIA',
+            title: 'Cortesía',
+            milestone: 5,
+            cycle: 1,
+          },
         });
         return { propias: filas.length, ajenas, negocioDelPremio: nueva.tenantId };
       }),
@@ -246,7 +266,9 @@ describe.skipIf(!CON_BD)('aislamiento entre negocios', () => {
       rondas.map((n) =>
         en(n, async () => {
           const filas = await prisma.loyaltyCard.findMany({ select: { tenantId: true } });
-          const enTx = await transaccion((tx) => tx.loyaltyAccrual.findMany({ select: { tenantId: true } }));
+          const enTx = await transaccion((tx) =>
+            tx.loyaltyAccrual.findMany({ select: { tenantId: true } }),
+          );
           return [...filas, ...enTx].every((f) => f.tenantId === n.id) && filas.length === 1;
         }),
       ),

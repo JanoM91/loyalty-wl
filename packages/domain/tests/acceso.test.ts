@@ -13,7 +13,6 @@ import {
   type IntentoAcceso,
 } from '../src/loyalty/acceso';
 
-
 const NEGOCIO = 'Café El Buentueste';
 
 describe('leerDatoDeAcceso', () => {
@@ -211,7 +210,9 @@ describe('solicitudes de acceso', () => {
     expect(m).toContain('https://cafe.ejemplo.mx/acceso/x');
     expect(m).toContain('Safari o Chrome');
     expect(m).toContain('24 horas');
-    expect(mensajeEnlaceAcceso(null, 'u', NEGOCIO)).toMatch(/^Hola, te escribimos de Café El Buentueste\./);
+    expect(mensajeEnlaceAcceso(null, 'u', NEGOCIO)).toMatch(
+      /^Hola, te escribimos de Café El Buentueste\./,
+    );
   });
 
   it('las respuestas genéricas no dicen si la tarjeta existe', () => {

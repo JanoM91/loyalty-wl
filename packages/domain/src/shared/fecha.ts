@@ -56,7 +56,14 @@ export function inicioDelDia(fecha: string, zona: string = ZONA_HORARIA_POR_OMIS
     second: '2-digit',
   }).formatToParts(utc);
   const n = (tipo: string) => Number(partes.find((p) => p.type === tipo)?.value ?? 0);
-  const comoUtc = Date.UTC(n('year'), n('month') - 1, n('day'), n('hour'), n('minute'), n('second'));
+  const comoUtc = Date.UTC(
+    n('year'),
+    n('month') - 1,
+    n('day'),
+    n('hour'),
+    n('minute'),
+    n('second'),
+  );
   const desplazamiento = comoUtc - utc.getTime();
   return new Date(utc.getTime() - desplazamiento);
 }

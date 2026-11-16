@@ -1,7 +1,9 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
+import type { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, type Prisma } from '@prisma/client';
+import type { Pool } from 'pg';
 
 /**
  * Cliente de Prisma sin contexto de negocio.
@@ -22,10 +24,10 @@ export function crearCliente(url?: string): PrismaClient {
     const generado = require(path.join(raiz, '..', '..', '.prisma', 'client', 'wasm.js')) as {
       PrismaClient: new (opciones: object) => PrismaClient;
     };
-    const { PrismaPg } = require('@prisma/adapter-pg') as typeof import('@prisma/adapter-pg');
-    const { Pool } = require('pg') as typeof import('pg');
-    const pool = new Pool({ connectionString: url ?? process.env.DATABASE_URL, max: 5 });
-    return new generado.PrismaClient({ adapter: new PrismaPg(pool), log });
+    const adaptador = require('@prisma/adapter-pg') as { PrismaPg: typeof PrismaPg };
+    const pg = require('pg') as { Pool: typeof Pool };
+    const pool = new pg.Pool({ connectionString: url ?? process.env.DATABASE_URL, max: 5 });
+    return new generado.PrismaClient({ adapter: new adaptador.PrismaPg(pool), log });
   }
 
   const opciones: Prisma.PrismaClientOptions = url ? { log, datasourceUrl: url } : { log };

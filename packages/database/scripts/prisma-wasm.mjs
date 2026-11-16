@@ -35,7 +35,13 @@ execFileSync('npx', ['prisma', 'generate', '--no-engine'], {
   },
 });
 
-const carpeta = path.join(path.dirname(require.resolve('@prisma/client/package.json')), '..', '..', '.prisma', 'client');
+const carpeta = path.join(
+  path.dirname(require.resolve('@prisma/client/package.json')),
+  '..',
+  '..',
+  '.prisma',
+  'client',
+);
 const archivo = path.join(carpeta, 'wasm.js');
 let codigo = readFileSync(archivo, 'utf8');
 if (!codigo.includes('config.engineWasm = undefined')) {

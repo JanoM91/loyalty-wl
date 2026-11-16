@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 import { base } from './cliente';
 import { negocioActual } from './negocio';
@@ -126,7 +126,11 @@ export const prisma = base.$extends({
  */
 export async function transaccion<T>(
   fn: (tx: Tx) => Promise<T>,
-  opciones?: { maxWait?: number; timeout?: number; isolationLevel?: Prisma.TransactionIsolationLevel },
+  opciones?: {
+    maxWait?: number;
+    timeout?: number;
+    isolationLevel?: Prisma.TransactionIsolationLevel;
+  },
 ): Promise<T> {
   if (enTransaccion.getStore()) {
     throw new Error('transaccion() no se puede anidar: pasa el `tx` a la función que lo necesita.');
@@ -139,6 +143,37 @@ export async function transaccion<T>(
   }, opciones);
 }
 
+/**
+ * Varias escrituras que deben entrar todas o ninguna, sin lógica entre ellas.
+ * Sustituye a `prisma.$transaction([a, b])`: las operaciones se arman con el
+ * `tx` que recibe la función.
+ */
+export function lote(armar: (tx: Tx) => Prisma.PrismaPromise<unknown>[]): Promise<void> {
+  return transaccion(async (tx) => {
+    for (const operacion of armar(tx)) await operacion;
+  });
+}
+
+/**
+ * ¿Es el error de «restricción única» de Prisma (P2002)?
+ *
+ * Se mira el código y no la clase: el error puede venir de otra copia del
+ * runtime de Prisma (motor nativo o WASM) y `instanceof` daría falso.
+ */
+export function esErrorUnico(e: unknown): e is { code: 'P2002'; meta?: { target?: unknown } } {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    (e as { code?: unknown }).code === 'P2002' &&
+    (e as { name?: unknown }).name === 'PrismaClientKnownRequestError'
+  );
+}
+
+/** Columnas (o nombre del índice) que chocaron en un error de restricción única. */
+export function camposDelError(e: { meta?: { target?: unknown } }): string {
+  return String(e.meta?.target ?? '');
+}
+
 /** Cierra las conexiones. Para scripts y pruebas. */
 export function desconectar(): Promise<void> {
   return base.$disconnect();
@@ -147,3 +182,23 @@ export function desconectar(): Promise<void> {
 export * from '@prisma/client';
 export * from './negocio';
 export * from './plataforma';
+
+/** Acceso al panel del negocio: contraseñas, sesiones, roles y usuarios. */
+export * from './auth/password';
+export * from './auth/sesion';
+export * from './auth/roles';
+export * from './auth/usuarios';
+
+/** Programa de lealtad. Las reglas viven en @wl/domain; aquí se guarda y se consulta. */
+export * from './lealtad/programa';
+export * from './lealtad/tarjetas';
+export * from './lealtad/verificacion';
+export * from './lealtad/acceso';
+export * from './lealtad/caja';
+export * from './lealtad/alta-caja';
+export * from './lealtad/reenvio';
+export * from './lealtad/enlace-personal';
+export * from './lealtad/reportes';
+export * from './lealtad/analitica';
+export * from './lealtad/mantenimiento';
+export * from './lealtad/wallet';
