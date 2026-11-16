@@ -6,6 +6,7 @@ import { Aviso } from '@/components/lealtad/Aviso';
 import { AvisoNavegadorIntegrado } from '@/components/lealtad/AvisoNavegadorIntegrado';
 import { tarjetaDeEsteNavegador } from '@/lib/lealtad/sesion';
 import { BotonMiTarjeta } from './BotonMiTarjeta';
+import { ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Mi tarjeta' };
 export const dynamic = 'force-dynamic';
@@ -50,7 +51,7 @@ export default async function MiTarjetaPage({
 
   // Ya está abierta aquí (sin enlace de un solo uso por canjear): directo.
   if (!q.a && (await tarjetaDeEsteNavegador()) === tarjeta.cardId) {
-    redirect('/lealtad/tarjeta');
+    redirect(await ruta('/lealtad/tarjeta'));
   }
 
   const nombre = tarjeta.nombre?.trim().split(' ')[0];

@@ -13,6 +13,7 @@ import {
 
 import { mandarRecuperacion } from '@/lib/admin/correos-usuarios';
 import { contextoPeticion, guardarSesionEnNavegador } from '@/lib/admin/sesion';
+import { rutaBase, ruta } from '@/lib/negocio';
 
 export interface EstadoAcceso {
   readonly error: string | null;
@@ -35,7 +36,7 @@ export async function entrar(_previo: EstadoAcceso, form: FormData): Promise<Est
   await guardarSesionEnNavegador(resultado.token, resultado.expira);
 
   // Fuera del try: `redirect` lanza una excepción de control de Next.
-  redirect('/admin');
+  redirect(await ruta('/admin'));
 }
 
 export async function salir(): Promise<void> {
@@ -45,9 +46,9 @@ export async function salir(): Promise<void> {
   // Se borra de la base y no solo del navegador. Si solo se quitara la cookie,
   // una copia del token seguiría sirviendo para entrar.
   await cerrarSesion(token);
-  galletas.delete(NOMBRE_COOKIE);
+  galletas.delete({ name: NOMBRE_COOKIE, path: (await rutaBase()) || '/' });
 
-  redirect('/admin/entrar');
+  redirect(await ruta('/admin/entrar'));
 }
 
 // ---------------------------------------------------------------------------
@@ -112,8 +113,8 @@ export async function fijarContrasena(
   if (!r.ok) return { error: r.error };
 
   const acceso = await iniciarSesion(r.email, clave, await contextoPeticion());
-  if (!acceso.ok) redirect('/admin/entrar?contrasena=lista');
+  if (!acceso.ok) redirect(await ruta('/admin/entrar?contrasena=lista'));
 
   await guardarSesionEnNavegador(acceso.token, acceso.expira);
-  redirect('/admin');
+  redirect(await ruta('/admin'));
 }

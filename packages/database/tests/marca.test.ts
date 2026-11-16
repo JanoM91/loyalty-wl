@@ -3,23 +3,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as db from '../src/index';
 import { CON_BD, en, negocioDePrueba } from './ayuda';
 
-describe('contraste de colores', () => {
-  it('mide como WCAG', () => {
-    expect(db.contraste('#000000', '#ffffff')).toBeCloseTo(21, 0);
-    expect(db.contraste('#777777', '#ffffff')).toBeLessThan(4.5);
-    expect(db.contraste('#ffffff', '#ffffff')).toBe(1);
-  });
-
-  it('rechaza una tarjeta ilegible y solo avisa de un acento tenue', () => {
-    const base = db.MARCA_POR_OMISION.colores;
-    expect(db.revisarColores(base).errores).toEqual([]);
-    expect(db.revisarColores({ ...base, sobreFondo: '#333333' }).errores).toHaveLength(1);
-    const tenue = db.revisarColores({ ...base, acento: '#2a2a2c' });
-    expect(tenue.errores).toEqual([]);
-    expect(tenue.avisos).toHaveLength(1);
-  });
-});
-
 describe.skipIf(!CON_BD)('el negocio edita su marca', () => {
   let a: db.Negocio;
   let b: db.Negocio;

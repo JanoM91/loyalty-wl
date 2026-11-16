@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { abrirConEnlacePersonal, canjearEnlaceAcceso } from '@wl/database';
 
 import { guardarSesionTarjeta, tarjetaDeEsteNavegador } from '@/lib/lealtad/sesion';
+import { ruta } from '@/lib/negocio';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request): Promise<never> {
   const actual = await tarjetaDeEsteNavegador();
   if (actual) {
-    redirect('/lealtad/tarjeta');
+    redirect(await ruta('/lealtad/tarjeta'));
   }
 
   const q = new URL(req.url).searchParams;
@@ -31,7 +32,7 @@ export async function GET(req: Request): Promise<never> {
     const r = await abrirConEnlacePersonal(mi, { userAgent: req.headers.get('user-agent') });
     if (r.ok) {
       await guardarSesionTarjeta(r.token, r.expira);
-      redirect('/lealtad/tarjeta');
+      redirect(await ruta('/lealtad/tarjeta'));
     }
   }
 
@@ -40,8 +41,8 @@ export async function GET(req: Request): Promise<never> {
     const r = await canjearEnlaceAcceso(t, req.headers.get('user-agent'));
     if (r.ok) {
       await guardarSesionTarjeta(r.token, r.expira);
-      redirect('/lealtad/tarjeta');
+      redirect(await ruta('/lealtad/tarjeta'));
     }
   }
-  redirect('/lealtad/entrar');
+  redirect(await ruta('/lealtad/entrar'));
 }

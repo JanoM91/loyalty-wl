@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { fotoDelNegocio } from '../src/lib/lealtad/fotos';
-import { slugDelHost } from '../src/middleware';
+import { negocioDeLaRuta, slugDelHost } from '../src/middleware';
 
 describe('slugDelHost: de qué negocio es una dirección', () => {
   const raiz = 'ejemplo.mx';
@@ -53,5 +53,25 @@ describe('fotoDelNegocio: solo fotos del almacén y de este negocio', () => {
     expect(fotoDelNegocio('javascript:alert(1)', id)).toBeNull();
     expect(fotoDelNegocio('', id)).toBeNull();
     expect(fotoDelNegocio(null, id)).toBeNull();
+  });
+});
+
+describe('negocioDeLaRuta: el negocio va en el primer tramo de la dirección', () => {
+  it('separa el negocio del resto', () => {
+    expect(negocioDeLaRuta('/cafe/lealtad/tarjeta')).toEqual({
+      slug: 'cafe',
+      resto: '/lealtad/tarjeta',
+    });
+    expect(negocioDeLaRuta('/tacos-el-guero')).toEqual({ slug: 'tacos-el-guero', resto: '/' });
+    expect(negocioDeLaRuta('/cafe/')).toEqual({ slug: 'cafe', resto: '/' });
+  });
+
+  it('las rutas del sitio no son negocios', () => {
+    expect(negocioDeLaRuta('/')).toBeNull();
+    expect(negocioDeLaRuta('/lealtad/tarjeta')).toBeNull();
+    expect(negocioDeLaRuta('/admin')).toBeNull();
+    expect(negocioDeLaRuta('/api/cron/lealtad-fotos')).toBeNull();
+    expect(negocioDeLaRuta('/Cafe/lealtad')).toBeNull();
+    expect(negocioDeLaRuta('/favicon.ico')).toBeNull();
   });
 });

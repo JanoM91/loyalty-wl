@@ -17,7 +17,7 @@ import { negocioPorSlug, type Negocio } from '@wl/database';
 
 /** Cabecera interna con el subdominio. Solo la escribe el middleware. */
 export const CABECERA_NEGOCIO = 'x-wl-negocio';
-/** Cabecera interna con el origen público de la petición: "https://cafe.ejemplo.mx". */
+/** Cabecera interna con la dirección base del negocio: "https://sitio.mx/cafe". */
 export const CABECERA_ORIGEN = 'x-wl-origen';
 
 // Un negocio suspendido no atiende: ni su tarjeta ni su panel.
@@ -58,4 +58,21 @@ export async function origenDeLaPeticion(): Promise<string> {
 /** Dirección para mostrar, sin protocolo: "cafe.ejemplo.mx". */
 export async function sitioDeLaPeticion(): Promise<string> {
   return (await origenDeLaPeticion()).replace(/^https?:\/\//, '');
+}
+
+/**
+ * Tramo del negocio en la dirección: "/cafe" en la instalación compartida por
+ * ruta; "" en la privada y por subdominio. Es también la ruta de sus cookies.
+ */
+export async function rutaBase(): Promise<string> {
+  return (await headers()).get('x-wl-base') ?? '';
+}
+
+/**
+ * Una ruta interna con el tramo del negocio delante: `/lealtad` → `/cafe/lealtad`
+ * en la instalación compartida. Úsala en toda redirección:
+ * `redirect(await ruta('/lealtad'))`.
+ */
+export async function ruta(interna: string): Promise<string> {
+  return `${await rutaBase()}${interna}`;
 }

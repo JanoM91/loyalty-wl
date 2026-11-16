@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { rutaBase, ruta } from '@/lib/negocio';
 import {
   NOMBRE_COOKIE_TARJETA,
   cerrarSesionTarjeta,
@@ -33,7 +34,7 @@ export async function exigirTarjeta(): Promise<VistaTarjeta> {
         return null;
       })
     : null;
-  if (!tarjeta) redirect('/lealtad');
+  if (!tarjeta) redirect(await ruta('/lealtad'));
   return tarjeta;
 }
 
@@ -44,7 +45,9 @@ export async function guardarSesionTarjeta(token: string, expira: Date): Promise
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: '/',
+    // Solo viaja en las direcciones de este negocio: en la instalación
+    // compartida, la sesión de un negocio no pisa la de otro.
+    path: (await rutaBase()) || '/',
     expires: expira,
   });
 }
@@ -52,5 +55,5 @@ export async function guardarSesionTarjeta(token: string, expira: Date): Promise
 export async function cerrarSesionDeTarjeta(): Promise<void> {
   const galletas = await cookies();
   await cerrarSesionTarjeta(galletas.get(NOMBRE_COOKIE_TARJETA)?.value);
-  galletas.delete(NOMBRE_COOKIE_TARJETA);
+  galletas.delete({ name: NOMBRE_COOKIE_TARJETA, path: (await rutaBase()) || '/' });
 }

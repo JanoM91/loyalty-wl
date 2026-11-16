@@ -1,6 +1,7 @@
 import {
   PROGRAMA_BASE,
   esPrefijoCodigo,
+  esSlugDeNegocio,
   esZonaHorariaValida,
   type ProgramaLealtad,
 } from '@wl/domain';
@@ -66,15 +67,15 @@ export interface NegocioNuevo {
 export type ResultadoNegocio =
   { readonly ok: true; readonly negocio: Negocio } | { readonly ok: false; readonly error: string };
 
-const SLUG = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
-/** Subdominios que no pueden ser un negocio. */
-const RESERVADOS = new Set(['www', 'app', 'api', 'admin', 'plataforma', 'static', 'mail']);
-
 /** Crea un negocio con su programa inicial y sus sucursales. */
 export async function crearNegocio(d: NegocioNuevo): Promise<ResultadoNegocio> {
   const slug = d.slug.trim().toLowerCase();
-  if (!SLUG.test(slug) || RESERVADOS.has(slug)) {
-    return { ok: false, error: 'El subdominio solo lleva minúsculas, números y guiones.' };
+  if (!esSlugDeNegocio(slug)) {
+    return {
+      ok: false,
+      error:
+        'La dirección del negocio solo lleva minúsculas, números y guiones, y no puede ser una palabra reservada del sitio.',
+    };
   }
   if (d.nombre.trim().length < 2) return { ok: false, error: 'Escribe el nombre del negocio.' };
   const zona = d.zonaHoraria ?? 'America/Mexico_City';
@@ -86,7 +87,7 @@ export async function crearNegocio(d: NegocioNuevo): Promise<ResultadoNegocio> {
 
   const bd = clienteDuenio();
   const existente = await bd.tenant.findUnique({ where: { slug }, select: { id: true } });
-  if (existente) return { ok: false, error: `Ya existe un negocio con el subdominio «${slug}».` };
+  if (existente) return { ok: false, error: `Ya existe un negocio con la dirección «${slug}».` };
 
   const fila = await bd.tenant.create({
     data: {

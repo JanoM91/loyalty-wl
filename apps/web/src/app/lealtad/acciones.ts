@@ -31,7 +31,7 @@ import {
   tarjetaDeEsteNavegador,
 } from '@/lib/lealtad/sesion';
 import { avisarCambioDeTarjeta } from '@/lib/wallet/avisar';
-import { exigirNegocio, origenDeLaPeticion } from '@/lib/negocio';
+import { exigirNegocio, origenDeLaPeticion, ruta } from '@/lib/negocio';
 
 /**
  * Acciones del cliente en su tarjeta.
@@ -66,7 +66,7 @@ export async function crear(_previo: Estado, form: FormData): Promise<Estado> {
   if (!resultado.ok) return { error: resultado.error };
 
   await guardarSesionTarjeta(resultado.token, resultado.expira);
-  redirect('/lealtad/tarjeta?nueva=1');
+  redirect(await ruta('/lealtad/tarjeta?nueva=1'));
 }
 
 // ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ export async function crear(_previo: Estado, form: FormData): Promise<Estado> {
 
 export async function enviarCodigo(_previo: Estado): Promise<Estado> {
   const id = await tarjetaDeEsteNavegador();
-  if (!id) redirect('/lealtad');
+  if (!id) redirect(await ruta('/lealtad'));
 
   const emision = await emitirCodigoVerificacion(id);
   if (!emision.ok) return { error: emision.error };
@@ -105,13 +105,13 @@ export async function enviarCodigo(_previo: Estado): Promise<Estado> {
 
 export async function confirmarCodigo(_previo: Estado, form: FormData): Promise<Estado> {
   const id = await tarjetaDeEsteNavegador();
-  if (!id) redirect('/lealtad');
+  if (!id) redirect(await ruta('/lealtad'));
 
   const r = await verificarCodigo(id, String(form.get('codigo') ?? ''));
   if (!r.ok) return { error: r.error };
 
   revalidatePath('/lealtad', 'layout');
-  redirect('/lealtad/tarjeta?verificada=1');
+  redirect(await ruta('/lealtad/tarjeta?verificada=1'));
 }
 
 // ---------------------------------------------------------------------------
@@ -127,7 +127,7 @@ function entero(valor: FormDataEntryValue | null): number | null {
 
 export async function guardarPerfil(_previo: Estado, form: FormData): Promise<Estado> {
   const id = await tarjetaDeEsteNavegador();
-  if (!id) redirect('/lealtad');
+  if (!id) redirect(await ruta('/lealtad'));
 
   const r = await actualizarPerfil(id, {
     nombre: String(form.get('nombre') ?? ''),
@@ -143,18 +143,18 @@ export async function guardarPerfil(_previo: Estado, form: FormData): Promise<Es
 
 export async function guardarCorreo(_previo: Estado, form: FormData): Promise<Estado> {
   const id = await tarjetaDeEsteNavegador();
-  if (!id) redirect('/lealtad');
+  if (!id) redirect(await ruta('/lealtad'));
 
   const r = await cambiarCorreo(id, String(form.get('correo') ?? ''));
   if (!r.ok) return { error: r.error };
 
   revalidatePath('/lealtad', 'layout');
-  redirect('/lealtad/verificar');
+  redirect(await ruta('/lealtad/verificar'));
 }
 
 export async function guardarCelular(_previo: Estado, form: FormData): Promise<Estado> {
   const id = await tarjetaDeEsteNavegador();
-  if (!id) redirect('/lealtad');
+  if (!id) redirect(await ruta('/lealtad'));
 
   const r = await cambiarCelular(id, String(form.get('celular') ?? ''));
   if (!r.ok) return { error: r.error };
@@ -178,7 +178,7 @@ export async function entrar(_previo: Estado, form: FormData): Promise<Estado> {
   if (!r.ok) return { error: r.error };
 
   await guardarSesionTarjeta(r.token, r.expira);
-  redirect('/lealtad/tarjeta');
+  redirect(await ruta('/lealtad/tarjeta'));
 }
 
 /**
@@ -217,7 +217,7 @@ export async function olvide(_previo: Estado, form: FormData): Promise<Estado> {
 /** Primera contraseña con la sesión abierta (aviso «Crea tu contraseña»). */
 export async function crearContrasena(_previo: Estado, form: FormData): Promise<Estado> {
   const id = await tarjetaDeEsteNavegador();
-  if (!id) redirect('/lealtad');
+  if (!id) redirect(await ruta('/lealtad'));
 
   const r = await crearContrasenaTarjeta(id, String(form.get('clave') ?? ''));
   if (!r.ok) return { error: r.error };
@@ -232,7 +232,7 @@ export async function crearContrasena(_previo: Estado, form: FormData): Promise<
 
 export async function cambiarContrasena(_previo: Estado, form: FormData): Promise<Estado> {
   const id = await tarjetaDeEsteNavegador();
-  if (!id) redirect('/lealtad');
+  if (!id) redirect(await ruta('/lealtad'));
 
   const { ip } = await contextoPeticion();
   const r = await cambiarContrasenaTarjeta(
@@ -278,7 +278,7 @@ export async function entrarConEnlace(
   if (!r.ok) return { error: r.error, contrasena: r.contrasena };
 
   await guardarSesionTarjeta(r.token, r.expira);
-  redirect('/lealtad/tarjeta');
+  redirect(await ruta('/lealtad/tarjeta'));
 }
 
 // ---------------------------------------------------------------------------
@@ -293,13 +293,13 @@ export async function abrirMiTarjeta(_previo: Estado, form: FormData): Promise<E
   });
   if (!r.ok) return { error: 'Este enlace ya no sirve. Pide uno nuevo en caja.' };
   await guardarSesionTarjeta(r.token, r.expira);
-  redirect('/lealtad/tarjeta');
+  redirect(await ruta('/lealtad/tarjeta'));
 }
 
 /** Desde el perfil: el enlace anterior deja de servir y los pases llevan el nuevo. */
 export async function cambiarEnlacePersonal(_previo: Estado): Promise<Estado> {
   const id = await tarjetaDeEsteNavegador();
-  if (!id) redirect('/lealtad');
+  if (!id) redirect(await ruta('/lealtad'));
   const { ip } = await contextoPeticion();
   const token = await regenerarEnlacePersonal(id, { ip });
   if (!token) return { error: 'No se pudo cambiar el enlace. Inténtalo de nuevo.' };
@@ -310,5 +310,5 @@ export async function cambiarEnlacePersonal(_previo: Estado): Promise<Estado> {
 
 export async function salir(): Promise<void> {
   await cerrarSesionDeTarjeta();
-  redirect('/lealtad');
+  redirect(await ruta('/lealtad'));
 }

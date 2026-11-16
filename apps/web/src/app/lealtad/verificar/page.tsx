@@ -5,14 +5,15 @@ import { exigirTarjeta } from '@/lib/lealtad/sesion';
 import { CORREO_CONFIGURADO } from '@/lib/correo';
 import { Aviso } from '@/components/lealtad/Aviso';
 import { FormularioVerificar } from './FormularioVerificar';
+import { ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Verifica tu correo' };
 export const dynamic = 'force-dynamic';
 
 export default async function VerificarPage() {
   const t = await exigirTarjeta();
-  if (!t.correo) redirect('/lealtad/perfil#correo');
-  if (t.correoVerificado) redirect('/lealtad/tarjeta');
+  if (!t.correo) redirect(await ruta('/lealtad/perfil#correo'));
+  if (t.correoVerificado) redirect(await ruta('/lealtad/tarjeta'));
 
   return (
     <>

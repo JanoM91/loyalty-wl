@@ -1,31 +1,41 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { esSlugDeNegocio } from '@wl/domain';
 
 /**
- * Dos trabajos en cada petición:
+ * Dos trabajos en cada petición.
  *
- * 1. **De qué negocio es.** Saca el subdominio del `Host` y lo deja en una
- *    cabecera interna. `cafe.<dominio raíz>` → `cafe`. Cualquier valor de esa
- *    cabecera que mande el navegador se descarta: el negocio lo decide la
- *    dirección, no quien pide.
- * 2. **Primera puerta del panel.** Sin cookie de sesión, `/admin` manda a la
- *    pantalla de acceso. No valida la cookie (aquí no hay base de datos): la
- *    comprobación de verdad la hace `exigirSesion()` en cada página.
+ * **1. De qué negocio es.** Hay tres formas de instalación y las tres acaban
+ * igual: una cabecera interna con el negocio y otra con su dirección base.
+ *
+ * - *Compartida (lite), por ruta*: `sitio.mx/cafe/lealtad`. El primer tramo es
+ *   el negocio; por dentro se atiende como `/lealtad`. Es la forma principal.
+ * - *Privada*: `WL_NEGOCIO_UNICO=cafe`. Todo el dominio es de ese negocio.
+ * - *Por subdominio*: `cafe.sitio.mx` (o `cafe.localhost` al desarrollar).
+ *
+ * Las pantallas enlazan a `/lealtad/...` y `/admin/...` sin el tramo del
+ * negocio. En la instalación por ruta, una petición así se redirige a la
+ * dirección completa: el negocio sale de la página desde la que se llegó y, si
+ * no la hay, del último negocio visitado en ese navegador.
+ *
+ * Cualquier valor de las cabeceras internas que mande el navegador se
+ * descarta. Elegir negocio no da permisos: las sesiones se buscan dentro del
+ * negocio elegido y sus cookies solo viajan en su propia ruta.
+ *
+ * **2. Primera puerta del panel.** Sin cookie de sesión, `/admin` manda a la
+ * pantalla de acceso. La comprobación de verdad la hace `exigirSesion()`.
  */
 
 const CABECERA_NEGOCIO = 'x-wl-negocio';
 const CABECERA_ORIGEN = 'x-wl-origen';
+const CABECERA_BASE = 'x-wl-base';
 const CABECERA_RUTA = 'x-ruta-panel';
 const COOKIE_PANEL = 'wl_admin';
-
-const SLUG = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
-/** Subdominios que no son negocios. */
-const RESERVADOS = new Set(['www', 'app', 'api', 'admin', 'plataforma']);
+/** Último negocio visitado: solo sirve para completar direcciones sin negocio. */
+const COOKIE_NEGOCIO = 'wl_negocio';
 
 /**
- * El subdominio del negocio, o null si la dirección es la de la plataforma.
- *
- * `WL_DOMINIO_RAIZ` es el dominio de plataforma ("ejemplo.mx"). En desarrollo
- * también vale `<negocio>.localhost`, que los navegadores resuelven solos.
+ * El negocio de un subdominio, o null. `raiz` es el dominio de plataforma;
+ * al desarrollar también vale `<negocio>.localhost`.
  */
 export function slugDelHost(host: string, raiz: string | undefined): string | null {
   const nombre = host.toLowerCase().split(':')[0] ?? '';
@@ -35,55 +45,114 @@ export function slugDelHost(host: string, raiz: string | undefined): string | nu
   } else if (raiz && nombre.endsWith(`.${raiz.toLowerCase()}`)) {
     etiqueta = nombre.slice(0, -(raiz.length + 1));
   }
-  if (!etiqueta || !SLUG.test(etiqueta) || RESERVADOS.has(etiqueta)) return null;
-  return etiqueta;
+  return etiqueta && esSlugDeNegocio(etiqueta) ? etiqueta : null;
+}
+
+/** Parte una ruta en negocio y resto: `/cafe/lealtad/x` → `cafe` y `/lealtad/x`. */
+export function negocioDeLaRuta(ruta: string): { slug: string; resto: string } | null {
+  const [, primero = '', ...demas] = ruta.split('/');
+  if (!esSlugDeNegocio(primero)) return null;
+  return { slug: primero, resto: `/${demas.join('/')}` };
+}
+
+/** ¿Es una pantalla de un negocio (tarjeta o panel) escrita sin su negocio? */
+function esRutaDeNegocio(ruta: string): boolean {
+  return /^\/(lealtad|admin)(\/|$)/.test(ruta);
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
   // `x-forwarded-host` primero: es la dirección que escribió la persona. La
   // pone la plataforma (Vercel la sobrescribe) y también Next cuando, tras una
-  // acción de servidor, pide por dentro la página a la que redirige; en ese
-  // caso `host` es el del propio servidor. Elegir negocio no da ningún
-  // permiso: las sesiones se buscan dentro del negocio elegido.
+  // acción de servidor, pide por dentro la página a la que redirige.
   const host = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '')
     .split(',')[0]!
     .trim();
-  // Instalación privada: un solo negocio, en cualquier dominio que apunte aquí.
+  const protocolo =
+    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ??
+    request.nextUrl.protocol.replace(':', '');
+  const origen = `${protocolo}://${host}`;
+
+  let slug: string | null = null;
+  let base = '';
+  let interna = pathname;
+
   const unico = process.env.WL_NEGOCIO_UNICO?.trim().toLowerCase();
-  const slug = unico && SLUG.test(unico) ? unico : slugDelHost(host, process.env.WL_DOMINIO_RAIZ);
+  if (unico && esSlugDeNegocio(unico)) {
+    slug = unico;
+  } else {
+    slug = slugDelHost(host, process.env.WL_DOMINIO_RAIZ);
+    if (!slug) {
+      const porRuta = negocioDeLaRuta(pathname);
+      if (porRuta) {
+        slug = porRuta.slug;
+        base = `/${porRuta.slug}`;
+        interna = porRuta.resto;
+      } else if (esRutaDeNegocio(pathname)) {
+        // Dirección sin negocio: se completa y se vuelve a pedir.
+        const desde = request.headers.get('referer');
+        let previo: string | null = null;
+        try {
+          const u = desde ? new URL(desde) : null;
+          if (u && u.host === host) previo = negocioDeLaRuta(u.pathname)?.slug ?? null;
+        } catch {
+          previo = null;
+        }
+        const recordado = request.cookies.get(COOKIE_NEGOCIO)?.value ?? '';
+        const destino = previo ?? (esSlugDeNegocio(recordado) ? recordado : null);
+        if (destino) {
+          const respuesta = NextResponse.redirect(
+            new URL(`/${destino}${pathname}${search}`, origen),
+            307,
+          );
+          respuesta.headers.set('Cache-Control', 'no-store');
+          return respuesta;
+        }
+      }
+    }
+  }
 
   const cabeceras = new Headers(request.headers);
-  cabeceras.delete(CABECERA_NEGOCIO);
-  cabeceras.delete(CABECERA_ORIGEN);
-  cabeceras.delete(CABECERA_RUTA);
+  for (const c of [CABECERA_NEGOCIO, CABECERA_ORIGEN, CABECERA_BASE, CABECERA_RUTA])
+    cabeceras.delete(c);
   if (slug) cabeceras.set(CABECERA_NEGOCIO, slug);
-  const protocolo =
-    request.headers.get('x-forwarded-proto') ?? request.nextUrl.protocol.replace(':', '');
-  cabeceras.set(CABECERA_ORIGEN, `${protocolo}://${host}`);
+  cabeceras.set(CABECERA_BASE, base);
+  cabeceras.set(CABECERA_ORIGEN, `${origen}${base}`);
 
-  if (pathname.startsWith('/admin')) {
+  if (slug && interna.startsWith('/admin')) {
     const publica =
-      pathname === '/admin/entrar' ||
-      pathname === '/admin/entrar/recuperar' ||
-      pathname.startsWith('/admin/contrasena/');
+      interna === '/admin/entrar' ||
+      interna === '/admin/entrar/recuperar' ||
+      interna.startsWith('/admin/contrasena/');
     if (!publica) {
       if (!request.cookies.get(COOKIE_PANEL)?.value) {
-        const destino = request.nextUrl.clone();
-        destino.pathname = '/admin/entrar';
-        destino.search = '';
-        const respuesta = NextResponse.redirect(destino);
+        const respuesta = NextResponse.redirect(new URL(`${base}/admin/entrar`, origen));
         // Ni el navegador ni la CDN deben guardar esta redirección.
         respuesta.headers.set('Cache-Control', 'no-store');
         return respuesta;
       }
       // La ruta viaja en una cabecera para que `exigirSesion()` sepa en qué
       // pantalla está y pueda mandar a la caja a las cuentas de sucursal.
-      cabeceras.set(CABECERA_RUTA, pathname);
+      cabeceras.set(CABECERA_RUTA, interna);
     }
   }
 
-  return NextResponse.next({ request: { headers: cabeceras } });
+  let respuesta: NextResponse;
+  if (base) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = interna;
+    respuesta = NextResponse.rewrite(destino, { request: { headers: cabeceras } });
+    respuesta.cookies.set(COOKIE_NEGOCIO, slug!, {
+      path: '/',
+      sameSite: 'lax',
+      httpOnly: true,
+      secure: protocolo === 'https',
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  } else {
+    respuesta = NextResponse.next({ request: { headers: cabeceras } });
+  }
+  return respuesta;
 }
 
 export const config = {

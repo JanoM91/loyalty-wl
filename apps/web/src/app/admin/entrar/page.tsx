@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { sesionActual } from '@/lib/admin/sesion';
 import { FormularioAcceso } from './FormularioAcceso';
 import { LogoMarca } from '@/components/Marca';
+import { ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = {
   title: 'Entrar · Panel',
@@ -19,7 +20,7 @@ export default async function EntrarPage({
   searchParams: Promise<{ contrasena?: string }>;
 }) {
   // Quien ya tiene sesión no necesita ver esta pantalla.
-  if (await sesionActual()) redirect('/admin');
+  if (await sesionActual()) redirect(await ruta('/admin'));
   const { contrasena } = await searchParams;
 
   return (

@@ -4,7 +4,7 @@ import { prisma, programaVigente } from '@wl/database';
 
 import { tarjetaDeEsteNavegador } from '@/lib/lealtad/sesion';
 import { Portada } from '../../Portada';
-import { exigirNegocio } from '@/lib/negocio';
+import { exigirNegocio, ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Únete al programa' };
 export const dynamic = 'force-dynamic';
@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function UnetePage({ params }: { params: Promise<{ sucursal: string }> }) {
   const { sucursal: slug } = await params;
-  if (await tarjetaDeEsteNavegador()) redirect('/lealtad/tarjeta');
+  if (await tarjetaDeEsteNavegador()) redirect(await ruta('/lealtad/tarjeta'));
 
   const sucursal = await prisma.branch.findFirst({
     where: { slug },

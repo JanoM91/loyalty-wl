@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { exigirSesion } from '@/lib/admin/sesion';
+import { ruta } from '@/lib/negocio';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,5 +11,5 @@ export const dynamic = 'force-dynamic';
  */
 export default async function AdminInicioPage() {
   await exigirSesion();
-  redirect('/admin/lealtad');
+  redirect(await ruta('/admin/lealtad'));
 }

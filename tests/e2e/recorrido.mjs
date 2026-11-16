@@ -6,7 +6,7 @@
  *
  *   node tests/e2e/recorrido.mjs <slug> <correo-del-dueño> <carpeta-de-capturas>
  *
- * Necesita la aplicación corriendo en http://<slug>.localhost:3200, las
+ * Necesita la aplicación corriendo en http://localhost:3200, las
  * variables de la base (DATABASE_URL, DIRECT_URL) y Chrome con Playwright.
  */
 import { execFileSync } from 'node:child_process';
@@ -18,7 +18,9 @@ const PW = process.env.PLAYWRIGHT_PATH ?? 'playwright';
 const { chromium } = await import(PW);
 
 const [slug, correoDuenio, carpeta = 'capturas'] = process.argv.slice(2);
-const BASE = `http://${slug}.localhost:3200`;
+// Instalación compartida: el negocio va en la ruta. Para probar otra forma,
+// pasa BASE (por ejemplo http://cafe-demo.localhost:3200).
+const BASE = process.env.BASE ?? `http://localhost:3200/${slug}`;
 const BD = path.resolve(import.meta.dirname, '../../packages/database');
 mkdirSync(carpeta, { recursive: true });
 

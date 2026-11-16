@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { exigirNegocio } from '@/lib/negocio';
+import { exigirNegocio, rutaBase } from '@/lib/negocio';
 import { NOMBRE_COOKIE_TARJETA, enlacePersonalDeTarjeta, leerSesionTarjeta } from '@wl/database';
 
 export const dynamic = 'force-dynamic';
@@ -20,10 +20,11 @@ export async function GET() {
   const galletas = await cookies();
   const cardId = await leerSesionTarjeta(galletas.get(NOMBRE_COOKIE_TARJETA)?.value);
 
-  let inicio = '/lealtad/app';
+  const base = await rutaBase();
+  let inicio = `${base}/lealtad/app`;
   if (cardId) {
     const token = await enlacePersonalDeTarjeta(cardId);
-    if (token) inicio = `/lealtad/app?mi=${token}`;
+    if (token) inicio = `${base}/lealtad/app?mi=${token}`;
   }
 
   const negocio = await exigirNegocio();
@@ -32,9 +33,9 @@ export async function GET() {
     name: `${negocio.nombre} · Tarjeta de lealtad`,
     short_name: negocio.nombre.slice(0, 12),
     description: `Tu tarjeta de lealtad de ${negocio.nombre}: estampas, premios y tu código para caja.`,
-    id: '/lealtad/app',
+    id: `${base}/lealtad/app`,
     start_url: inicio,
-    scope: '/lealtad',
+    scope: `${base}/lealtad`,
     display: 'standalone',
     orientation: 'portrait',
     background_color: negocio.marca.colores.fondo,

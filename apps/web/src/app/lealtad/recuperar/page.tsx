@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { Aviso } from '@/components/lealtad/Aviso';
 import { tarjetaDeEsteNavegador } from '@/lib/lealtad/sesion';
 import { FormularioRecuperar } from './FormularioRecuperar';
+import { ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Olvidé mi contraseña' };
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ export const dynamic = 'force-dynamic';
  * respuesta es la misma en todos los casos.
  */
 export default async function RecuperarPage() {
-  if (await tarjetaDeEsteNavegador()) redirect('/lealtad/tarjeta');
+  if (await tarjetaDeEsteNavegador()) redirect(await ruta('/lealtad/tarjeta'));
   return (
     <>
       <div className="grid gap-1">

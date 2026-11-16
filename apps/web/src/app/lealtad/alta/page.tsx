@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { tarjetaDeEsteNavegador } from '@/lib/lealtad/sesion';
 import { FormularioAlta } from './FormularioAlta';
+import { ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Crea tu tarjeta' };
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ export default async function AltaPage({
 }: {
   searchParams: Promise<{ sucursal?: string }>;
 }) {
-  if (await tarjetaDeEsteNavegador()) redirect('/lealtad/tarjeta');
+  if (await tarjetaDeEsteNavegador()) redirect(await ruta('/lealtad/tarjeta'));
   const { sucursal } = await searchParams;
 
   return (

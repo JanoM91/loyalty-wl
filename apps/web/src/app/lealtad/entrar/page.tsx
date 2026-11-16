@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { tarjetaDeEsteNavegador } from '@/lib/lealtad/sesion';
 import { FormularioEntrar } from './FormularioEntrar';
+import { ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Entra a tu tarjeta' };
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic';
  * acceso («Olvidé mi contraseña» o el que le dan en caja).
  */
 export default async function EntrarPage() {
-  if (await tarjetaDeEsteNavegador()) redirect('/lealtad/tarjeta');
+  if (await tarjetaDeEsteNavegador()) redirect(await ruta('/lealtad/tarjeta'));
   return (
     <>
       <div className="grid gap-1">

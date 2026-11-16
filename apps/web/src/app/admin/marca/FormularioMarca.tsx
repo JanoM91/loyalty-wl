@@ -2,7 +2,7 @@
 
 import { useActionState, useState, type CSSProperties } from 'react';
 import type { MarcaNegocio, PlantillaMarca } from '@wl/database';
-import type { ProgramaLealtad } from '@wl/domain';
+import { COMBINACIONES, type ProgramaLealtad } from '@wl/domain';
 
 import { ProveedorMarca } from '@/components/Marca';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
@@ -15,76 +15,6 @@ const PLANTILLAS: readonly { id: PlantillaMarca; nombre: string; nota: string }[
   { id: 'aire', nombre: 'Aire', nota: 'Clara y mínima' },
   { id: 'noche', nombre: 'Noche', nota: 'Para fondos oscuros' },
   { id: 'calida', nombre: 'Cálida', nota: 'Serif, artesanal' },
-];
-
-/** Combinaciones ya revisadas: un toque y la tarjeta cambia. */
-const COMBINACIONES: readonly { nombre: string; plantilla: PlantillaMarca; colores: Colores }[] = [
-  {
-    nombre: 'Grafito',
-    plantilla: 'aire',
-    colores: {
-      fondo: '#1d1d1f',
-      sobreFondo: '#ffffff',
-      acento: '#ffd60a',
-      papel: '#f5f5f7',
-      tinta: '#1d1d1f',
-    },
-  },
-  {
-    nombre: 'Cobalto',
-    plantilla: 'aire',
-    colores: {
-      fondo: '#1f3fff',
-      sobreFondo: '#ffffff',
-      acento: '#c8ff3d',
-      papel: '#f3f5fb',
-      tinta: '#0b1437',
-    },
-  },
-  {
-    nombre: 'Mandarina',
-    plantilla: 'aire',
-    colores: {
-      fondo: '#ff5a1f',
-      sobreFondo: '#1c0b02',
-      acento: '#fff1d6',
-      papel: '#fff8f1',
-      tinta: '#2a1206',
-    },
-  },
-  {
-    nombre: 'Salvia',
-    plantilla: 'aire',
-    colores: {
-      fondo: '#dfe8d8',
-      sobreFondo: '#16271b',
-      acento: '#16271b',
-      papel: '#f7f8f4',
-      tinta: '#16271b',
-    },
-  },
-  {
-    nombre: 'Medianoche',
-    plantilla: 'noche',
-    colores: {
-      fondo: '#f2f2ee',
-      sobreFondo: '#0c0c0d',
-      acento: '#6d4aff',
-      papel: '#0c0c0d',
-      tinta: '#f2f2ee',
-    },
-  },
-  {
-    nombre: 'Horno',
-    plantilla: 'calida',
-    colores: {
-      fondo: '#3b2417',
-      sobreFondo: '#fbf3e6',
-      acento: '#e9b872',
-      papel: '#f6eee1',
-      tinta: '#2b1a10',
-    },
-  },
 ];
 
 const COLORES: readonly { id: keyof Colores; nombre: string; nota: string }[] = [
@@ -191,7 +121,7 @@ export function FormularioMarca({
           <div className="flex flex-wrap gap-2">
             {COMBINACIONES.map((c) => (
               <button
-                key={c.nombre}
+                key={c.id}
                 type="button"
                 onClick={() => {
                   setColores(c.colores);

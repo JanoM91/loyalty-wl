@@ -1,6 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { NOMBRE_COOKIE, leerSesion, type Sesion, type UserRole } from '@wl/database';
+import { rutaBase, ruta } from '@/lib/negocio';
 
 /**
  * Sesión del panel, vista desde la aplicación web.
@@ -29,7 +30,7 @@ export async function sesionActual(): Promise<Sesion | null> {
  */
 export async function exigirSesion(): Promise<Sesion> {
   const sesion = await sesionActual();
-  if (!sesion) redirect('/admin/entrar');
+  if (!sesion) redirect(await ruta('/admin/entrar'));
   if (sesion.rol === 'SUCURSAL') await confinarACaja();
   return sesion;
 }
@@ -48,10 +49,10 @@ const RUTAS_SUCURSAL = ['/admin/lealtad/caja', '/admin/cuenta', '/admin/entrar']
  * servidor, por ejemplo), no se redirige: la acción ya comprueba su rol.
  */
 async function confinarACaja(): Promise<void> {
-  const ruta = (await headers()).get('x-ruta-panel');
-  if (!ruta) return;
-  if (RUTAS_SUCURSAL.some((r) => ruta === r || ruta.startsWith(`${r}/`))) return;
-  redirect('/admin/lealtad/caja');
+  const actual = (await headers()).get('x-ruta-panel');
+  if (!actual) return;
+  if (RUTAS_SUCURSAL.some((r) => actual === r || actual.startsWith(`${r}/`))) return;
+  redirect(await ruta('/admin/lealtad/caja'));
 }
 
 /**
@@ -63,7 +64,7 @@ async function confinarACaja(): Promise<void> {
  */
 export async function exigirRol(permitidos: readonly UserRole[]): Promise<Sesion> {
   const sesion = await exigirSesion();
-  if (!permitidos.includes(sesion.rol)) redirect('/admin?sin-permiso=1');
+  if (!permitidos.includes(sesion.rol)) redirect(await ruta('/admin?sin-permiso=1'));
   return sesion;
 }
 
@@ -91,7 +92,9 @@ export async function guardarSesionEnNavegador(token: string, expira: Date): Pro
     // petición a este. Es lo que impide que una página ajena ejecute acciones
     // del panel en nombre de quien tiene sesión abierta.
     sameSite: 'lax',
-    path: '/',
+    // Solo viaja en las direcciones de este negocio: en la instalación
+    // compartida, la sesión de un negocio no pisa la de otro.
+    path: (await rutaBase()) || '/',
     expires: expira,
   });
 }

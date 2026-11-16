@@ -1,6 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import { ZONA_HORARIA_POR_OMISION, esPrefijoCodigo, esZonaHorariaValida } from '@wl/domain';
+import {
+  ZONA_HORARIA_POR_OMISION,
+  esPrefijoCodigo,
+  esZonaHorariaValida,
+  type ColoresMarca,
+} from '@wl/domain';
 
 import { base } from './cliente';
 
@@ -23,18 +28,7 @@ import { base } from './cliente';
 // Marca y ajustes
 // ---------------------------------------------------------------------------
 
-export interface ColoresMarca {
-  /** Fondo de la tarjeta, de la cabecera y de los pases. */
-  readonly fondo: string;
-  /** Texto sobre `fondo`. */
-  readonly sobreFondo: string;
-  /** Acento decorativo (etiquetas, sellos). No es color de acción. */
-  readonly acento: string;
-  /** Fondo de la página. */
-  readonly papel: string;
-  /** Texto principal sobre `papel`. */
-  readonly tinta: string;
-}
+export type { ColoresMarca };
 
 /**
  * Plantilla de diseño: decide tipografía, formas y el carácter general. Los
