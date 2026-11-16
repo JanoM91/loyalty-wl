@@ -1,7 +1,7 @@
 # PROMPT MAESTRO · Loyalty WL (programa de lealtad white label)
 
 > Versión 1.1 · 14 nov 2026 · Redactado por Claude Sonnet 5.5; corregido por Claude Fable 5.2 al cerrar la Fase 0 (ver «Correcciones de la Fase 0» en §4).
-> **Estado (15 nov 2026): Fase 0 entregada y sus decisiones aprobadas por Jano (`docs/00-decisiones.md` §0). El arranque de la Fase 1 espera su visto bueno explícito. No hay código de producto.**
+> **Estado (15 nov 2026): Fases 0, 1 y 2 entregadas (`docs/03-estado-fases-1-2.md`). La Fase 3 espera el visto bueno explícito de Jano. Lee primero «Correcciones de las Fases 1 y 2» en §4.**
 
 ## Cómo usarlo (para Jano)
 
