@@ -13,34 +13,29 @@ const LATERALES_DER: readonly Seccion[] = [
 ];
 
 /**
- * Barra inferior de la tarjeta: Premios · Historial · Mi tarjeta · Perfil ·
- * Reglas.
+ * Barra flotante de la tarjeta: Mi tarjeta, Premios, Historial, Perfil y
+ * Reglas. Solo íconos; la sección en la que estás va rellena.
  *
  * Abajo y no arriba: en el celular es donde llega el pulgar, y el cliente la
- * usa de pie frente a la caja con la compra en la otra mano. La tarjeta va al
- * centro y resaltada: es lo que se abre frente a la caja.
+ * usa de pie frente a la caja con la compra en la otra mano.
  */
 export function NavTarjeta({ actual, premiosListos }: { actual: string; premiosListos: number }) {
-  const lateral = (s: Seccion) => {
+  const enlace = (s: Seccion) => {
     const activa = actual === s.href;
     return (
       <li key={s.href}>
         <a
           href={s.href}
           aria-current={activa ? 'page' : undefined}
-          className={`relative grid min-h-[60px] justify-items-center gap-0.5 px-1 pt-2 pb-2.5 text-[11.5px] ${activa ? 'font-semibold text-ink' : 'text-muted hover:text-ink'}`}
+          aria-label={s.etiqueta}
+          title={s.etiqueta}
+          className={`relative grid h-12 place-items-center rounded-full transition-colors ${activa ? 'bg-ink text-cream' : 'text-muted hover:text-ink'}`}
         >
-          <Icono
-            nombre={s.icono}
-            width={22}
-            height={22}
-            className={activa ? 'text-crust' : undefined}
-          />
-          {s.etiqueta}
+          <Icono nombre={s.icono} width={22} height={22} />
           {s.href === '/lealtad/premios' && premiosListos > 0 && (
             <span
               aria-label={`${premiosListos} listos`}
-              className="absolute top-1 left-[calc(50%+6px)] grid h-[17px] min-w-[17px] place-items-center rounded-full bg-crust-dark px-1 text-[10.5px] font-bold text-cream"
+              className="absolute top-1 right-[calc(50%-18px)] grid h-[17px] min-w-[17px] place-items-center rounded-full bg-crust px-1 text-[11px] font-bold text-[var(--wl-fondo)]"
             >
               {premiosListos}
             </span>
@@ -50,31 +45,14 @@ export function NavTarjeta({ actual, premiosListos }: { actual: string; premiosL
     );
   };
 
-  const tarjetaActiva = actual === TARJETA.href;
-
   return (
     <nav
       aria-label="Secciones de tu tarjeta"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-rule bg-cream/95 backdrop-blur"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed inset-x-0 bottom-0 z-30 px-5"
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 14px)' }}
     >
-      <ul className="mx-auto grid max-w-md grid-cols-5 items-start px-1">
-        {LATERALES_IZQ.map(lateral)}
-        <li>
-          <a
-            href={TARJETA.href}
-            aria-current={tarjetaActiva ? 'page' : undefined}
-            className="-mt-[22px] grid justify-items-center gap-1 pb-2.5 text-[11.5px] font-semibold text-ink"
-          >
-            <span
-              className={`grid h-[60px] w-[60px] place-items-center rounded-full border-[3px] bg-ink text-crust-light shadow-[0_10px_22px_-10px_rgba(20,16,12,0.65)] ${tarjetaActiva ? 'border-crust-light' : 'border-ink'}`}
-            >
-              <Icono nombre={TARJETA.icono} width={26} height={26} />
-            </span>
-            {TARJETA.etiqueta}
-          </a>
-        </li>
-        {LATERALES_DER.map(lateral)}
+      <ul className="mx-auto grid max-w-[22rem] grid-cols-5 gap-1 rounded-full border border-rule bg-cream/85 p-1.5 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+        {[TARJETA, ...LATERALES_IZQ, ...LATERALES_DER].map(enlace)}
       </ul>
     </nav>
   );

@@ -360,7 +360,7 @@ export function Caja({
                 autoFocus
                 autoComplete="off"
                 placeholder={marca.ejemploCodigo}
-                className={`${CAMPO} font-mono uppercase`}
+                className={`${CAMPO} font-mono`}
               />
               <button
                 type="submit"

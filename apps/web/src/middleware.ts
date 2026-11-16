@@ -49,7 +49,9 @@ export function middleware(request: NextRequest) {
   const host = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '')
     .split(',')[0]!
     .trim();
-  const slug = slugDelHost(host, process.env.WL_DOMINIO_RAIZ);
+  // Instalación privada: un solo negocio, en cualquier dominio que apunte aquí.
+  const unico = process.env.WL_NEGOCIO_UNICO?.trim().toLowerCase();
+  const slug = unico && SLUG.test(unico) ? unico : slugDelHost(host, process.env.WL_DOMINIO_RAIZ);
 
   const cabeceras = new Headers(request.headers);
   cabeceras.delete(CABECERA_NEGOCIO);

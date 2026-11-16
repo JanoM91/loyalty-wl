@@ -62,9 +62,7 @@ export default async function PremiosPage() {
       )}
 
       <section className="grid gap-2">
-        <h2 className="font-sans text-[11px] font-semibold tracking-[0.14em] text-muted uppercase">
-          Qué incluye cada premio
-        </h2>
+        <h2 className="font-sans text-[11px] font-semibold text-muted">Qué incluye cada premio</h2>
         <ul className="divide-y divide-rule overflow-hidden rounded-lg border border-rule bg-cream">
           {programa.hitos.map((h) => (
             <li key={h.posicion} className="flex items-start gap-3 px-3.5 py-3">
@@ -84,9 +82,7 @@ export default async function PremiosPage() {
 
       {entregados.length > 0 && (
         <section className="grid gap-2">
-          <h2 className="font-sans text-[11px] font-semibold tracking-[0.14em] text-muted uppercase">
-            Ya entregados
-          </h2>
+          <h2 className="font-sans text-[11px] font-semibold text-muted">Ya entregados</h2>
           <ul className="divide-y divide-rule overflow-hidden rounded-lg border border-rule bg-cream">
             {entregados.map((p) => (
               <li key={p.id} className="flex items-center gap-3 px-3.5 py-3 text-sm">

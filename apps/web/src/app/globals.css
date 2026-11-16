@@ -1,113 +1,171 @@
 @import 'tailwindcss';
 
 /**
- * Tokens de plataforma expuestos como utilidades de Tailwind.
+ * Sistema de diseño de Loyalty WL.
  *
- * Tailwind genera clases como `bg-ink` y `text-cream` y además publica cada
- * token como variable CSS. Eso permite que la marca de cada negocio los
- * reemplace en tiempo de ejecución (ver `estiloDeMarca` en lib/marca.ts) sin
- * recompilar nada. Los valores de aquí son los de un negocio sin marca.
+ * Tres capas:
+ * 1. **Marca** (`--wl-*`): los cinco colores de cada negocio. Los pone
+ *    `estiloDeMarca` en el `<html>`; aquí están los de un negocio sin marca.
+ * 2. **Plantilla** (`data-plantilla`): tipografía, formas y cómo se derivan
+ *    las superficies. `aire` (clara y mínima), `noche` (oscura), `calida` (serif).
+ * 3. **Utilidades** (`@theme`): los nombres que usan las pantallas.
  *
- * Qué pinta cada uno:
- * - ink: superficies oscuras (cabecera, tarjeta) y texto sobre claro.
- * - cream: texto sobre ink y superficies claras.
- * - crumb: fondo de la página.
- * - crust-light: acento sobre ink (etiquetas, sellos). Decora; no es color de acción.
+ * Qué significa cada nombre en las pantallas (heredados del código portado):
+ * - `bg-ink`: superficie de marca (tarjeta, botón principal). `text-ink`: texto.
+ * - `text-cream`: texto sobre la superficie de marca. `bg-cream`: tarjetas y campos.
+ * - `bg-crumb`: fondo de la página. `rule`: líneas. `muted`: texto secundario.
+ * - `crust`: acento. Solo rellena o bordea, o es texto sobre la superficie de
+ *   marca; como texto sobre claro se vuelve tinta, para que siempre se lea.
  */
-@theme {
-  --color-ink: #14100c;
-  --color-ink-soft: #4a3a2c;
-  --color-muted: #6b5c4e;
+:root {
+  --wl-fondo: #1d1d1f;
+  --wl-sobre: #ffffff;
+  --wl-acento: #ffd60a;
+  --wl-papel: #f5f5f7;
+  --wl-tinta: #1d1d1f;
+}
 
-  --color-crust: #b0632b;
-  --color-crust-dark: #8e4e1f;
-  --color-crust-light: #d9a05b;
-  --color-accent: var(--color-crust);
+/* Plantilla «aire» (por omisión). Se repite en cualquier elemento con
+   `data-plantilla` para que una vista previa pueda llevar su propia marca. */
+:root,
+[data-plantilla] {
+  --wl-superficie: color-mix(in srgb, var(--wl-papel) 20%, #ffffff);
+  --wl-linea: color-mix(in srgb, var(--wl-tinta) 10%, transparent);
+  --wl-suave: color-mix(in srgb, var(--wl-tinta) 58%, var(--wl-papel));
+  --wl-fuente-titulos: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --wl-fuente-texto: 'Onest Variable', ui-sans-serif, system-ui, sans-serif;
+  --wl-peso-titulos: 620;
+  --wl-apretado: -0.035em;
+  --wl-radio: 1;
+}
 
-  --color-crumb: #f3ece1;
-  --color-cream: #fbf7f1;
-  --color-rule: #e0d4c2;
+[data-plantilla='noche'] {
+  --wl-superficie: color-mix(in srgb, var(--wl-papel) 88%, var(--wl-tinta));
+  --wl-linea: color-mix(in srgb, var(--wl-tinta) 14%, transparent);
+}
 
-  --color-forest: #3e5641;
-  --color-success: #4a7a3a;
-  --color-warning: #c9821f;
-  --color-danger: #a34a3a;
+[data-plantilla='calida'] {
+  --wl-superficie: color-mix(in srgb, var(--wl-papel) 45%, #ffffff);
+  --wl-fuente-titulos: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --wl-fuente-texto: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --wl-peso-titulos: 500;
+  --wl-apretado: -0.01em;
+  --wl-radio: 0.45;
+}
+
+@theme inline {
+  --color-ink: var(--wl-tinta);
+  --background-color-ink: var(--wl-fondo);
+  --color-ink-soft: color-mix(in srgb, var(--wl-tinta) 82%, var(--wl-papel));
+  --color-muted: var(--wl-suave);
+
+  --color-cream: var(--wl-sobre);
+  --background-color-cream: var(--wl-superficie);
+  --color-crumb: var(--wl-papel);
+  --color-rule: var(--wl-linea);
+
+  --color-crust: var(--wl-acento);
+  --color-crust-light: var(--wl-acento);
+  --color-crust-dark: var(--wl-tinta);
+  --text-color-crust: var(--wl-tinta);
+  --background-color-crust-dark: var(--wl-fondo);
+  --color-accent: var(--wl-acento);
 
   /* Estados con significado (listo, aviso, error). No cambian con la marca. */
+  --color-forest: #2f6b3f;
+  --color-success: #2f6b3f;
+  --color-warning: #b26a00;
+  --color-danger: #c0362c;
   --color-disponible: #2f6b3f;
   --color-vuelve: #1e5a82;
-  --color-agotado: #9a5518;
+  --color-agotado: #b26a00;
 
-  --font-display: Georgia, 'Times New Roman', serif;
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--wl-fuente-titulos);
+  --font-sans: var(--wl-fuente-texto);
+
+  /* Formas: generosas en «aire», contenidas en «calida». */
+  --radius-sm: calc(12px * var(--wl-radio));
+  --radius-md: calc(16px * var(--wl-radio));
+  --radius-lg: calc(22px * var(--wl-radio));
+  --radius-xl: calc(30px * var(--wl-radio));
 }
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
   body {
-    background-color: var(--color-cream);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
+    background-color: var(--wl-papel);
+    color: var(--wl-tinta);
+    font-family: var(--wl-fuente-texto);
     /* Nunca por debajo de 16 px. */
     font-size: 16px;
-    line-height: 1.6;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
 
   h1,
   h2,
-  h3 {
-    font-family: var(--font-display);
-    line-height: 1.15;
+  h3,
+  .font-display {
+    font-family: var(--wl-fuente-titulos);
+    font-weight: var(--wl-peso-titulos);
+    letter-spacing: var(--wl-apretado);
+    line-height: 1.08;
+  }
+
+  /* Campos y botones del código portado: bordes suaves, sin esquinas duras. */
+  input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
+  select,
+  textarea {
+    border-radius: var(--radius-sm);
+  }
+  button,
+  a[class*='bg-ink'] {
+    border-radius: var(--radius-sm);
   }
 
   /* El foco siempre es visible. Nunca outline: none. */
   :focus-visible {
-    outline: 2px solid var(--color-crust);
-    outline-offset: 2px;
+    outline: 2px solid var(--wl-tinta);
+    outline-offset: 3px;
   }
 }
 
+/* Pasar de una pantalla a otra funde en vez de parpadear (donde el navegador lo admite). */
+@view-transition {
+  navigation: auto;
+}
+
+/**
+ * El único movimiento del programa: el sello recién ganado se llena desde el
+ * centro. Marca el momento que importa. Sin movimiento para quien lo pidió así.
+ */
+@keyframes wl-sellar {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.lp-sello-nuevo {
+  animation: wl-sellar 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-/**
- * Programa de lealtad: el sello nuevo «cae» sobre la tarjeta. Es la única
- * animación del programa y marca el momento que importa: la estampa que se
- * acaba de ganar. Sin movimiento para quien lo pidió así.
- */
-@keyframes lp-sellar {
-  0% {
-    transform: scale(1.7) rotate(-24deg);
-    opacity: 0;
-  }
-  55% {
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
-
-.lp-sello-nuevo {
-  animation: lp-sellar 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lp-sello-nuevo {
-    animation: none;
   }
 }

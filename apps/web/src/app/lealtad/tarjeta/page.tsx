@@ -101,9 +101,7 @@ export default async function TarjetaPage({
         id="guardar"
         className="grid scroll-mt-4 justify-items-center gap-2 rounded-xl border border-rule bg-cream p-4 text-center"
       >
-        <h2 className="font-sans text-[11px] font-semibold tracking-[0.14em] text-muted uppercase">
-          Muéstralo en caja
-        </h2>
+        <h2 className="font-sans text-[11px] font-semibold text-muted">Muéstralo en caja</h2>
         <CodigoQR codigo={t.codigo} />
         <p className="max-w-[30ch] text-xs text-muted">
           Es el código de tu tarjeta. No contiene tu teléfono ni tu correo.

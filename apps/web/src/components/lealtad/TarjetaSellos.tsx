@@ -57,43 +57,39 @@ export function TarjetaSellos({
   // tarjeta anterior que todavía no se canjean.
   const disponibles = premios.filter((p) => p.disponible);
 
+  const columnas = programa.posiciones <= 10 ? 5 : programa.posiciones <= 18 ? 6 : 8;
+
   return (
     <section
       aria-label={`Tarjeta de lealtad: ${estampas} de ${programa.posiciones} estampas`}
-      className={`relative isolate grid w-full overflow-hidden rounded-xl bg-ink text-cream shadow-[0_16px_32px_-14px_rgba(20,16,12,0.6)] ${compacta ? 'gap-3 p-4' : 'gap-4 p-5'}`}
+      className={`grid w-full rounded-xl bg-ink text-cream ${compacta ? 'gap-4 p-5' : 'gap-6 p-6'}`}
     >
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10"
-        style={{
-          backgroundImage:
-            'radial-gradient(110% 70% at 100% 0%, color-mix(in srgb, var(--color-crust) 32%, transparent), transparent 58%), radial-gradient(90% 70% at 0% 100%, rgba(255,255,255,.08), transparent 62%)',
-        }}
-      />
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="grid gap-1.5">
-          <LogoMarca sobre="oscuro" className="h-7 text-lg" />
-          <span className="text-[10.5px] font-semibold tracking-[0.16em] text-crust-light uppercase">
-            Tarjeta de lealtad
-          </span>
-        </div>
-        <div className="text-right text-xs text-cream/70">
-          <b className="block text-sm font-semibold text-cream">{datos.nombre || 'Tu tarjeta'}</b>
-          Ciclo {ciclo}
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <LogoMarca sobre="oscuro" className="h-6 text-[17px]" />
+        <span className="text-[13px] text-cream/70">
+          {datos.nombre || 'Tu tarjeta'}
+          {ciclo > 1 ? `, tarjeta ${ciclo}` : ''}
+        </span>
       </div>
 
-      <p className="flex items-baseline gap-2">
+      {/* El número es la tarjeta: cuántas llevas, de cuántas. */}
+      <p className="flex items-end gap-3">
         <span
-          className={`font-display leading-none tabular-nums ${compacta ? 'text-4xl' : 'text-5xl'}`}
+          className={`font-display leading-[0.8] tabular-nums ${compacta ? 'text-[72px]' : 'text-[112px]'}`}
         >
           {estampas}
         </span>
-        <span className="text-sm text-cream/80">de {programa.posiciones} estampas</span>
+        <span className="pb-1 text-[15px] leading-tight text-cream/70">
+          de {programa.posiciones}
+          <br />
+          estampas
+        </span>
       </p>
 
-      <ol className={`grid grid-cols-5 ${compacta ? 'gap-2' : 'gap-2.5'}`}>
+      <ol
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${columnas}, minmax(0, 1fr))` }}
+      >
         {Array.from({ length: programa.posiciones }, (_, i) => {
           const posicion = i + 1;
           const hito = programa.hitos.find((h) => h.posicion === posicion);
@@ -104,42 +100,27 @@ export function TarjetaSellos({
               key={posicion}
               aria-label={`Estampa ${posicion}${sellada ? ', sellada' : ''}${hito ? `, premio: ${hito.nombre}` : ''}`}
               className={[
-                'relative grid aspect-square min-w-0 place-items-center overflow-hidden rounded-full font-mono text-xs',
+                'relative grid aspect-square min-w-0 place-items-center overflow-hidden rounded-full text-[13px] tabular-nums',
                 sellada
-                  ? hito
-                    ? 'bg-crust-light text-ink'
-                    : 'bg-crust text-cream'
+                  ? 'bg-crust-light text-[var(--wl-fondo)]'
                   : hito
-                    ? 'border-[1.5px] border-crust-light text-crust-light'
-                    : 'border-[1.5px] border-dashed border-cream/30 text-cream/50',
+                    ? 'border-2 border-crust-light text-crust-light'
+                    : 'bg-cream/[0.09] text-cream/45',
                 nueva ? 'lp-sello-nuevo' : '',
               ].join(' ')}
-              style={
-                {
-                  '--giro': `${GIROS[i % GIROS.length]}deg`,
-                  animationDelay: nueva ? `${nuevas.indexOf(i) * 120}ms` : undefined,
-                } as React.CSSProperties
-              }
+              style={{ animationDelay: nueva ? `${nuevas.indexOf(i) * 120}ms` : undefined }}
             >
-              {sellada ? (
-                marca.iconoUrl ? (
-                  // Posición absoluta: dentro de la cuadrícula, un alto en
-                  // porcentaje no se resuelve contra el círculo.
-                  <img
-                    src={marca.iconoUrl}
-                    alt=""
-                    className="pointer-events-none absolute inset-0 m-auto h-[70%] w-[70%] object-contain"
-                    style={{ transform: `rotate(${GIROS[i % GIROS.length]}deg)` }}
-                  />
-                ) : (
-                  <Icono
-                    nombre="palomita"
-                    className="h-[52%] w-[52%]"
-                    style={{ transform: `rotate(${(GIROS[i % GIROS.length] ?? 0) + 30}deg)` }}
-                  />
-                )
+              {sellada && marca.iconoUrl && !hito ? (
+                <img
+                  src={marca.iconoUrl}
+                  alt=""
+                  className="pointer-events-none absolute inset-0 m-auto h-[64%] w-[64%] object-contain"
+                  style={{ transform: `rotate(${GIROS[i % GIROS.length]}deg)` }}
+                />
               ) : hito ? (
                 <Icono nombre={iconoDePremio(posicion, programa)} className="h-[46%] w-[46%]" />
+              ) : sellada ? (
+                <Icono nombre="palomita" strokeWidth={2.4} className="h-[44%] w-[44%]" />
               ) : (
                 <span>{posicion}</span>
               )}
@@ -149,26 +130,27 @@ export function TarjetaSellos({
       </ol>
 
       {!compacta && (
-        <ul className="grid gap-1.5 border-t border-cream/15 pt-3 text-[13.5px]">
+        <ul className="grid gap-2.5 text-[15px]">
           {programa.hitos.map((h) => {
             const listo = listos.includes(h.posicion);
             const entregado = entregados.includes(h.posicion);
             const falta = h.posicion - estampas;
             return (
-              <li key={h.posicion} className="flex items-center gap-3">
-                <span className="w-20 flex-none font-mono text-xs font-semibold text-crust-light">
-                  {h.posicion} estampas
+              <li key={h.posicion} className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0">
+                  {h.nombre} <span className="text-cream/55">a las {h.posicion}</span>
                 </span>
-                <span className="min-w-0 flex-1 text-cream/90">{h.nombre}</span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11.5px] font-semibold whitespace-nowrap ${listo ? 'bg-crust-light text-ink' : 'bg-cream/10 text-cream/75'}`}
+                  className={`flex-none rounded-full px-2.5 py-0.5 text-[13px] whitespace-nowrap ${listo ? 'bg-crust-light font-semibold text-[var(--wl-fondo)]' : 'text-cream/70'}`}
                 >
                   {listo
                     ? 'Listo para canjear'
                     : entregado
                       ? 'Entregado'
                       : falta > 0
-                        ? `Faltan ${falta}`
+                        ? falta === 1
+                          ? 'Falta 1'
+                          : `Faltan ${falta}`
                         : 'Ganado'}
                 </span>
               </li>
@@ -177,10 +159,10 @@ export function TarjetaSellos({
         </ul>
       )}
 
-      <p className="rounded-md bg-cream/[0.08] px-3 py-2.5 text-[13.5px] leading-snug">
+      <p className="border-t border-cream/15 pt-4 text-[15px] leading-snug text-cream/85">
         {disponibles.length > 0 ? (
           <>
-            <b className="font-semibold text-crust-light">
+            <b className="font-semibold text-cream">
               {disponibles.length === 1
                 ? 'Tienes un premio listo:'
                 : `Tienes ${disponibles.length} premios listos:`}

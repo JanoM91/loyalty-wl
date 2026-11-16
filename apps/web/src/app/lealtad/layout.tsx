@@ -34,25 +34,17 @@ export default async function LealtadLayout({ children }: { children: ReactNode 
     <div className="min-h-screen bg-crumb">
       {/* Con credenciales: el manifest personaliza start_url según la sesión. */}
       <link rel="manifest" href="/lealtad/manifest.webmanifest" crossOrigin="use-credentials" />
-      <header className="bg-ink text-cream">
-        <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-          <a
-            href="/lealtad"
-            className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cream"
-          >
-            <LogoMarca sobre="oscuro" className="h-9 text-xl" />
-          </a>
-          <span className="text-[11px] font-semibold tracking-[0.16em] text-crust-light uppercase">
-            Lealtad
-          </span>
-        </div>
+      <header className="mx-auto flex max-w-md items-center px-5 pt-5 pb-1">
+        <a href="/lealtad" className="text-ink">
+          <LogoMarca sobre="claro" className="h-8 text-[19px]" />
+        </a>
       </header>
 
-      <main id="contenido" className="mx-auto grid max-w-md gap-4 px-4 pt-5 pb-28">
+      <main id="contenido" className="mx-auto grid max-w-md gap-4 px-5 pt-4 pb-28">
         {children}
       </main>
 
-      <footer className="mx-auto max-w-md px-4 pb-24 text-xs text-muted">
+      <footer className="mx-auto max-w-md px-5 pb-28 text-[13px] text-muted">
         <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-1">
           <a href="/lealtad/terminos" className="underline underline-offset-4 hover:text-ink">
             Términos del programa

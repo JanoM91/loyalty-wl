@@ -76,7 +76,7 @@ export default async function TarjetasPage({
       <div className="overflow-x-auto rounded-lg border border-rule bg-cream">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-rule text-left text-[11px] tracking-wider text-muted uppercase">
+            <tr className="border-b border-rule text-left text-[11px] text-muted">
               <th className="px-3 py-2 font-semibold">Cliente</th>
               <th className="px-3 py-2 font-semibold">Contacto</th>
               <th className="px-3 py-2 font-semibold">Estado</th>

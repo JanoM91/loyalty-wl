@@ -104,7 +104,7 @@ export default async function DetalleTarjetaPage({
         <div className="mt-3 overflow-x-auto rounded-lg border border-rule bg-cream">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-rule text-left text-[11px] tracking-wider text-muted uppercase">
+              <tr className="border-b border-rule text-left text-[11px] text-muted">
                 <th className="px-3 py-2 font-semibold">Compra</th>
                 <th className="px-3 py-2 font-semibold">Sucursal</th>
                 <th className="px-3 py-2 font-semibold">Ticket</th>

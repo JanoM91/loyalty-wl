@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/onest';
 import './globals.css';
 
 import { negocioDeLaPeticion } from '@/lib/negocio';
@@ -22,7 +24,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const negocio = await negocioDeLaPeticion();
   return (
-    <html lang="es-MX" style={negocio ? estiloDeMarca(negocio) : undefined}>
+    <html
+      lang="es-MX"
+      data-plantilla={negocio?.marca.plantilla ?? 'aire'}
+      style={negocio ? estiloDeMarca(negocio) : undefined}
+    >
       <body>
         <ProveedorMarca marca={negocio ? marcaVisible(negocio) : null}>{children}</ProveedorMarca>
       </body>

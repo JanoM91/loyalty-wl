@@ -36,7 +36,18 @@ export interface ColoresMarca {
   readonly tinta: string;
 }
 
+/**
+ * Plantilla de diseño: decide tipografía, formas y el carácter general. Los
+ * colores los pone cada negocio; la plantilla, cómo se usan.
+ * - `aire`: clara y mínima. La de las demos.
+ * - `noche`: la misma, sobre fondo oscuro.
+ * - `calida`: serif y tonos cálidos, para marcas artesanales.
+ */
+export const PLANTILLAS = ['aire', 'noche', 'calida'] as const;
+export type PlantillaMarca = (typeof PLANTILLAS)[number];
+
 export interface MarcaNegocio {
+  readonly plantilla: PlantillaMarca;
   /** Va bajo el nombre en la portada. */
   readonly frase: string;
   readonly colores: ColoresMarca;
@@ -67,7 +78,16 @@ export interface MarcaNegocio {
 /** Qué hacer con el folio o la foto del ticket al registrar una visita. */
 export type ReglaComprobante = 'PEDIDO' | 'OBLIGATORIO';
 
+/**
+ * Modalidad contratada.
+ * - `LITE`: comparte instalación con otros negocios; personaliza su marca y su
+ *   programa; campañas y reportes avanzados los administra Exkalibur.
+ * - `PRIVADA`: instalación propia (su proyecto y su base), con todo abierto.
+ */
+export type PlanNegocio = 'LITE' | 'PRIVADA';
+
 export interface AjustesNegocio {
+  readonly plan: PlanNegocio;
   /**
    * Con el QR del cliente a la vista. PEDIDO: la caja lo pide siempre, pero si
    * no se captura la visita se acredita igual (queda anotado y esa visita no
@@ -85,13 +105,14 @@ export interface AjustesNegocio {
 }
 
 export const MARCA_POR_OMISION: MarcaNegocio = {
+  plantilla: 'aire',
   frase: '',
   colores: {
-    fondo: '#14100c',
-    sobreFondo: '#fbf7f1',
-    acento: '#d9a05b',
-    papel: '#f3ece1',
-    tinta: '#14100c',
+    fondo: '#1d1d1f',
+    sobreFondo: '#ffffff',
+    acento: '#ffd60a',
+    papel: '#f5f5f7',
+    tinta: '#1d1d1f',
   },
   logoClaroUrl: null,
   logoUrl: null,
@@ -102,6 +123,7 @@ export const MARCA_POR_OMISION: MarcaNegocio = {
 };
 
 export const AJUSTES_POR_OMISION: AjustesNegocio = {
+  plan: 'LITE',
   comprobanteConQr: 'PEDIDO',
   comprobanteSinTarjeta: 'OBLIGATORIO',
   umbralEvidenciaMigracion: 5,
@@ -130,6 +152,9 @@ export function leerMarca(json: unknown): MarcaNegocio {
   const legal = objeto(m.legal);
   const d = MARCA_POR_OMISION;
   return {
+    plantilla: (PLANTILLAS as readonly unknown[]).includes(m.plantilla)
+      ? (m.plantilla as PlantillaMarca)
+      : d.plantilla,
     frase: texto(m.frase) ?? '',
     colores: {
       fondo: color(c.fondo, d.colores.fondo),
@@ -160,6 +185,7 @@ export function leerAjustes(json: unknown): AjustesNegocio {
   const a = objeto(json);
   const d = AJUSTES_POR_OMISION;
   return {
+    plan: a.plan === 'PRIVADA' ? 'PRIVADA' : d.plan,
     comprobanteConQr: regla(a.comprobanteConQr, d.comprobanteConQr),
     comprobanteSinTarjeta: regla(a.comprobanteSinTarjeta, d.comprobanteSinTarjeta),
     umbralEvidenciaMigracion: entero(a.umbralEvidenciaMigracion, d.umbralEvidenciaMigracion, 1, 30),
@@ -294,4 +320,14 @@ export async function negocioActual(): Promise<Negocio> {
   const negocio = await negocioSiHay();
   if (!negocio) throw new SinNegocioError();
   return negocio;
+}
+
+/** Qué puede hacer el negocio por su cuenta, según su modalidad. */
+export function funcionesDelPlan(negocio: Negocio): {
+  readonly marcaEditable: boolean;
+  readonly campanas: boolean;
+  readonly reportesCompletos: boolean;
+} {
+  const privada = negocio.ajustes.plan === 'PRIVADA';
+  return { marcaEditable: true, campanas: privada, reportesCompletos: privada };
 }

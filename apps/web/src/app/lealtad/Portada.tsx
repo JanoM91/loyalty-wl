@@ -1,6 +1,6 @@
 import type { ProgramaLealtad } from '@wl/domain';
 
-import { LogoMarca } from '@/components/Marca';
+import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
 
 /**
  * Portada del programa: lo que ve quien escanea el código del mostrador.
@@ -23,70 +23,66 @@ export function Portada({
   const [primero, segundo] = hitos;
   const alta = sucursal ? `/lealtad/alta?sucursal=${sucursal.slug}` : '/lealtad/alta';
 
-  return (
-    <section className="-mx-4 -mt-5 grid justify-items-center gap-6 bg-ink px-6 pt-8 pb-9 text-center text-cream">
-      <LogoMarca sobre="oscuro" className="h-28 text-4xl" />
-      {frase ? <p className="-mt-3 text-sm text-cream/70">{frase}</p> : null}
+  const mayor = hitos[hitos.length - 1];
+  // Una tarjeta de muestra, a medio camino del primer premio.
+  const muestra = Math.max(1, Math.min((primero?.posicion ?? 3) - 1, 3));
 
-      <div className="grid gap-2.5">
-        <h1 className="text-3xl leading-tight text-balance">Tu visita tiene recompensa</h1>
-        <p className="mx-auto max-w-[32ch] text-[15.5px] text-cream/85">
-          Suma una estampa en cada compra. Con {primero?.posicion} te regalamos{' '}
-          {primero?.nombre.toLowerCase()}
-          {segundo ? ` y con ${segundo.posicion}, ${segundo.nombre.toLowerCase()}` : ''}.
+  return (
+    <section className="grid gap-9 pt-4 pb-6">
+      <div className="grid gap-4">
+        <h1 className="text-[clamp(2.6rem,13vw,3.5rem)] text-balance">
+          {mayor ? `${mayor.nombre} en tu visita ${mayor.posicion}` : 'Tus visitas suman'}
+        </h1>
+        <p className="max-w-[34ch] text-[17px] text-muted">
+          {frase ? `${frase}. ` : ''}
+          Cada visita es una estampa
+          {segundo && primero
+            ? `; a las ${primero.posicion} ya te llevas ${primero.nombre.toLowerCase()}.`
+            : '.'}
         </p>
       </div>
 
-      <div aria-hidden="true" className="flex gap-1.5">
-        {Array.from({ length: programa.posiciones }, (_, i) => (
-          <span
-            key={i}
-            className={`h-5 w-5 rounded-full ${i < 3 ? 'bg-crust' : programa.hitos.some((h) => h.posicion === i + 1) ? 'border-[1.5px] border-crust-light' : 'border-[1.5px] border-dashed border-cream/35'}`}
-          />
-        ))}
+      <div aria-hidden="true">
+        <TarjetaSellos
+          datos={{ estampas: muestra, ciclo: 1, nombre: 'Así se ve' }}
+          programa={programa}
+          compacta
+        />
       </div>
 
-      <ol className="grid w-full gap-3 text-left text-sm text-cream/80">
+      <ol className="grid gap-5">
         {[
-          ['Muestra tu código en caja', 'Desde el navegador de tu celular, sin instalar nada.'],
-          [
-            'Suma una estampa por visita',
-            'Una por sucursal y día, en cualquiera de nuestras sucursales.',
-          ],
-          ['Canjea tu premio en caja', 'Tus estampas y premios no vencen.'],
+          ['Crea tu tarjeta', 'Con tu celular o tu correo. No instalas nada.'],
+          ['Muéstrala en caja', 'Una estampa por visita, en cualquier sucursal.'],
+          ['Cobra tu premio', 'Tus estampas y premios no vencen.'],
         ].map(([titulo, texto], i) => (
-          <li key={titulo} className="grid grid-cols-[30px_minmax(0,1fr)] items-start gap-3">
-            <span className="grid h-[30px] w-[30px] place-items-center rounded-full border-[1.5px] border-crust-light font-mono text-[13px] font-semibold text-crust-light">
-              {i + 1}
-            </span>
-            <span>
-              <b className="block font-semibold text-cream">{titulo}</b>
+          <li key={titulo} className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-baseline gap-2">
+            <span className="font-display text-2xl text-muted tabular-nums">{i + 1}</span>
+            <span className="text-[15px] text-muted">
+              <b className="block text-[17px] font-semibold text-ink">{titulo}</b>
               {texto}
             </span>
           </li>
         ))}
       </ol>
 
-      <div className="grid w-full gap-2">
+      <div className="grid gap-3">
         <a
           href={alta}
-          className="inline-flex min-h-[56px] items-center justify-center rounded-sm bg-cream px-6 text-base font-semibold text-ink hover:bg-crumb"
+          className="inline-flex min-h-[60px] items-center justify-center rounded-full bg-ink px-6 text-[17px] font-semibold text-cream"
         >
-          Quiero mi tarjeta
+          Crear mi tarjeta
         </a>
         <a
           href="/lealtad/entrar"
-          className="inline-flex min-h-[44px] items-center justify-center text-sm font-medium text-crust-light underline underline-offset-4"
+          className="inline-flex min-h-[48px] items-center justify-center rounded-full text-[15px] font-semibold text-ink underline decoration-rule decoration-2 underline-offset-4"
         >
-          Ya tengo tarjeta · Entrar
+          Ya tengo tarjeta
         </a>
+        {sucursal ? (
+          <p className="text-center text-[13px] text-muted">Estás en {sucursal.nombre}.</p>
+        ) : null}
       </div>
-
-      {sucursal && (
-        <p className="text-xs text-cream/60">
-          Escaneaste el código de <b className="font-semibold text-cream">{sucursal.nombre}</b>.
-        </p>
-      )}
     </section>
   );
 }

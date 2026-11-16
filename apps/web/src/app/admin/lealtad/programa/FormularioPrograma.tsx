@@ -204,7 +204,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
           </p>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-rule text-left text-[11px] tracking-wider text-muted uppercase">
+              <tr className="border-b border-rule text-left text-[11px] text-muted">
                 <th className="py-1.5 font-semibold">Desde</th>
                 <th className="py-1.5 font-semibold">Hasta</th>
                 <th className="py-1.5 font-semibold">Estampas</th>

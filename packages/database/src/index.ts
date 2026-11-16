@@ -182,6 +182,7 @@ export function desconectar(): Promise<void> {
 export * from '@prisma/client';
 export * from './negocio';
 export * from './plataforma';
+export * from './marca';
 
 /** Acceso al panel del negocio: contraseñas, sesiones, roles y usuarios. */
 export * from './auth/password';

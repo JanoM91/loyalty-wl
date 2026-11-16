@@ -63,8 +63,6 @@ export function LogoMarca({
   const url = sobre === 'oscuro' ? marca.logoClaroUrl : marca.logoUrl;
   if (url) return <img src={url} alt={marca.nombre} className={`w-auto ${className}`} />;
   return (
-    <span className={`font-display leading-tight font-bold tracking-wide ${className}`}>
-      {marca.nombre}
-    </span>
+    <span className={`font-display leading-tight font-bold ${className}`}>{marca.nombre}</span>
   );
 }

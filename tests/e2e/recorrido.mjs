@@ -48,7 +48,7 @@ try {
   const cliente = await celular.newPage();
   await cliente.goto(`${BASE}/lealtad`);
   await foto(cliente, '1-portada');
-  await cliente.getByRole('link', { name: 'Quiero mi tarjeta' }).click();
+  await cliente.getByRole('link', { name: 'Crear mi tarjeta' }).click();
   const numero = `228${String(Math.floor(Math.random() * 1e7)).padStart(7, '0')}`;
   await cliente.getByRole('button', { name: 'Celular' }).click();
   await cliente.locator('input[name=contacto]').fill(numero);
@@ -179,6 +179,16 @@ try {
     'Panel: el detalle de la tarjeta abre',
     (await panel.locator('body').innerText()).includes(codigo),
   );
+  // --- 7. El dueño abre su marca y la guarda (sin cambiarla) ---
+  await panel.goto(`${BASE}/admin/marca`);
+  await foto(panel, '12-panel-marca');
+  await panel.getByRole('button', { name: 'Guardar marca' }).click();
+  await panel
+    .getByText('Marca guardada')
+    .waitFor({ timeout: 10000 })
+    .catch(() => {});
+  paso('Panel: la marca se guarda', /Marca guardada/.test(await panel.locator('body').innerText()));
+
   await panel.goto(`${BASE}/admin/lealtad/analitica`);
   await foto(panel, '11-panel-analitica');
   paso('Panel: la analítica abre', /Analítica/i.test(await panel.locator('body').innerText()));

@@ -171,7 +171,7 @@ export default async function AnaliticaPage() {
         <h2 className="px-4 pt-4 font-sans text-base font-semibold text-ink">Por sucursal</h2>
         <table className="mt-3 w-full text-sm">
           <thead>
-            <tr className="border-b border-rule text-left text-[11px] tracking-wider text-muted uppercase">
+            <tr className="border-b border-rule text-left text-[11px] text-muted">
               <th className="px-3 py-2 font-semibold">Sucursal</th>
               <th className="px-3 py-2 font-semibold">Estado</th>
               <th className="px-3 py-2 text-right font-semibold">Visitas 7 d</th>
@@ -224,7 +224,7 @@ export default async function AnaliticaPage() {
         ) : (
           <table className="mt-3 w-full text-sm">
             <thead>
-              <tr className="border-b border-rule text-left text-[11px] tracking-wider text-muted uppercase">
+              <tr className="border-b border-rule text-left text-[11px] text-muted">
                 <th className="px-3 py-2 font-semibold">Premio</th>
                 <th className="px-3 py-2 text-right font-semibold">Estampas</th>
                 <th className="px-3 py-2 text-right font-semibold">Ganados</th>

@@ -12,13 +12,11 @@ import type { MarcaVisible } from '@/components/Marca';
 export function estiloDeMarca(negocio: Negocio): CSSProperties {
   const c = negocio.marca.colores;
   return {
-    '--color-ink': c.fondo,
-    '--color-cream': c.sobreFondo,
-    '--color-crust': c.acento,
-    '--color-crust-light': c.acento,
-    '--color-crust-dark': c.tinta,
-    '--color-ink-soft': c.tinta,
-    '--color-crumb': c.papel,
+    '--wl-fondo': c.fondo,
+    '--wl-sobre': c.sobreFondo,
+    '--wl-acento': c.acento,
+    '--wl-papel': c.papel,
+    '--wl-tinta': c.tinta,
   } as CSSProperties;
 }
 
