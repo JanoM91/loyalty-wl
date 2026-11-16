@@ -54,7 +54,7 @@ Fuentes: neon.com/docs/introduction/plans, neon.com/guides/neon-launch-plan-vs-s
 ## Evidencia (15 nov 2026, entorno de Claude)
 
 - `pnpm lint`, `format:check`, `typecheck`, `build`: sin errores. `pnpm test`: 177 pruebas (dominio 88, datos 83, web 6).
-- Recorrido en navegador con el diseño nuevo: `cafe-demo` 10 de 10 pasos (incluye guardar la marca); `barberia-demo` 10 de 10.
+- Recorrido en navegador con el diseño nuevo: `cafe-demo` 10 de 10 pasos (incluye guardar la marca); `barberia-demo` 11 de 11.
 - Instalación privada simulada (`WL_NEGOCIO_UNICO=cafe-demo`): un dominio cualquiera abre el programa del café.
 
 ## Pendiente
