@@ -138,6 +138,9 @@ try {
     'Cliente: su tarjeta muestra 1 estampa',
     /\b1\s*de \d+ estampas/.test(conUna.replace(/\n/g, ' ')),
   );
+
+  // --- 3b. Apple Wallet (solo si el servidor tiene certificado: WALLET_PRUEBA=1) ---
+  if (process.env.WALLET_PRUEBA === '1') await probarAppleWallet(cliente);
   await foto(cliente, '6-tarjeta-una-estampa');
 
   // --- 4. Atajo declarado: estampas que faltan y contacto verificado, en la base ---
@@ -222,4 +225,109 @@ try {
   await navegador.close();
   const mal = pasos.filter((p) => !p.ok).length;
   console.log(`${slug}: ${pasos.length - mal} de ${pasos.length} pasos bien`);
+}
+
+
+/**
+ * Apple Wallet de punta a punta contra el servidor, haciendo de iPhone:
+ * descarga el pase con la sesión de la tarjeta, lo abre, comprueba la firma y
+ * recorre el servicio web de PassKit (registro, cambios, descarga, baja).
+ * Requiere un certificado en el servidor; con uno de prueba vale, porque aquí
+ * no interviene Apple.
+ */
+async function probarAppleWallet(cliente) {
+  const { execSync } = await import('node:child_process');
+  const { mkdirSync, writeFileSync, readFileSync } = await import('node:fs');
+  const dir = `${carpeta}/pase`;
+  mkdirSync(dir, { recursive: true });
+
+  const r = await cliente.request.get(`${BASE}/lealtad/tarjeta/apple-wallet`);
+  paso(
+    'Wallet: la tarjeta descarga un pase de Apple',
+    r.status() === 200 && r.headers()['content-type'] === 'application/vnd.apple.pkpass',
+    `${r.status()} ${r.headers()['content-type']}`,
+  );
+  if (r.status() !== 200) return;
+  writeFileSync(`${dir}/tarjeta.pkpass`, await r.body());
+  execSync(`cd ${dir} && unzip -o -q tarjeta.pkpass -d abierto`);
+  const pase = JSON.parse(readFileSync(`${dir}/abierto/pass.json`, 'utf8'));
+  const archivos = execSync(`ls ${dir}/abierto`).toString().split('\n').filter(Boolean);
+  paso(
+    'Wallet: el pase trae manifiesto, firma e imágenes en tres tamaños',
+    ['manifest.json', 'signature', 'icon.png', 'icon@2x.png', 'logo@2x.png', 'strip@2x.png', 'strip@3x.png'].every(
+      (a) => archivos.includes(a),
+    ),
+    archivos.join(' '),
+  );
+  let firma = '';
+  try {
+    firma = execSync(
+      `cd ${dir}/abierto && openssl smime -verify -binary -inform DER -in signature -content manifest.json -noverify -out /dev/null 2>&1`,
+    ).toString();
+  } catch (e) {
+    firma = String(e.stdout ?? e);
+  }
+  paso('Wallet: la firma del manifiesto es válida', /Verification successful/i.test(firma), firma.trim().slice(0, 120));
+  paso(
+    'Wallet: el pase lleva 1 estampa, el QR de la web y el servicio web del negocio',
+    /^1 de \d+$/.test(pase.storeCard.headerFields[0].value) &&
+      pase.barcodes[0].message.startsWith(`${BASE}/lealtad/t/`) &&
+      pase.webServiceURL === `${BASE}/api/wallet/apple`,
+    `${pase.storeCard.headerFields[0].value} · ${pase.webServiceURL}`,
+  );
+
+  // Hace de iPhone: registra el dispositivo con el token del pase.
+  const servicio = `${pase.webServiceURL}/v1`;
+  const tipo = pase.passTypeIdentifier;
+  const serie = pase.serialNumber;
+  const dispositivo = `e2e${Date.now().toString(36)}`;
+  const auth = { Authorization: `ApplePass ${pase.authenticationToken}` };
+  const pedir = (ruta, o = {}) => cliente.request.fetch(`${servicio}${ruta}`, { failOnStatusCode: false, ...o });
+
+  const sinToken = await pedir(`/passes/${tipo}/${serie}`);
+  // El mismo pase, pedido en el servicio web de otro negocio: no debe existir ahí.
+  const vecino = slug === 'cafe-demo' ? 'barberia-demo' : 'cafe-demo';
+  const otroNegocio = await cliente.request.fetch(
+    `${servicio.replace(`/${slug}/`, `/${vecino}/`)}/passes/${tipo}/${serie}`,
+    { failOnStatusCode: false, headers: auth },
+  );
+  paso(
+    'Wallet: sin token responde 401 y otro negocio no puede leer este pase',
+    sinToken.status() === 401 && otroNegocio.status() === 401,
+    `${sinToken.status()} ${otroNegocio.status()}`,
+  );
+
+  const alta = await pedir(`/devices/${dispositivo}/registrations/${tipo}/${serie}`, {
+    method: 'POST',
+    headers: auth,
+    data: { pushToken: 'a'.repeat(64) },
+  });
+  const cambios = await pedir(`/devices/${dispositivo}/registrations/${tipo}`);
+  const lista = cambios.status() === 200 ? await cambios.json() : null;
+  paso(
+    'Wallet: el iPhone se registra y el servicio le dice qué pase cambió',
+    alta.status() === 201 && Boolean(lista?.serialNumbers?.includes(serie)),
+    `${alta.status()} ${cambios.status()}`,
+  );
+
+  const fresco = await pedir(`/passes/${tipo}/${serie}`, { headers: auth });
+  const sinCambio = await pedir(`/passes/${tipo}/${serie}`, {
+    headers: { ...auth, 'If-Modified-Since': fresco.headers()['last-modified'] ?? '' },
+  });
+  paso(
+    'Wallet: entrega el pase al iPhone y responde 304 si no hay cambios',
+    fresco.status() === 200 && sinCambio.status() === 304,
+    `${fresco.status()} ${sinCambio.status()}`,
+  );
+
+  const baja = await pedir(`/devices/${dispositivo}/registrations/${tipo}/${serie}`, {
+    method: 'DELETE',
+    headers: auth,
+  });
+  const trasBaja = await pedir(`/devices/${dispositivo}/registrations/${tipo}`);
+  paso(
+    'Wallet: al quitar el pase, el iPhone deja de estar registrado',
+    baja.status() === 200 && trasBaja.status() === 404,
+    `${baja.status()} ${trasBaja.status()}`,
+  );
 }

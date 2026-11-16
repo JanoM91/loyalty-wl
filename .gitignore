@@ -24,3 +24,6 @@ tests/e2e/evidence/
 next-env.d.ts
 _tmp-*
 .env.pruebas
+.env*
+!.env.example
+.vercel

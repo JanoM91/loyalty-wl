@@ -1,7 +1,7 @@
 # PROMPT MAESTRO · Loyalty WL (programa de lealtad white label)
 
 > Versión 1.1 · 14 nov 2026 · Redactado por Claude Sonnet 5.5; corregido por Claude Fable 5.2 al cerrar la Fase 0 (ver «Correcciones de la Fase 0» en §4).
-> **Estado (15 nov 2026): Fases 0, 1 y 2 entregadas (`docs/03-estado-fases-1-2.md`). La Fase 3 espera el visto bueno explícito de Jano. Lee primero «Correcciones de las Fases 1 y 2» en §4.**
+> **Estado (16 nov 2026): Fases 0 a 3 entregadas y desplegadas en Vercel; Fase 4 (Wallet) construida y probada con certificado de prueba, falta cargar las credenciales reales y verla en teléfono (`docs/07-wallet.md`). Repositorio: `JanoM91/loyalty-wl`. Dominio del servicio compartido: `club-lealtad.com`. Lee primero «Correcciones de las Fases 1 y 2» en §4.**
 
 ## Cómo usarlo (para Jano)
 

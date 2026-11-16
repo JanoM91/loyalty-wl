@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
 
+import { ruta } from '@/lib/negocio';
 import { appleWalletConfigurado } from '@/lib/wallet/apple/config';
 
 /**
@@ -21,7 +22,7 @@ export async function BotonAppleWallet() {
 
   return (
     <a
-      href="/lealtad/tarjeta/apple-wallet"
+      href={await ruta('/lealtad/tarjeta/apple-wallet')}
       className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/90"
     >
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none">

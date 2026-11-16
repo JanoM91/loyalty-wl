@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { put } from '@vercel/blob';
 import {
   guardarLogo,
@@ -12,6 +13,7 @@ import {
 
 import { exigirRol } from '@/lib/admin/sesion';
 import { exigirNegocio } from '@/lib/negocio';
+import { actualizarTodosLosPases } from '@/lib/wallet/avisar';
 
 export interface EstadoMarca {
   readonly ok: boolean;
@@ -46,6 +48,8 @@ export async function guardarMarca(_previo: EstadoMarca, form: FormData): Promis
   );
   if (!r.ok) return { ok: false, error: r.error, avisos: [] };
   revalidatePath('/', 'layout');
+  // Los pases de Wallet llevan la marca: se les pide que tomen la nueva.
+  after(() => actualizarTodosLosPases());
   return { ok: true, error: null, avisos: r.avisos };
 }
 
@@ -72,6 +76,8 @@ export async function subirLogo(_previo: EstadoLogo, form: FormData): Promise<Es
     const r = await guardarLogo(tipo, null, { userId: sesion.userId });
     if (!r.ok) return { ok: false, error: r.error };
     revalidatePath('/', 'layout');
+  // Los pases de Wallet llevan la marca: se les pide que tomen la nueva.
+  after(() => actualizarTodosLosPases());
     return { ok: true, error: null };
   }
 
@@ -92,5 +98,7 @@ export async function subirLogo(_previo: EstadoLogo, form: FormData): Promise<Es
   const r = await guardarLogo(tipo, subida.url, { userId: sesion.userId });
   if (!r.ok) return { ok: false, error: r.error };
   revalidatePath('/', 'layout');
+  // Los pases de Wallet llevan la marca: se les pide que tomen la nueva.
+  after(() => actualizarTodosLosPases());
   return { ok: true, error: null };
 }

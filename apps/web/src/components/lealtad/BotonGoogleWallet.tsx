@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 
-import { googleWalletConfigurado } from '@/lib/wallet/google/config';
+import { ruta } from '@/lib/negocio';
+import { googleWalletPublico } from '@/lib/wallet/google/config';
 
 /**
  * «Agregar a Google Wallet».
@@ -13,19 +14,15 @@ import { googleWalletConfigurado } from '@/lib/wallet/google/config';
  * Google y se coloca en public/wallet/ siguiendo sus lineamientos.
  */
 export async function BotonGoogleWallet() {
-  if (!googleWalletConfigurado()) return null;
-  // Mientras Google tenga la cuenta en modo demostración, solo las cuentas de
-  // prueba pueden guardar el pase: el botón se esconde al público hasta que
-  // GOOGLE_WALLET_PUBLICO sea "1". La dirección /lealtad/tarjeta/google-wallet
-  // sigue funcionando para probar.
-  if (process.env.GOOGLE_WALLET_PUBLICO !== '1') return null;
+  // Oculto mientras Google tenga la cuenta en modo demostración.
+  if (!googleWalletPublico()) return null;
   const ua = (await headers()).get('user-agent') ?? '';
   const esApple = /iPhone|iPad|iPod|Macintosh/.test(ua);
   if (esApple) return null;
 
   return (
     <a
-      href="/lealtad/tarjeta/google-wallet"
+      href={await ruta('/lealtad/tarjeta/google-wallet')}
       className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/90"
     >
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none">
