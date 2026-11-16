@@ -6,6 +6,7 @@ import { exigirRol } from '@/lib/admin/sesion';
 import { exigirNegocio } from '@/lib/negocio';
 
 import { FormularioMarca } from './FormularioMarca';
+import { Logotipos } from './Logotipos';
 
 export const metadata: Metadata = { title: 'Marca' };
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,10 @@ export default async function MarcaPage() {
       titulo="Marca"
       descripcion="Así ven tu programa tus clientes. Los cambios se aplican al guardar."
     >
-      <FormularioMarca nombre={negocio.nombre} marca={negocio.marca} programa={programa} />
+      <div className="grid gap-12">
+        <FormularioMarca nombre={negocio.nombre} marca={negocio.marca} programa={programa} />
+        <Logotipos marca={negocio.marca} activo={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />
+      </div>
     </MarcoPanel>
   );
 }

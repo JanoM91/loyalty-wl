@@ -74,32 +74,34 @@ export async function guardarMarca(
   if (sitio && !/^https:\/\/[^\s]+$/.test(sitio))
     return { ok: false, error: 'El sitio debe empezar por https://' };
 
-  // Lo que el panel no edita (logotipos, Facebook) se conserva como está.
-  const marca: MarcaNegocio = {
-    ...negocio.marca,
-    plantilla: d.plantilla as PlantillaMarca,
-    frase: limpio(d.frase, 80) ?? '',
-    colores,
-    contacto: {
-      correo: limpio(d.correo, 160)?.toLowerCase() ?? null,
-      whatsapp: digitos ? `52${digitos}` : null,
-      sitio,
-    },
-    redes: {
-      ...negocio.marca.redes,
-      instagram: limpio(d.instagram, 60)?.replace(/^@/, '') ?? null,
-    },
-    legal: {
-      razonSocial: limpio(d.razonSocial, 200),
-      domicilio: limpio(d.domicilio, 300),
-      correoPrivacidad: limpio(d.correoPrivacidad, 160)?.toLowerCase() ?? null,
-    },
-  };
-
-  await transaccion(async (tx) => {
+  const marca = await transaccion(async (tx) => {
+    // Se parte de lo guardado ahora mismo, no de la copia del contexto: lo que
+    // el panel no edita aquí (logotipos, Facebook) se conserva como está.
+    const fila = await tx.tenant.findUniqueOrThrow({
+      where: { id: negocio.id },
+      select: { brand: true },
+    });
+    const actual = leerMarca(fila.brand);
+    const nueva: MarcaNegocio = {
+      ...actual,
+      plantilla: d.plantilla as PlantillaMarca,
+      frase: limpio(d.frase, 80) ?? '',
+      colores,
+      contacto: {
+        correo: limpio(d.correo, 160)?.toLowerCase() ?? null,
+        whatsapp: digitos ? `52${digitos}` : null,
+        sitio,
+      },
+      redes: { ...actual.redes, instagram: limpio(d.instagram, 60)?.replace(/^@/, '') ?? null },
+      legal: {
+        razonSocial: limpio(d.razonSocial, 200),
+        domicilio: limpio(d.domicilio, 300),
+        correoPrivacidad: limpio(d.correoPrivacidad, 160)?.toLowerCase() ?? null,
+      },
+    };
     await tx.tenant.update({
       where: { id: negocio.id },
-      data: { name: nombre, brand: marca as unknown as Prisma.InputJsonValue },
+      data: { name: nombre, brand: nueva as unknown as Prisma.InputJsonValue },
     });
     await tx.auditLog.create({
       data: {
@@ -107,9 +109,64 @@ export async function guardarMarca(
         action: 'marca.guardar',
         entityType: 'tenant',
         entityId: negocio.id,
-        metadata: { plantilla: marca.plantilla, colores: { ...marca.colores } },
+        metadata: { plantilla: nueva.plantilla, colores: { ...nueva.colores } },
+      },
+    });
+    return nueva;
+  });
+  return { ok: true, marca: leerMarca(marca), avisos };
+}
+
+/** Los tres logotipos de un negocio. */
+export const TIPOS_LOGO = ['logoUrl', 'logoClaroUrl', 'iconoUrl'] as const;
+export type TipoLogo = (typeof TIPOS_LOGO)[number];
+
+/**
+ * Guarda (o quita, con `null`) la dirección de un logotipo. Solo acepta
+ * archivos del almacén y de la carpeta de marca de este negocio: la dirección
+ * llega del navegador y no se cree sin más.
+ */
+export async function guardarLogo(
+  tipo: TipoLogo,
+  url: string | null,
+  actor: { readonly userId: string },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const negocio = await negocioActual();
+  if (!(TIPOS_LOGO as readonly string[]).includes(tipo))
+    return { ok: false, error: 'Logotipo desconocido.' };
+  if (url !== null) {
+    let u: URL;
+    try {
+      u = new URL(url);
+    } catch {
+      return { ok: false, error: 'La dirección del archivo no es válida.' };
+    }
+    if (
+      u.protocol !== 'https:' ||
+      !u.hostname.endsWith('.blob.vercel-storage.com') ||
+      !u.pathname.startsWith(`/negocios/${negocio.id}/marca/`)
+    )
+      return { ok: false, error: 'Ese archivo no es de este negocio.' };
+  }
+  await transaccion(async (tx) => {
+    const fila = await tx.tenant.findUniqueOrThrow({
+      where: { id: negocio.id },
+      select: { brand: true },
+    });
+    const marca: MarcaNegocio = { ...leerMarca(fila.brand), [tipo]: url };
+    await tx.tenant.update({
+      where: { id: negocio.id },
+      data: { brand: marca as unknown as Prisma.InputJsonValue },
+    });
+    await tx.auditLog.create({
+      data: {
+        userId: actor.userId,
+        action: url ? 'marca.logo' : 'marca.quitar_logo',
+        entityType: 'tenant',
+        entityId: negocio.id,
+        metadata: { tipo },
       },
     });
   });
-  return { ok: true, marca: leerMarca(marca), avisos };
+  return { ok: true };
 }

@@ -34,12 +34,19 @@ Necesitas Node 22, pnpm 9 y una base PostgreSQL (Neon sirve) con **dos roles**.
 5. Siembra los dos negocios de demostración: `pnpm db:seed`
    - Imprime, por negocio, un enlace `/admin/contrasena/...` de un solo uso para
      que su dueño fije su contraseña.
-6. Arranca: `pnpm dev` y abre `http://cafe-demo.localhost:3200` y
-   `http://barberia-demo.localhost:3200` (Chrome resuelve `*.localhost` solo).
-   - Panel: `http://cafe-demo.localhost:3200/admin`.
+6. Arranca: `pnpm dev` y abre `http://localhost:3200` (página del servicio),
+   `http://localhost:3200/cafe-demo` y `http://localhost:3200/barberia-demo`.
+   - Panel: `http://localhost:3200/cafe-demo/admin`.
 
 Si un paso falla con «RolInseguroError», `DATABASE_URL` está usando el rol
 dueño: debe ser `wl_web`.
+
+## Panel de plataforma (dar de alta negocios)
+
+1. Crea tu cuenta, una sola vez: `pnpm --filter @wl/database plataforma:usuario tu-correo "Tu nombre"` (te pide la contraseña en la terminal).
+2. Abre `http://localhost:3200/plataforma`, entra y usa **Nuevo negocio**.
+
+En la instalación compartida cada negocio vive en `http://localhost:3200/<negocio>`. Detalle en `docs/05-plataforma.md`.
 
 ## Comandos
 

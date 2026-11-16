@@ -183,6 +183,7 @@ export * from '@prisma/client';
 export * from './negocio';
 export * from './plataforma';
 export * from './marca';
+export * from './plataforma-acceso';
 
 /** Acceso al panel del negocio: contraseñas, sesiones, roles y usuarios. */
 export * from './auth/password';

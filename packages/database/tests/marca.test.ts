@@ -87,6 +87,25 @@ describe.skipIf(!CON_BD)('el negocio edita su marca', () => {
     expect((await db.negocioPorSlug('prueba-marca-a'))?.marca.colores.sobreFondo).toBe('#ffffff');
   });
 
+  it('guarda un logotipo solo si el archivo es de este negocio', async () => {
+    const buena = `https://x.public.blob.vercel-storage.com/negocios/${a.id}/marca/logoUrl-abc.png`;
+    expect(await en(a, () => db.guardarLogo('logoUrl', buena, actor))).toEqual({ ok: true });
+    expect((await db.negocioPorSlug('prueba-marca-a'))?.marca.logoUrl).toBe(buena);
+    const ajena = buena.replace(a.id, b.id);
+    expect((await en(a, () => db.guardarLogo('iconoUrl', ajena, actor))).ok).toBe(false);
+    expect(
+      (await en(a, () => db.guardarLogo('iconoUrl', 'https://atacante.com/x.png', actor))).ok,
+    ).toBe(false);
+    expect((await en(a, () => db.guardarLogo('iconoUrl', 'javascript:alert(1)', actor))).ok).toBe(
+      false,
+    );
+    // Guardar la marca después no borra el logotipo.
+    expect((await en(a, () => db.guardarMarca(cambios(), actor))).ok).toBe(true);
+    expect((await db.negocioPorSlug('prueba-marca-a'))?.marca.logoUrl).toBe(buena);
+    expect(await en(a, () => db.guardarLogo('logoUrl', null, actor))).toEqual({ ok: true });
+    expect((await db.negocioPorSlug('prueba-marca-a'))?.marca.logoUrl).toBeNull();
+  });
+
   it('la base impide editar otro negocio, cambiar su estado o sus ajustes', async () => {
     // Fila ajena: la política la deja fuera, no se actualiza nada.
     const ajena = await en(a, () =>

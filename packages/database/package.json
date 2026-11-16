@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist .turbo",
-    "invitar": "tsx scripts/invitar.ts"
+    "invitar": "tsx scripts/invitar.ts",
+    "plataforma:usuario": "tsx scripts/plataforma-usuario.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

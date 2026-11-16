@@ -11,9 +11,11 @@ import { crearCliente } from './cliente';
 import {
   conNegocio,
   negocioPorId,
+  negocioPorSlug,
   type AjustesNegocio,
   type MarcaNegocio,
   type Negocio,
+  type PlanNegocio,
 } from './negocio';
 import { emitirEnlaceContrasena } from './auth/usuarios';
 import { prisma } from './index';
@@ -23,13 +25,13 @@ import { prisma } from './index';
  *
  * Crear, suspender o borrar un negocio toca la tabla `tenant`, que el rol de
  * la aplicación solo puede leer. Por eso estas funciones se conectan con el
- * rol dueño (`DIRECT_URL`). Hoy las usan la siembra y las pruebas; el panel de
- * plataforma (Fase 3) las usará desde una ruta protegida.
+ * rol dueño (`DIRECT_URL`). Las usan la siembra, las pruebas y el panel de
+ * plataforma (`/plataforma`), que por eso necesita `DIRECT_URL` en el servidor.
  */
 
 let duenio: PrismaClient | null = null;
 
-function clienteDuenio(): PrismaClient {
+export function clienteDuenio(): PrismaClient {
   const url = process.env.DIRECT_URL;
   if (!url) throw new Error('Falta DIRECT_URL: las operaciones de plataforma usan el rol dueño.');
   duenio ??= crearCliente(url);
@@ -193,4 +195,52 @@ export async function cambiarEstadoNegocio(id: string, activo: boolean): Promise
  */
 export async function borrarNegocio(id: string): Promise<void> {
   await clienteDuenio().tenant.delete({ where: { id } });
+}
+
+// ---------------------------------------------------------------------------
+// Para el panel de plataforma
+// ---------------------------------------------------------------------------
+
+export interface NegocioEnLista {
+  readonly negocio: Negocio;
+  readonly creado: Date;
+  readonly sucursales: number;
+  readonly tarjetas: number;
+  readonly usuarios: number;
+}
+
+/** Todos los negocios, activos y suspendidos, con sus tamaños. */
+export async function listarNegocios(): Promise<NegocioEnLista[]> {
+  const filas = await clienteDuenio().tenant.findMany({
+    orderBy: { createdAt: 'desc' },
+    select: {
+      slug: true,
+      createdAt: true,
+      _count: { select: { branchs: true, loyaltyCards: true, userAccounts: true } },
+    },
+  });
+  const salida: NegocioEnLista[] = [];
+  for (const f of filas) {
+    const negocio = await negocioPorSlug(f.slug);
+    if (negocio)
+      salida.push({
+        negocio,
+        creado: f.createdAt,
+        sucursales: f._count.branchs,
+        tarjetas: f._count.loyaltyCards,
+        usuarios: f._count.userAccounts,
+      });
+  }
+  return salida;
+}
+
+/** Cambia la modalidad contratada. Solo plataforma: el negocio no puede. */
+export async function cambiarPlan(id: string, plan: PlanNegocio): Promise<void> {
+  const bd = clienteDuenio();
+  const fila = await bd.tenant.findUniqueOrThrow({ where: { id }, select: { settings: true } });
+  const ajustes =
+    typeof fila.settings === 'object' && fila.settings !== null && !Array.isArray(fila.settings)
+      ? fila.settings
+      : {};
+  await bd.tenant.update({ where: { id }, data: { settings: { ...ajustes, plan } } });
 }
