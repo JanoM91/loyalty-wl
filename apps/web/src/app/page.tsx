@@ -1,11 +1,22 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { negociosActivos, prisma, programaVigente } from '@wl/database';
+import { prisma, programaVigente } from '@wl/database';
 
 import { InicioNegocio } from '@/components/inicio/InicioNegocio';
-import { InicioPlataforma } from '@/components/inicio/InicioPlataforma';
+import { Inicio as InicioDelServicio } from '@/components/sitio/Inicio';
 import { negocioDeLaPeticion, ruta } from '@/lib/negocio';
+import { metadatosDelSitio } from '@/lib/sitio';
 
 export const dynamic = 'force-dynamic';
+
+/** La página del servicio sí se indexa; las de los negocios siguen sin indexarse. */
+export async function generateMetadata(): Promise<Metadata> {
+  if (await negocioDeLaPeticion()) return {};
+  return metadatosDelSitio(
+    'Programa de lealtad digital para tu negocio',
+    'La tarjeta de sellos de tu negocio en el celular de tus clientes, con Apple Wallet y Google Wallet. Sin app y sin papel.',
+  );
+}
 
 /**
  * Inicio, según la instalación:
@@ -16,14 +27,7 @@ export const dynamic = 'force-dynamic';
 export default async function Inicio() {
   const negocio = await negocioDeLaPeticion();
 
-  if (!negocio) {
-    const negocios = await negociosActivos();
-    return (
-      <InicioPlataforma
-        negocios={negocios.map((n) => ({ slug: n.slug, nombre: n.nombre, frase: n.marca.frase }))}
-      />
-    );
-  }
+  if (!negocio) return <InicioDelServicio />;
 
   if (!process.env.WL_NEGOCIO_UNICO) redirect(await ruta('/lealtad'));
 
