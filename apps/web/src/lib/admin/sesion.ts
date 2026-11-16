@@ -39,7 +39,7 @@ export async function exigirSesion(): Promise<Sesion> {
  * Rutas que una cuenta de sucursal sí puede abrir: la caja (con sus
  * subpantallas) y su propia cuenta, para cambiar la contraseña.
  */
-const RUTAS_SUCURSAL = ['/admin/lealtad/caja', '/admin/cuenta', '/admin/entrar'];
+const RUTAS_SUCURSAL = ['/admin/lealtad/caja', '/admin/cuenta', '/admin/entrar', '/admin/ayuda'];
 
 /**
  * Regla heredada de LAPANA (oct-2026): las cuentas de sucursal solo operan la caja

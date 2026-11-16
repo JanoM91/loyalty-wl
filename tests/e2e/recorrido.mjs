@@ -191,6 +191,28 @@ try {
     .catch(() => {});
   paso('Panel: la marca se guarda', /Marca guardada/.test(await panel.locator('body').innerText()));
 
+  // --- 8. Ayuda con los datos del negocio y alta de una sucursal ---
+  await panel.goto(`${BASE}/admin/ayuda`);
+  await foto(panel, '13-panel-ayuda');
+  const ayuda = await panel.locator('body').innerText();
+  paso(
+    'Panel: la ayuda habla de este negocio',
+    ayuda.includes('Registrar una visita') && ayuda.includes(`${codigo.split('-')[0]}-`),
+  );
+  const nueva = `Sucursal ${Date.now().toString(36)}`;
+  await panel.goto(`${BASE}/admin/sucursales`);
+  await panel.locator('input[name=nombre]').last().fill(nueva);
+  await panel.getByRole('button', { name: 'Crear sucursal' }).click();
+  await panel
+    .getByText('Sucursal creada')
+    .waitFor({ timeout: 10000 })
+    .catch(() => {});
+  await panel.goto(`${BASE}/admin/sucursales`);
+  paso(
+    'Panel: el dueño abre una sucursal nueva',
+    (await panel.locator('body').innerText()).includes(nueva),
+  );
+
   await panel.goto(`${BASE}/admin/lealtad/analitica`);
   await foto(panel, '11-panel-analitica');
   paso('Panel: la analítica abre', /Analítica/i.test(await panel.locator('body').innerText()));

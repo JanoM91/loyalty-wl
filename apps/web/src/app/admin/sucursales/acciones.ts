@@ -76,3 +76,66 @@ export async function guardarSucursal(
 
   return { ok: true, error: null };
 }
+
+export interface EstadoNueva {
+  readonly ok: boolean;
+  readonly error: string | null;
+}
+
+/** "Plaza Ánimas" → "plaza-animas". */
+function aSlug(texto: string): string {
+  return texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
+/**
+ * Abre una sucursal nueva. Nace apagada para el programa: se enciende en
+ * «Programa → Sucursales y códigos» cuando su personal ya practicó la caja.
+ */
+export async function crearSucursal(_previo: EstadoNueva, form: FormData): Promise<EstadoNueva> {
+  const sesion = await exigirRol(['ADMIN', 'DUENO']);
+  const nombre = String(form.get('nombre') ?? '')
+    .trim()
+    .replace(/\s+/g, ' ');
+  if (nombre.length < 2 || nombre.length > 160)
+    return { ok: false, error: 'Escribe el nombre de la sucursal.' };
+  const slug = aSlug(nombre);
+  if (!slug) return { ok: false, error: 'El nombre necesita al menos una letra o un número.' };
+
+  const repetida = await prisma.branch.findFirst({ where: { slug }, select: { id: true } });
+  if (repetida) return { ok: false, error: 'Ya tienes una sucursal con ese nombre.' };
+
+  const creada = await prisma.branch.create({
+    data: {
+      slug,
+      name: nombre,
+      addressLine: String(form.get('calle') ?? '')
+        .trim()
+        .slice(0, 250),
+      neighborhood: String(form.get('colonia') ?? '')
+        .trim()
+        .slice(0, 120),
+      city: String(form.get('ciudad') ?? '')
+        .trim()
+        .slice(0, 120),
+      postalCode: '',
+    },
+    select: { id: true },
+  });
+  await prisma.auditLog.create({
+    data: {
+      userId: sesion.userId,
+      action: 'sucursal.crear',
+      entityType: 'branch',
+      entityId: creada.id,
+      metadata: { nombre },
+    },
+  });
+  revalidatePath('/admin/sucursales');
+  return { ok: true, error: null };
+}

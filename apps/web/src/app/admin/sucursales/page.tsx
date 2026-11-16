@@ -4,6 +4,7 @@ import { prisma } from '@wl/database';
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { exigirRol } from '@/lib/admin/sesion';
 import { FichaSucursal, type DatosSucursal } from './FichaSucursal';
+import { NuevaSucursal } from './NuevaSucursal';
 
 export const metadata: Metadata = { title: 'Sucursales' };
 export const dynamic = 'force-dynamic';
@@ -46,12 +47,13 @@ export default async function SucursalesAdminPage() {
       sesion={sesion}
       actual="/admin/sucursales"
       titulo="Sucursales"
-      descripcion="Dirección, teléfono y WhatsApp de cada sucursal. Para abrir una sucursal nueva, pídela a soporte."
+      descripcion="Dirección, teléfono y WhatsApp de cada sucursal."
     >
       <div className="space-y-5">
         {filas.map((s) => (
           <FichaSucursal key={s.slug} sucursal={s} />
         ))}
+        {(sesion.rol === 'ADMIN' || sesion.rol === 'DUENO') && <NuevaSucursal />}
       </div>
     </MarcoPanel>
   );

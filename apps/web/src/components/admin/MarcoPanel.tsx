@@ -23,6 +23,7 @@ const SECCIONES = [
   { href: '/admin/marca', etiqueta: 'Marca', roles: ['ADMIN', 'DUENO'] },
   { href: '/admin/sucursales', etiqueta: 'Sucursales', roles: DIRECCION },
   { href: '/admin/usuarios', etiqueta: 'Usuarios', roles: ['ADMIN', 'DUENO'] },
+  { href: '/admin/ayuda', etiqueta: 'Ayuda', roles: ['ADMIN', 'DUENO', 'GERENTE', 'SUCURSAL'] },
 ] as const;
 
 export function MarcoPanel({
