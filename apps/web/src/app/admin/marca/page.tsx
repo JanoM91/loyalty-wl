@@ -20,11 +20,17 @@ export default async function MarcaPage() {
       sesion={sesion}
       actual="/admin/marca"
       titulo="Marca y datos"
-      descripcion="Así ven tu programa tus clientes. Los cambios se aplican al guardar."
+      descripcion="Así ven tu programa tus clientes. El logotipo se guarda al elegirlo; lo demás, al tocar Guardar."
     >
       <div className="grid gap-12">
-        <FormularioMarca nombre={negocio.nombre} marca={negocio.marca} programa={programa} />
         <Logotipos marca={negocio.marca} activo={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />
+        {/* Con colores nuevos (p. ej. los del logotipo) el formulario se vuelve a armar. */}
+        <FormularioMarca
+          key={Object.values(negocio.marca.colores).join('')}
+          nombre={negocio.nombre}
+          marca={negocio.marca}
+          programa={programa}
+        />
       </div>
     </MarcoPanel>
   );

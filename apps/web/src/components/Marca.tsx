@@ -62,7 +62,16 @@ export function LogoMarca({
   const marca = useMarca();
   const url = sobre === 'oscuro' ? marca.logoClaroUrl : marca.logoUrl;
   if (url) return <img src={url} alt={marca.nombre} className={`w-auto ${className}`} />;
+  // Sobre el color de la tarjeta, sin logotipo claro: el Sello junto al nombre.
+  const sello = sobre === 'oscuro' ? marca.iconoUrl : null;
   return (
-    <span className={`font-display leading-tight font-bold ${className}`}>{marca.nombre}</span>
+    <span
+      className={`font-display leading-tight font-bold ${sello ? 'inline-flex items-center gap-2' : ''} ${className}`}
+    >
+      {sello ? (
+        <img src={sello} alt="" className="h-[1.7em] w-[1.7em] flex-none object-contain" />
+      ) : null}
+      {marca.nombre}
+    </span>
   );
 }

@@ -108,6 +108,18 @@ export default async function AdminInicioPage() {
   // Arranque: solo para los clubes que vienen del asistente.
   const pasos: Paso[] | null = alta
     ? [
+        // El logotipo solo lo cambia quien administra la marca.
+        ...(administra
+          ? [
+              {
+                titulo: 'Pon tu logotipo',
+                texto: 'Una foto o captura sirve. Sale en tu tarjeta, tu panel y tu cartel.',
+                boton: 'Subir mi logotipo',
+                href: `${base}/admin/marca#logotipo`,
+                hecho: Boolean(negocio.marca.logoUrl || negocio.marca.logoClaroUrl),
+              },
+            ]
+          : []),
         {
           titulo: 'Saca tu propia tarjeta',
           texto: 'Como lo hará tu cliente. Tarda un minuto.',
@@ -198,14 +210,16 @@ export default async function AdminInicioPage() {
               <section aria-labelledby="arranca" className={`${TARJETA} wl-entra p-4 lg:p-5`}>
                 <div className="flex items-baseline justify-between gap-3">
                   <h2 id="arranca" className="text-[22px]">
-                    Arranca en 3 pasos
+                    Arranca en {pasos.length} pasos
                   </h2>
-                  <span className={`text-[13px] font-semibold ${SUAVE}`}>{hechos} de 3</span>
+                  <span className={`text-[13px] font-semibold ${SUAVE}`}>
+                    {hechos} de {pasos.length}
+                  </span>
                 </div>
                 <div aria-hidden="true" className="mt-3 h-1.5 rounded-full bg-[#CDE8DC]">
                   <div
                     className="h-1.5 rounded-full bg-[#00C389] transition-[width] duration-500"
-                    style={{ width: `${Math.max(4, (hechos / 3) * 100)}%` }}
+                    style={{ width: `${Math.max(4, (hechos / pasos.length) * 100)}%` }}
                   />
                 </div>
                 <ol className="mt-4 flex flex-col gap-4">

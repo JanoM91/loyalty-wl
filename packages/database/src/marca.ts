@@ -170,3 +170,37 @@ export async function guardarLogo(
   });
   return { ok: true };
 }
+
+/**
+ * Cambia solo los colores de la marca (por ejemplo, los que salen del
+ * logotipo). Rechaza combinaciones que no se leen, igual que `guardarMarca`.
+ */
+export async function guardarColoresMarca(
+  colores: ColoresMarca,
+  actor: { readonly userId: string },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const negocio = await negocioActual();
+  const { errores } = revisarColores(colores);
+  if (errores[0]) return { ok: false, error: errores[0] };
+  await transaccion(async (tx) => {
+    const fila = await tx.tenant.findUniqueOrThrow({
+      where: { id: negocio.id },
+      select: { brand: true },
+    });
+    const marca: MarcaNegocio = { ...leerMarca(fila.brand), colores: { ...colores } };
+    await tx.tenant.update({
+      where: { id: negocio.id },
+      data: { brand: marca as unknown as Prisma.InputJsonValue },
+    });
+    await tx.auditLog.create({
+      data: {
+        userId: actor.userId,
+        action: 'marca.colores',
+        entityType: 'tenant',
+        entityId: negocio.id,
+        metadata: { colores: { ...colores } },
+      },
+    });
+  });
+  return { ok: true };
+}

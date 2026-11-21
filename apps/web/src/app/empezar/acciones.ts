@@ -11,15 +11,24 @@ import {
   crearNegocio,
   definirContrasenaConEnlace,
   direccionLibre,
+  guardarLogo,
   iniciarSesion,
   invitarDuenio,
   validarContrasena,
 } from '@wl/database';
-import { COMBINACIONES, esPrefijoCodigo, giroPorId, vencimientoDePrueba } from '@wl/domain';
+import {
+  COMBINACIONES,
+  esPrefijoCodigo,
+  giroPorId,
+  leerColoresMarca,
+  vencimientoDePrueba,
+  type ColoresMarca,
+} from '@wl/domain';
 
 import { VERSION_LEGAL } from '@/components/sitio/Legal';
 import { contextoPeticion, guardarSesionEnNavegador } from '@/lib/admin/sesion';
 import { enviarCorreo } from '@/lib/correo';
+import { almacenListo, subirImagenDeMarca } from '@/lib/imagenes-de-marca';
 import { mandarBienvenida } from '@/lib/correo-bienvenida';
 import { negocioDeLaPeticion, origenDeLaPeticion } from '@/lib/negocio';
 
@@ -104,6 +113,16 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
     COMBINACIONES.find((c) => c.id === t('combinacion')) ??
     COMBINACIONES.find((c) => c.id === giro.combinaciones[0]) ??
     COMBINACIONES[0]!;
+  // «Los de tu logo»: colores calculados en el celular a partir del logotipo.
+  // Se aceptan solo si se leen bien; si no, va la combinación del giro.
+  let coloresDelLogo: ColoresMarca | null = null;
+  if (t('combinacion') === 'logo') {
+    try {
+      coloresDelLogo = leerColoresMarca(JSON.parse(t('colores')));
+    } catch {
+      coloresDelLogo = null;
+    }
+  }
 
   if ((await altasRecientes(24)) >= TOPE_DIARIO) {
     return fallo('Hoy recibimos muchas solicitudes. Escríbenos por WhatsApp y lo armamos.');
@@ -135,7 +154,7 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
     prefijoCodigo: prefijo,
     marca: {
       plantilla: combinacion.plantilla,
-      colores: combinacion.colores,
+      colores: coloresDelLogo ?? combinacion.colores,
       contacto: { correo, whatsapp, sitio: null },
     },
     ajustes: {
@@ -175,6 +194,33 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   // La sesión vive solo en la dirección del club, como la del acceso normal.
   if (acceso) await guardarSesionEnNavegador(acceso.token, acceso.expira, `/${slug}`);
 
+  // El logotipo que eligió en el asistente se queda como el del club (y de él
+  // sale el Sello). Solo se cambia desde el panel. Si algo falla, el club se
+  // crea igual y la pantalla final le pide subirlo desde el panel.
+  const logo = form.get('logo');
+  const sello = form.get('sello');
+  let logoGuardado = true;
+  if (logo instanceof File && logo.size > 0) {
+    logoGuardado = false;
+    if (acceso && almacenListo()) {
+      try {
+        const actor = { userId: acceso.sesion.userId };
+        await conNegocio(r.negocio, async () => {
+          const url = await subirImagenDeMarca(r.negocio.id, logo, 'logoUrl');
+          const guardado = await guardarLogo('logoUrl', url, actor);
+          if (!guardado.ok) throw new Error(guardado.error);
+          if (sello instanceof File && sello.size > 0) {
+            const s = await subirImagenDeMarca(r.negocio.id, sello, 'sello-auto');
+            await guardarLogo('iconoUrl', s, actor);
+          }
+        });
+        logoGuardado = true;
+      } catch (e) {
+        console.warn('[alta] no se pudo guardar el logotipo', e);
+      }
+    }
+  }
+
   // Aviso a Exkalibur. Si el correo no está configurado, queda en el registro
   // del servidor y el club aparece en /plataforma de todos modos.
   console.warn(`[alta] club nuevo: ${slug} (${giro.id}, ${origen || 'sin origen'})`);
@@ -209,5 +255,7 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   revalidatePath('/negocios');
   // Si la sesión no se pudo abrir, la pantalla final ofrece entrar con la
   // contraseña recién elegida.
-  redirect(`/empezar/listo?n=${slug}${acceso ? '' : '&sin-sesion=1'}`);
+  redirect(
+    `/empezar/listo?n=${slug}${acceso ? '' : '&sin-sesion=1'}${logoGuardado ? '' : '&logo=0'}`,
+  );
 }
