@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
 import { NOMBRE_COOKIE_TARJETA, enlacePersonalDeTarjeta, leerSesionTarjeta } from '@wl/database';
 
@@ -28,7 +29,7 @@ export async function GET() {
   }
 
   const negocio = await exigirNegocio();
-  const icono = negocio.marca.iconoUrl;
+  const iconos = iconosDeApp(negocio, base);
   const manifest = {
     name: `${negocio.nombre} · Tarjeta de lealtad`,
     short_name: negocio.nombre.slice(0, 12),
@@ -41,8 +42,12 @@ export async function GET() {
     background_color: negocio.marca.colores.fondo,
     theme_color: negocio.marca.colores.fondo,
     lang: 'es-MX',
-    // Sin isotipo, el celular usa una captura de la página como ícono.
-    icons: icono ? [{ src: icono, sizes: 'any', purpose: 'any' }] : [],
+    // El isotipo del negocio o, si no subió, su inicial en sus colores.
+    icons: [
+      { src: iconos.chico, sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: iconos.grande, sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: iconos.grande, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+    ],
   };
 
   const respuesta = NextResponse.json(manifest, {

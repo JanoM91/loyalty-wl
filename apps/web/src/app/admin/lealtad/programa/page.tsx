@@ -4,13 +4,14 @@ import { programaVigente, versionesDelPrograma, VERSION_TERMINOS } from '@wl/dat
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
+import { exigirNegocio } from '@/lib/negocio';
 import { CORREO_CONFIGURADO } from '@/lib/correo';
 import { fechaLarga } from '@/lib/lealtad/formato';
 import { appleWalletConfigurado } from '@/lib/wallet/apple/config';
 import { googleWalletConfigurado } from '@/lib/wallet/google/config';
 import { FormularioPrograma } from './FormularioPrograma';
 
-export const metadata: Metadata = { title: 'Reglas del programa' };
+export const metadata: Metadata = { title: 'Premio y reglas' };
 export const dynamic = 'force-dynamic';
 
 /**
@@ -23,33 +24,25 @@ export default async function ProgramaPage() {
   const sesion = await exigirRol(ROLES_PROGRAMA);
   const [programa, versiones] = await Promise.all([programaVigente(), versionesDelPrograma()]);
 
-  const integraciones = [
-    {
-      nombre: 'Correo (Resend)',
-      listo: CORREO_CONFIGURADO,
-      falta: 'RESEND_API_KEY y dominio verificado',
-    },
-    {
-      nombre: 'Fotos de ticket (Vercel Blob)',
-      listo: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
-      falta: 'BLOB_READ_WRITE_TOKEN',
-    },
-    { nombre: 'Apple Wallet', listo: appleWalletConfigurado(), falta: 'Certificado Pass Type ID' },
-    {
-      nombre: 'Google Wallet',
-      listo: googleWalletConfigurado(),
-      falta: 'Cuenta emisora',
-    },
-    { nombre: 'Lectura del ticket con IA', listo: false, falta: 'Clave de Claude API · fase 2' },
-    { nombre: 'WhatsApp', listo: false, falta: 'Meta Tech Provider · fase 2' },
-  ];
+  // Lo que este club ya usa. Sin nombres técnicos: el dueño no configura
+  // nada de esto. Los clubes del asistente no lo ven: no pueden hacer nada al
+  // respecto y la plataforma lo activa para todos a la vez.
+  const negocio = await exigirNegocio();
+  const servicios = negocio.ajustes.alta
+    ? []
+    : [
+        { nombre: 'Correos de verificación', listo: CORREO_CONFIGURADO },
+        { nombre: 'Fotos de ticket en caja', listo: Boolean(process.env.BLOB_READ_WRITE_TOKEN) },
+        { nombre: 'Apple Wallet', listo: appleWalletConfigurado() },
+        { nombre: 'Google Wallet', listo: googleWalletConfigurado() },
+      ];
 
   return (
     <MarcoPanel
       sesion={sesion}
       actual="/admin/lealtad"
       titulo="Premio y reglas"
-      descripcion={`Versión vigente ${programa.version} · términos ${VERSION_TERMINOS}`}
+      descripcion={`Qué gana tu cliente y cuántos sellos pide. Versión ${programa.version} · términos ${VERSION_TERMINOS}`}
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <FormularioPrograma key={programa.version} programa={programa} />
@@ -63,7 +56,7 @@ export default async function ProgramaPage() {
               <dt className="text-muted">Vencimientos</dt>
               <dd>Sin vencimiento de sellos ni de premios.</dd>
               <dt className="text-muted">Canje</dt>
-              <dd>Requiere un contacto verificado; por ahora, el correo.</dd>
+              <dd>Requiere un contacto verificado: correo o celular.</dd>
             </dl>
           </section>
 
@@ -100,24 +93,26 @@ export default async function ProgramaPage() {
             </ol>
           </section>
 
-          <section className="grid content-start gap-3 rounded-lg border border-rule bg-cream p-4">
-            <h2 className="font-sans text-base font-semibold text-ink">Integraciones</h2>
-            <ul className="grid gap-2 text-sm">
-              {integraciones.map((i) => (
-                <li
-                  key={i.nombre}
-                  className="flex items-center justify-between gap-3 rounded-md border border-rule bg-white px-3 py-2"
-                >
-                  <span>{i.nombre}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${i.listo ? 'bg-disponible/10 text-disponible' : 'bg-agotado/10 text-agotado'}`}
+          {servicios.length > 0 && (
+            <section className="grid content-start gap-3 rounded-lg border border-rule bg-cream p-4">
+              <h2 className="font-sans text-base font-semibold text-ink">Servicios del club</h2>
+              <ul className="grid gap-2 text-sm">
+                {servicios.map((i) => (
+                  <li
+                    key={i.nombre}
+                    className="flex items-center justify-between gap-3 rounded-md border border-rule bg-white px-3 py-2"
                   >
-                    {i.listo ? 'Activa' : `Pendiente: ${i.falta}`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
+                    <span>{i.nombre}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${i.listo ? 'bg-disponible/10 text-disponible' : 'bg-crumb text-ink'}`}
+                    >
+                      {i.listo ? 'Activo' : 'Pronto'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
       </div>
     </MarcoPanel>

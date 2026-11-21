@@ -12,7 +12,7 @@ import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil, fechaLarga } from '@/lib/lealtad/formato';
 import { regenerarEnlace } from './acciones';
 
-export const metadata: Metadata = { title: 'Tarjeta de lealtad' };
+export const metadata: Metadata = { title: 'Cliente' };
 export const dynamic = 'force-dynamic';
 
 const ESTADO: Record<string, { texto: string; clase: string }> = {
@@ -159,7 +159,7 @@ export default async function DetalleTarjetaPage({
                 <span>
                   <b className="font-semibold text-ink">{p.nombre}</b>{' '}
                   <span className="text-muted">
-                    · estampa {p.posicion}, tarjeta {p.ciclo} · {fechaLarga(p.generado)}
+                    · sello {p.posicion}, tarjeta {p.ciclo} · {fechaLarga(p.generado)}
                   </span>
                 </span>
                 <span className="text-xs">

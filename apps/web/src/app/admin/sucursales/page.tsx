@@ -6,7 +6,7 @@ import { exigirRol } from '@/lib/admin/sesion';
 import { FichaSucursal, type DatosSucursal } from './FichaSucursal';
 import { NuevaSucursal } from './NuevaSucursal';
 
-export const metadata: Metadata = { title: 'Sucursales' };
+export const metadata: Metadata = { title: 'Direcciones y contacto' };
 export const dynamic = 'force-dynamic';
 
 export default async function SucursalesAdminPage() {
@@ -46,7 +46,7 @@ export default async function SucursalesAdminPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/sucursales"
-      titulo="Sucursales"
+      titulo="Direcciones y contacto"
       descripcion="Dirección, teléfono y WhatsApp de cada sucursal."
     >
       <div className="space-y-5">

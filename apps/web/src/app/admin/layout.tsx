@@ -1,15 +1,31 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 import { ESTILO_PANEL } from '@/lib/admin/panel';
-import { exigirNegocio } from '@/lib/negocio';
+import { iconosDeApp } from '@/lib/iconos-app';
+import { exigirNegocio, rutaBase } from '@/lib/negocio';
 
-export const metadata: Metadata = {
-  title: { default: 'Panel', template: '%s · Panel' },
-  // El panel nunca debe aparecer en un buscador. También está bloqueado en
-  // robots.ts, pero esa es una petición y esto es una instrucción directa.
-  robots: { index: false, follow: false, nocache: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const [base, negocio] = await Promise.all([rutaBase(), exigirNegocio()]);
+  const iconos = iconosDeApp(negocio, base);
+  return {
+    title: { default: 'Panel', template: '%s · Panel' },
+    // El panel nunca debe aparecer en un buscador. También está bloqueado en
+    // robots.ts, pero esa es una petición y esto es una instrucción directa.
+    robots: { index: false, follow: false, nocache: true },
+    // Se puede instalar en el celular: «Agregar a pantalla de inicio».
+    manifest: `${base}/admin/manifest.webmanifest`,
+    applicationName: 'Mi panel',
+    appleWebApp: { capable: true, title: 'Mi panel', statusBarStyle: 'default' },
+    // Ícono con la marca del negocio, como su tarjeta.
+    icons: {
+      icon: [{ url: iconos.chico, sizes: '192x192', type: 'image/png' }],
+      apple: [{ url: iconos.apple, sizes: '180x180', type: 'image/png' }],
+    },
+  };
+}
+
+export const viewport: Viewport = { themeColor: '#F1FBF6' };
 
 /**
  * Contenedor del panel.

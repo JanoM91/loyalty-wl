@@ -3,10 +3,13 @@ import type { ReactNode } from 'react';
 
 import { LogoMarca } from '@/components/Marca';
 import { sesionActual } from '@/lib/admin/sesion';
+import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { nombre } = await exigirNegocio();
+  const [negocio, base] = await Promise.all([exigirNegocio(), rutaBase()]);
+  const { nombre } = negocio;
+  const iconos = iconosDeApp(negocio, base);
   return {
     title: { default: 'Programa de lealtad', template: `%s · ${nombre}` },
     robots: { index: false, follow: false },
@@ -14,6 +17,10 @@ export async function generateMetadata(): Promise<Metadata> {
     // manifest es dinámico (lleva el acceso de esta sesión); ver
     // lealtad/manifest.webmanifest/route.ts.
     appleWebApp: { capable: true, title: nombre, statusBarStyle: 'black' },
+    icons: {
+      icon: [{ url: iconos.chico, sizes: '192x192', type: 'image/png' }],
+      apple: [{ url: iconos.apple, sizes: '180x180', type: 'image/png' }],
+    },
   };
 }
 

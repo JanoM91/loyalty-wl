@@ -38,8 +38,7 @@ export default async function TarjetaPage({
       )}
       {guardar && (
         <Aviso tono="info" titulo="Guárdala en tu celular">
-          Elige una: tu pantalla de inicio o tu Wallet. Las dos se actualizan solas con cada
-          estampa.{' '}
+          Elige una: tu pantalla de inicio o tu Wallet. Las dos se actualizan solas con cada sello.{' '}
           <a href="#guardar" className="font-semibold underline">
             Ver cómo
           </a>

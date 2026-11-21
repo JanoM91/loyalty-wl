@@ -10,7 +10,7 @@ import { estadoAcceso } from '../EstadoAcceso';
 import { EdicionUsuario } from '../FormularioUsuario';
 import { AccesoUsuario } from './AccesoUsuario';
 
-export const metadata: Metadata = { title: 'Usuario' };
+export const metadata: Metadata = { title: 'Equipo' };
 export const dynamic = 'force-dynamic';
 
 const instante = (d: Date) => `${fechaLarga(d)}, ${hora(d)}`;
@@ -31,11 +31,6 @@ export default async function UsuarioPage({ params }: { params: Promise<{ id: st
       miga={{ texto: 'Equipo', ruta: '/admin/usuarios' }}
       titulo={u.nombre}
       descripcion={u.email}
-      acciones={
-        <a href="/admin/usuarios" className="text-sm text-ink underline underline-offset-4">
-          Volver a Usuarios
-        </a>
-      }
     >
       <section className="mb-8 rounded-sm border border-rule bg-cream px-5 py-5">
         <h2 className="font-display text-lg text-ink">Acceso</h2>

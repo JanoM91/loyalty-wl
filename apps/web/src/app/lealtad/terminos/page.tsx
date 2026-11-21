@@ -106,8 +106,8 @@ export default async function TerminosPage() {
 
       <Seccion n={6} titulo="Uso indebido">
         <p>
-          Si una tarjeta se usa para sumar visitas que no ocurrieron, {nombre} puede quitarle esas
-          estampas o cancelarla.
+          Si una tarjeta se usa para sumar visitas que no ocurrieron, {nombre} puede quitarle esos
+          sellos o cancelarla.
         </p>
       </Seccion>
 

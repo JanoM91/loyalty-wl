@@ -13,7 +13,7 @@ import { exigirNegocio, rutaBase, sitioDeLaPeticion } from '@/lib/negocio';
 import { MarcaDelNegocio } from '@/components/admin/MarcaDelNegocio';
 import { estiloDeMarca } from '@/lib/marca';
 
-export const metadata: Metadata = { title: 'Cartel de mostrador' };
+export const metadata: Metadata = { title: 'Tu cartel QR' };
 export const dynamic = 'force-dynamic';
 
 /**
