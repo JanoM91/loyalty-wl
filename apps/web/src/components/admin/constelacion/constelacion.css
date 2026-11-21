@@ -1,0 +1,546 @@
+/**
+ * Mapa del club («Constelación»). Todo bajo `.cn` para no tocar el resto del
+ * panel. Principios: ver la skill «lienzo espacial minimalista».
+ */
+.cn {
+  --cn-fondo: #f1fbf6;
+  --cn-tinta: #06231c;
+  --cn-suave: #3c5a51;
+  --cn-linea: #cde8dc;
+  --cn-hilo: #9fd3be;
+  --cn-activo: #5b2eff;
+  --cn-verde: #00c389;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background-color: var(--cn-fondo);
+  background-image: radial-gradient(#c9e7da 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+  color: var(--cn-tinta);
+  font-family: 'Onest Variable', 'Onest', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.cn * {
+  box-sizing: border-box;
+}
+.cn :focus-visible {
+  outline: 3px solid var(--cn-tinta);
+  outline-offset: 3px;
+}
+.cn-fondo {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+}
+.cn-fondo.arrastrando {
+  cursor: grabbing;
+}
+.cn-mundo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transition: transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cn-mundo.sin-transicion {
+  transition: none;
+}
+.cn-hilos {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+.cn-hilos path {
+  fill: none;
+  stroke: var(--cn-hilo);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transition:
+    stroke 0.2s,
+    opacity 0.3s;
+}
+.cn-hilos path.activo {
+  stroke: var(--cn-activo);
+  stroke-width: 2.4;
+}
+.cn-hilos path.propio {
+  stroke-dasharray: 6 6;
+}
+.cn-hilos path.apagado {
+  opacity: 0.12;
+}
+
+.cn-nodo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 1.5px solid var(--cn-linea);
+  border-radius: 22px;
+  padding: 14px 16px 16px;
+  box-shadow:
+    0 1px 0 rgba(6, 35, 28, 0.04),
+    0 12px 32px -20px rgba(6, 35, 28, 0.35);
+  transition:
+    filter 0.3s,
+    opacity 0.3s,
+    box-shadow 0.2s,
+    width 0.3s,
+    border-color 0.2s;
+  cursor: pointer;
+  touch-action: none;
+}
+.cn-nodo:hover {
+  box-shadow:
+    0 1px 0 rgba(6, 35, 28, 0.05),
+    0 18px 40px -20px rgba(6, 35, 28, 0.45);
+}
+.cn-nodo.sel {
+  border: 2px solid var(--cn-tinta);
+  z-index: 5;
+}
+.cn-nodo.destino {
+  border: 2px dashed var(--cn-activo);
+}
+.cn-nodo.apagado {
+  filter: blur(6px);
+  opacity: 0.25;
+  pointer-events: none;
+}
+.cn-nodo.alerta {
+  border-color: #e8a23a;
+}
+.cn-nodo.nota {
+  background: #fff7c7;
+  border-color: #ead97a;
+}
+.cn-cab {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.cn-abrir {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.cn-ini {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  font-family: 'Bricolage Grotesque Variable', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+}
+.cn-tit {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.cn-tit b {
+  font-family: 'Bricolage Grotesque Variable', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.cn-tit span {
+  font-size: 13.5px;
+  color: var(--cn-suave);
+}
+.cn-tit span.rojo {
+  color: #a4321f;
+  font-weight: 600;
+}
+/* Los controles flotan sobre la esquina: ocultos no ocupan lugar. */
+.cn-ctl {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  display: flex;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.cn-nodo:hover .cn-ctl,
+.cn-nodo:focus-within .cn-ctl,
+.cn-nodo.sel .cn-ctl {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cn-nodo.sel .cn-abrir {
+  padding-right: 92px;
+}
+.cn-nodo.nota .cn-ctl {
+  position: static;
+  background: transparent;
+  justify-content: flex-end;
+}
+.cn-ic {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  color: var(--cn-tinta);
+  cursor: pointer;
+}
+.cn-ic:hover {
+  background: #e4f6ee;
+}
+.cn-res {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e3f2eb;
+  font-size: 14px;
+  color: var(--cn-suave);
+}
+.cn-det {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 14.5px;
+  cursor: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.cn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--cn-tinta);
+  color: #f1fbf6;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0 18px;
+  cursor: pointer;
+}
+.cn-btn.grande {
+  min-height: 58px;
+  font-size: 17px;
+  background: var(--cn-verde);
+  color: var(--cn-tinta);
+}
+.cn-btn.sec {
+  background: #fff;
+  color: var(--cn-tinta);
+  border: 1.5px solid var(--cn-linea);
+  font-weight: 500;
+}
+.cn-btn.violeta {
+  background: var(--cn-activo);
+  color: #fff;
+}
+.cn-lk {
+  color: var(--cn-tinta);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.cn-campo {
+  min-height: 46px;
+  width: 100%;
+  border: 1.5px solid var(--cn-linea);
+  border-radius: 12px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--cn-tinta);
+  background: #fff;
+}
+.cn-tarjeta {
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.cn-tarjeta .num {
+  font-family: 'Bricolage Grotesque Variable', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1;
+}
+.cn-puntos {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cn-puntos span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+}
+.cn-qr {
+  width: 120px;
+  height: 120px;
+  flex: none;
+  background: #fff;
+  border: 1.5px solid var(--cn-tinta);
+  border-radius: 12px;
+  padding: 6px;
+}
+.cn-qr svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.cn-pasos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cn-pasos a {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+.cn-pasos a:hover {
+  background: #eef9f4;
+}
+.cn-pasos .n {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid var(--cn-tinta);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cn-pasos .hecho .n {
+  background: #2f6b3f;
+  border-color: #2f6b3f;
+  color: #fff;
+}
+.cn-pasos .hecho b {
+  text-decoration: line-through;
+  color: var(--cn-suave);
+}
+.cn-nota-texto {
+  width: 100%;
+  min-height: 72px;
+  border: 0;
+  background: transparent;
+  resize: none;
+  font: inherit;
+  font-size: 15px;
+  color: var(--cn-tinta);
+  cursor: text;
+}
+
+.cn-arriba {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+  z-index: 10;
+}
+.cn-arriba > * {
+  pointer-events: auto;
+}
+.cn-miga {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--cn-suave);
+  min-width: 0;
+}
+.cn-miga button {
+  min-height: 44px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  padding: 0 16px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--cn-tinta);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.cn-der {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--cn-suave);
+}
+.cn-der button.salir {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--cn-suave);
+  font: inherit;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.cn-foco {
+  position: absolute;
+  left: 50%;
+  top: 76px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--cn-tinta);
+  color: #f1fbf6;
+  border-radius: 999px;
+  padding: 6px 6px 6px 18px;
+  font-size: 14px;
+  z-index: 12;
+  white-space: nowrap;
+}
+.cn-foco button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: #f1fbf6;
+  color: var(--cn-tinta);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 14px;
+  cursor: pointer;
+}
+.cn-pista {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  font-size: 13.5px;
+  color: var(--cn-suave);
+  background: rgba(241, 251, 246, 0.88);
+  padding: 8px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: calc(100% - 32px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 10;
+}
+.cn-zoom {
+  position: absolute;
+  right: 20px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0.35;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+.cn-zoom:hover,
+.cn-zoom:focus-within {
+  opacity: 1;
+}
+.cn-zoom button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--cn-linea);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 20px;
+  color: var(--cn-tinta);
+  cursor: pointer;
+}
+
+@media (max-width: 719px) {
+  .cn-arriba {
+    left: 12px;
+    right: 12px;
+    top: 10px;
+  }
+  .cn-miga button {
+    max-width: 46vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cn-miga > span,
+  .cn-miga > b {
+    display: none;
+  }
+  .cn-foco {
+    top: 66px;
+  }
+  .cn-pista {
+    bottom: 12px;
+    font-size: 12.5px;
+  }
+  .cn-zoom {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cn-mundo,
+  .cn-nodo,
+  .cn-hilos path {
+    transition: none;
+  }
+}
+@media print {
+  .cn {
+    display: none;
+  }
+}

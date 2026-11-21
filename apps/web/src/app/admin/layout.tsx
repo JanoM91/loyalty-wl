@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import { ESTILO_PANEL } from '@/lib/admin/panel';
 import { exigirNegocio } from '@/lib/negocio';
 
 export const metadata: Metadata = {
@@ -21,5 +22,11 @@ export const metadata: Metadata = {
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   // El panel es de un negocio: en una dirección que no es de ninguno, 404.
   await exigirNegocio();
-  return <div className="min-h-screen bg-crumb">{children}</div>;
+  // El panel se ve con la identidad de club-lealtad, no con la del negocio:
+  // la plantilla «aire» y sus colores reemplazan los de la marca aquí dentro.
+  return (
+    <div data-plantilla="aire" style={ESTILO_PANEL} className="min-h-screen bg-crumb text-ink">
+      {children}
+    </div>
+  );
 }

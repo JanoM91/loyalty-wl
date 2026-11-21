@@ -8,6 +8,7 @@ import { exigirRol } from '@/lib/admin/sesion';
 import { hora } from '@/lib/lealtad/formato';
 import { Caja } from './Caja';
 import { exigirNegocio } from '@/lib/negocio';
+import { estiloDeMarca } from '@/lib/marca';
 
 export const metadata: Metadata = { title: 'Caja de lealtad' };
 export const dynamic = 'force-dynamic';
@@ -91,6 +92,7 @@ export default async function CajaPage({
         hoy={fechaLocal(new Date(), negocio.zonaHoraria)}
         folioObligatorio={negocio.ajustes.comprobanteConQr === 'OBLIGATORIO'}
         sinTicket={negocio.ajustes.comprobanteConQr === 'NO_PEDIR'}
+        marcaNegocio={{ estilo: estiloDeMarca(negocio), plantilla: negocio.marca.plantilla }}
         fotosActivas={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
         pendientes={pendientes}
         programa={programa}

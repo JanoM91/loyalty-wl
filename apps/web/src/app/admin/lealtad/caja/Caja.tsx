@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useState, useTransition, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { describirPremio, type ProgramaLealtad } from '@wl/domain';
 import type { VistaCaja } from '@wl/database';
@@ -8,6 +8,7 @@ import type { VistaCaja } from '@wl/database';
 import { Aviso } from '@/components/lealtad/Aviso';
 import { Icono, iconoDePremio, type NombreIcono } from '@/components/lealtad/Iconos';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
+import { MarcaDelNegocio } from '@/components/admin/MarcaDelNegocio';
 import { Escaner } from './Escaner';
 import { reducirFoto } from './foto';
 import { NuevoCliente } from './NuevoCliente';
@@ -49,6 +50,8 @@ interface Props {
   readonly folioObligatorio?: boolean;
   /** El negocio no pide ticket: la visita se suma en un toque, sin pantalla de ticket. */
   readonly sinTicket?: boolean;
+  /** Colores y plantilla del negocio, para mostrar la tarjeta como la ve el cliente. */
+  readonly marcaNegocio: { readonly estilo: CSSProperties; readonly plantilla: string };
   readonly sucursal: {
     readonly slug: string;
     readonly nombre: string;
@@ -87,6 +90,7 @@ export function Caja({
   verSucursalSolicitudes,
   folioObligatorio = false,
   sinTicket = false,
+  marcaNegocio,
 }: Props) {
   const marca = useMarca();
   const router = useRouter();
@@ -603,6 +607,7 @@ export function Caja({
 
       {paso === 'resultado' && resultado && tarjeta && (
         <Resultado
+          marca={marcaNegocio}
           r={resultado}
           tarjeta={tarjeta}
           programa={programa}
@@ -884,6 +889,7 @@ function BotonSiguiente({ onClick }: { onClick: () => void }) {
 }
 
 function Resultado(p: {
+  marca: { readonly estilo: CSSProperties; readonly plantilla: string };
   r: RespuestaVisita;
   tarjeta: VistaCaja;
   programa: ProgramaLealtad;
@@ -917,19 +923,21 @@ function Resultado(p: {
             {r.despues.ciclo > r.antes.ciclo ? ' · tarjeta completa, empieza una nueva' : ''}
           </p>
         </div>
-        <div className="mx-auto w-full max-w-sm">
-          <TarjetaSellos
-            compacta
-            programa={p.programa}
-            nuevas={nuevas.reverse()}
-            datos={{
-              estampas: r.despues.estampas,
-              ciclo: r.despues.ciclo,
-              nombre: tarjeta.nombre,
-              premios: tarjeta.premiosDisponibles.map((x) => ({ ...x, disponible: true })),
-            }}
-          />
-        </div>
+        <MarcaDelNegocio estilo={p.marca.estilo} plantilla={p.marca.plantilla}>
+          <div className="mx-auto w-full max-w-sm">
+            <TarjetaSellos
+              compacta
+              programa={p.programa}
+              nuevas={nuevas.reverse()}
+              datos={{
+                estampas: r.despues.estampas,
+                ciclo: r.despues.ciclo,
+                nombre: tarjeta.nombre,
+                premios: tarjeta.premiosDisponibles.map((x) => ({ ...x, disponible: true })),
+              }}
+            />
+          </div>
+        </MarcaDelNegocio>
         {r.premios.length > 0 && (
           <Aviso
             tono="ok"
