@@ -138,7 +138,7 @@ export function TarjetaSellos({
             return (
               <li key={h.posicion} className="flex items-baseline justify-between gap-3">
                 <span className="min-w-0">
-                  {h.nombre} <span className="text-cream/55">a las {h.posicion}</span>
+                  {h.nombre} <span className="text-cream/55">· {h.posicion} estampas</span>
                 </span>
                 <span
                   className={`flex-none rounded-full px-2.5 py-0.5 text-[13px] whitespace-nowrap ${listo ? 'bg-crust-light font-semibold text-[var(--wl-fondo)]' : 'text-cream/70'}`}

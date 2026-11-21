@@ -81,7 +81,7 @@ describe.skipIf(!CON_BD)('panel de plataforma', () => {
       prefijoCodigo: 'CP',
       ajustes: {
         pruebaVence: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        alta: { giro: 'barberia', correo, whatsapp, origen: 'belleza' },
+        alta: { giro: 'barberia', correo, whatsapp, origen: 'belleza', legal: '' },
       },
       sucursales: [{ slug: 'principal', nombre: 'Principal', participa: true }],
     });

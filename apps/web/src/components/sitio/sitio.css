@@ -146,3 +146,10 @@ to{transform:translateY(-16px) rotate(-1.2deg)}
 .cl .qr{background:#fff;border-radius:18px;padding:14px;width:100%;max-width:240px;border:1.5px solid var(--ink)}
 .cl .qr svg{display:block;width:100%;height:auto}
 .cl .ps{display:flex;gap:18px;align-items:flex-start;padding:22px 0;border-top:1.5px solid var(--line)}
+/* Páginas legales (/terminos, /privacidad) y la nota legal del asistente. */
+.cl .legal p,.cl .legal ul,.cl .legal ol{margin:0}
+.cl .legal ul,.cl .legal ol{padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.cl .legal b{font-weight:600}
+.cl .ul{color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;overflow-wrap:anywhere}
+.cl .ul:hover{text-decoration-thickness:2px}
+.cl .caja{background:var(--surface);border:2px solid var(--ink);border-radius:22px;padding:22px 24px}

@@ -11,6 +11,7 @@ import {
 } from '@wl/database';
 import { COMBINACIONES, esPrefijoCodigo, giroPorId, vencimientoDePrueba } from '@wl/domain';
 
+import { VERSION_LEGAL } from '@/components/sitio/Legal';
 import { enviarCorreo } from '@/lib/correo';
 import { negocioDeLaPeticion } from '@/lib/negocio';
 
@@ -102,7 +103,7 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
     ajustes: {
       plan: 'LITE',
       pruebaVence: vencimientoDePrueba(),
-      alta: { giro: giro.id, correo, whatsapp, origen },
+      alta: { giro: giro.id, correo, whatsapp, origen, legal: VERSION_LEGAL },
     },
     programa: {
       posiciones: sellos,
@@ -115,7 +116,8 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   });
   if (!r.ok) return { error: r.error };
 
-  const invitacion = await invitarDuenio(r.negocio, { email: correo, nombre });
+  // El asistente no pide el nombre de la persona: la cuenta nace sin él.
+  const invitacion = await invitarDuenio(r.negocio, { email: correo, nombre: '' });
   if (!invitacion.ok) return { error: invitacion.error };
 
   // Aviso a Exkalibur. Si el correo no está configurado, queda en el registro

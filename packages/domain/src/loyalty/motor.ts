@@ -121,7 +121,11 @@ export function textoProximoPremio(estampas: number, programa: ProgramaLealtad):
   const p = proximoPremio(estampas, programa);
   if (!p) return 'Tarjeta completa.';
   const cuantas = p.faltan === 1 ? 'falta 1 estampa' : `faltan ${p.faltan} estampas`;
-  return `Te ${cuantas} para tu ${describirPremio(programa, p.premio).nombre.toLowerCase()}.`;
+  // El dueño puede escribir el premio con «Tu…»: que no salga «para tu tu…».
+  const premio = describirPremio(programa, p.premio)
+    .nombre.toLowerCase()
+    .replace(/^tu\s+/, '');
+  return `Te ${cuantas} para tu ${premio}.`;
 }
 
 // ---------------------------------------------------------------------------

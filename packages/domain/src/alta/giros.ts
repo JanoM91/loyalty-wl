@@ -27,7 +27,7 @@ export const GIROS: readonly Giro[] = [
     nombre: 'Barbería',
     grupo: 'belleza',
     sellos: 5,
-    premio: 'Tu sexto corte gratis',
+    premio: 'Sexto corte gratis',
     combinaciones: BELLEZA,
   },
   {
@@ -35,7 +35,7 @@ export const GIROS: readonly Giro[] = [
     nombre: 'Peluquería',
     grupo: 'belleza',
     sellos: 5,
-    premio: 'Tu sexto corte gratis',
+    premio: 'Sexto corte gratis',
     combinaciones: BELLEZA,
   },
   {
