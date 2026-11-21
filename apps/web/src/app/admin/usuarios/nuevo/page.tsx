@@ -17,7 +17,8 @@ export default async function NuevoUsuarioPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/usuarios"
-      titulo="Nuevo usuario"
+      miga={{ texto: 'Equipo', ruta: '/admin/usuarios' }}
+      titulo="Invitar a alguien"
       descripcion="Una cuenta por persona: así la bitácora dice quién hizo cada cosa. Para la tableta de caja de una sucursal, una cuenta con rol Sucursal."
       acciones={
         <a href="/admin/usuarios" className="text-sm text-ink underline underline-offset-4">

@@ -28,6 +28,7 @@ export default async function UsuarioPage({ params }: { params: Promise<{ id: st
     <MarcoPanel
       sesion={sesion}
       actual="/admin/usuarios"
+      miga={{ texto: 'Equipo', ruta: '/admin/usuarios' }}
       titulo={u.nombre}
       descripcion={u.email}
       acciones={

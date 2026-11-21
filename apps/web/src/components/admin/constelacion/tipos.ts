@@ -32,6 +32,8 @@ export interface DatosMapa {
   /** Pasos de arranque; null si el club no viene del asistente o ya los cumplió. */
   readonly arranque: readonly PasoArranque[] | null;
   readonly programa: {
+    /** Un premio y un sello por visita: se edita en el mapa mismo. */
+    readonly editable: boolean;
     readonly posiciones: number;
     readonly hitos: readonly { readonly posicion: number; readonly nombre: string }[];
   };

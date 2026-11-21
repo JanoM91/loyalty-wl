@@ -19,7 +19,7 @@ export default async function MarcaPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/marca"
-      titulo="Marca"
+      titulo="Marca y datos"
       descripcion="Así ven tu programa tus clientes. Los cambios se aplican al guardar."
     >
       <div className="grid gap-12">

@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { bitacoraLealtad, listarPendientes } from '@wl/database';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
-import { SubnavLealtad } from '@/components/admin/SubnavLealtad';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil, fechaLarga, hora, pesos } from '@/lib/lealtad/formato';
@@ -26,11 +25,9 @@ export default async function PendientesPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/lealtad"
-      titulo="Programa de lealtad"
+      titulo="Por revisar"
       descripcion="Lo que la caja no pudo resolver sola. Aprobar suma el sello con la fecha real de la compra."
     >
-      <SubnavLealtad actual="/admin/lealtad/pendientes" pendientes={pendientes.length} />
-
       {pendientes.length === 0 ? (
         <p className="rounded-lg border border-rule bg-cream px-4 py-6 text-center text-sm text-muted">
           No hay visitas pendientes de revisión.

@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { prisma, programaVigente, versionesDelPrograma, VERSION_TERMINOS } from '@wl/database';
+import { programaVigente, versionesDelPrograma, VERSION_TERMINOS } from '@wl/database';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
-import { SubnavLealtad } from '@/components/admin/SubnavLealtad';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { CORREO_CONFIGURADO } from '@/lib/correo';
@@ -22,11 +21,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function ProgramaPage() {
   const sesion = await exigirRol(ROLES_PROGRAMA);
-  const [pendientes, programa, versiones] = await Promise.all([
-    prisma.loyaltyAccrual.count({ where: { status: 'PENDIENTE' } }),
-    programaVigente(),
-    versionesDelPrograma(),
-  ]);
+  const [programa, versiones] = await Promise.all([programaVigente(), versionesDelPrograma()]);
 
   const integraciones = [
     {
@@ -53,11 +48,9 @@ export default async function ProgramaPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/lealtad"
-      titulo="Programa de lealtad"
+      titulo="Premio y reglas"
       descripcion={`Versión vigente ${programa.version} · términos ${VERSION_TERMINOS}`}
     >
-      <SubnavLealtad actual="/admin/lealtad/programa" pendientes={pendientes} />
-
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <FormularioPrograma key={programa.version} programa={programa} />
 

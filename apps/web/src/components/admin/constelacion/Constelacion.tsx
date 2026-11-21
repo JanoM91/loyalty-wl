@@ -1,8 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { useRouter } from 'next/navigation';
 
 import { salir } from '@/app/admin/entrar/acciones';
+import { guardarPremio, type EstadoPremio } from '@/app/admin/acciones';
 
 import { Paleta, type ComandoPaleta } from '../Paleta';
 import type { DatosMapa } from './tipos';
@@ -87,7 +97,7 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
 
 function anchoDe(id: string, nivel: string, detalle: boolean): number {
   if (detalle) return id === 'sucursales' || id === 'arranque' ? 400 : 370;
-  return nivel === 'mapa' ? 230 : 270;
+  return nivel === 'mapa' ? 290 : 270;
 }
 
 export function Constelacion({
@@ -602,7 +612,9 @@ export function Constelacion({
           </ol>
         );
       case 'premio':
-        return (
+        return d.programa.editable && premioFinal ? (
+          <EditorPremio nombre={premioFinal.nombre} sellos={d.programa.posiciones} numeros={n} />
+        ) : (
           <>
             {d.programa.hitos.map((h) => (
               <span key={h.posicion}>
@@ -610,16 +622,9 @@ export function Constelacion({
                 {h.nombre.toLowerCase()}
               </span>
             ))}
-            <span>
-              {plural(n.premiosListos, 'premio listo', 'premios listos')} para cobrar ·{' '}
-              {plural(n.premiosEntregados, 'entregado', 'entregados')} en 7 días
-            </span>
             <a className="cn-btn" href={enlace('/admin/lealtad/programa')}>
-              {premioFinal ? 'Cambiar el premio o los sellos' : 'Definir el premio'}
+              {premioFinal ? 'Cambiar premios y sellos' : 'Definir el premio'}
             </a>
-            <span style={{ fontSize: 13, color: 'var(--cn-suave)' }}>
-              Cambiarlo crea una versión nueva: lo que tus clientes ya ganaron se respeta.
-            </span>
           </>
         );
       case 'clientes':
@@ -650,8 +655,11 @@ export function Constelacion({
       case 'caja':
         return (
           <>
-            <a className="cn-btn grande" href={enlace('/admin/lealtad/caja')}>
+            <a className="cn-btn grande" href={enlace('/admin/lealtad/caja?accion=sumar')}>
               Sumar sello de visita
+            </a>
+            <a className="cn-btn sec" href={enlace('/admin/lealtad/caja?accion=premio')}>
+              Entregar premio
             </a>
             <span>
               Escanea la tarjeta del cliente o búscalo por su celular. También entregas premios
@@ -835,6 +843,7 @@ export function Constelacion({
             conectando && conectando !== x.id ? 'destino' : '',
             foco && foco !== x.id ? 'apagado' : '',
             x.alerta ? 'alerta' : '',
+            nivel === 'mapa' && !detalleVisible ? 'lejos' : '',
           ]
             .filter(Boolean)
             .join(' ');
@@ -1118,5 +1127,116 @@ function MiniTarjeta({ datos }: { datos: DatosMapa }) {
       </span>
       {premio && <span style={{ fontSize: 13 }}>{premio.nombre}</span>}
     </div>
+  );
+}
+
+/**
+ * El premio editable en la tarjeta del mapa: nombre y sellos, con la tarjeta
+ * de muestra al día. Guardar crea una versión nueva del programa.
+ */
+function EditorPremio({
+  nombre,
+  sellos,
+  numeros,
+}: {
+  nombre: string;
+  sellos: number;
+  numeros: DatosMapa['numeros'];
+}) {
+  const router = useRouter();
+  const [texto, setTexto] = useState(nombre);
+  const [cuantos, setCuantos] = useState(sellos);
+  const [estado, accion, guardando] = useActionState<EstadoPremio, FormData>(guardarPremio, {
+    ok: false,
+    mensaje: null,
+  });
+  const cambiado = texto.trim() !== nombre || cuantos !== sellos;
+
+  useEffect(() => {
+    if (estado.ok) router.refresh();
+  }, [estado, router]);
+
+  return (
+    <form action={accion} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <label
+        style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 600 }}
+      >
+        Premio
+        <input
+          name="premio"
+          className="cn-campo"
+          value={texto}
+          maxLength={80}
+          onChange={(e) => setTexto(e.target.value)}
+        />
+      </label>
+      <div
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}
+      >
+        <span style={{ fontSize: 13, fontWeight: 600 }} id="cn-sellos">
+          Sellos de visita para ganarlo
+        </span>
+        <span
+          style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+          role="group"
+          aria-labelledby="cn-sellos"
+        >
+          <button
+            type="button"
+            className="cn-ic"
+            aria-label="Un sello menos"
+            onClick={() => setCuantos((c) => Math.max(3, c - 1))}
+          >
+            −
+          </button>
+          <b
+            style={{
+              fontFamily: 'Bricolage Grotesque Variable, sans-serif',
+              fontSize: 24,
+              minWidth: 28,
+              textAlign: 'center',
+            }}
+            aria-live="polite"
+          >
+            {cuantos}
+          </b>
+          <button
+            type="button"
+            className="cn-ic"
+            aria-label="Un sello más"
+            onClick={() => setCuantos((c) => Math.min(12, c + 1))}
+          >
+            +
+          </button>
+        </span>
+        <input type="hidden" name="sellos" value={cuantos} />
+      </div>
+      <span className="cn-puntos" style={{ color: 'var(--cn-verde)' }} aria-hidden="true">
+        {Array.from({ length: cuantos }, (_, i) => (
+          <span key={i} style={{ borderStyle: 'dashed' }} />
+        ))}
+      </span>
+      <button
+        type="submit"
+        className="cn-btn"
+        disabled={!cambiado || guardando}
+        style={{ opacity: !cambiado || guardando ? 0.5 : 1 }}
+      >
+        {guardando ? 'Guardando…' : 'Guardar premio'}
+      </button>
+      {estado.mensaje && (
+        <span
+          role="status"
+          style={{ fontSize: 13.5, color: estado.ok ? '#2F6B3F' : '#A4321F', fontWeight: 600 }}
+        >
+          {estado.mensaje}
+        </span>
+      )}
+      <span style={{ fontSize: 13, color: 'var(--cn-suave)' }}>
+        {plural(numeros.premiosListos, 'premio listo', 'premios listos')} para cobrar ·{' '}
+        {plural(numeros.premiosEntregados, 'entregado', 'entregados')} en 7 días. Lo que tus
+        clientes ya ganaron conserva su premio.
+      </span>
+    </form>
   );
 }

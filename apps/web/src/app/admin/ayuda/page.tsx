@@ -41,8 +41,8 @@ export default async function AyudaPage() {
             tableta o computadora.
           </p>
 
-          <Tarea titulo="Registrar una visita">
-            <li>Toca «Registrar visita».</li>
+          <Tarea titulo="Sumar un sello de visita">
+            <li>Toca «Sumar sello de visita».</li>
             <li>
               Escanea el código de la tarjeta del cliente. Si la cámara no lo lee, escribe el
               código: empieza con {negocio.prefijoCodigo}-.
@@ -105,23 +105,30 @@ export default async function AyudaPage() {
 
         {direccion && (
           <Capitulo titulo="Para quien dirige el negocio">
+            <p>
+              Tu panel abre con el <b>mapa de tu club</b>: cada parte es una tarjeta. Toca una para
+              ver sus acciones; aléjate con la rueda o pellizcando para ver todo. Desde cualquier
+              pantalla, <b>⌘K</b> (o Ctrl+K) abre las acciones: escribe «sello», «premio», «cartel»
+              o el nombre de un cliente.
+            </p>
             <Tarea titulo="Antes de abrir el programa al público">
               {administra && (
                 <li>
-                  En <b>Marca</b>: tu nombre, tus colores, tus logotipos y tus datos de contacto.
+                  En la tarjeta <b>Marca</b>: tu nombre, tus colores, tus logotipos, tu contacto y
+                  tu domicilio.
                 </li>
               )}
               <li>
-                En <b>Programa</b>, pestaña «Programa»: cuántos sellos y qué premios.
+                En la tarjeta <b>Premio</b>: qué regalas y cuántos sellos de visita pide.
               </li>
               <li>
-                En <b>Programa</b>, pestaña «Sucursales y códigos»: enciende cada sucursal e imprime
-                su cartel con el código para el mostrador.
+                En la tarjeta de tu <b>sucursal</b>: imprime el cartel con el código para el
+                mostrador.
               </li>
               {administra && (
                 <li>
-                  En <b>Usuarios</b>: una cuenta de rol Sucursal por cada persona de caja. Cada
-                  quien recibe un enlace para elegir su contraseña.
+                  En la tarjeta <b>Equipo</b>: invita a cada persona de caja. Cada quien recibe un
+                  enlace para elegir su contraseña.
                 </li>
               )}
               <li>Haz una visita de prueba con tu propio celular, de principio a fin.</li>
@@ -129,12 +136,12 @@ export default async function AyudaPage() {
 
             <Tarea titulo="Cada semana">
               <li>
-                Revisa <b>Programa</b>, pestaña «Pendientes»: visitas que la caja dejó para
-                revisión. Apruébalas o recházalas.
+                Si aparece la tarjeta <b>Por revisar</b>, apruébalas o recházalas: son visitas que
+                la caja dejó para ti.
               </li>
               <li>
-                Mira el <b>Resumen</b> y la <b>Analítica</b>: tarjetas nuevas, clientes que
-                volvieron y premios entregados.
+                Mira la tarjeta <b>Números</b>: tarjetas nuevas, clientes que volvieron y premios
+                entregados.
               </li>
             </Tarea>
 

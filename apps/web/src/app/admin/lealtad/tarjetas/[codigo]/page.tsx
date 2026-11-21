@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { detalleTarjeta, programaVigente } from '@wl/database';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
-import { SubnavLealtad } from '@/components/admin/SubnavLealtad';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
 import { MarcaDelNegocio } from '@/components/admin/MarcaDelNegocio';
 import { estiloDeMarca } from '@/lib/marca';
@@ -38,11 +37,10 @@ export default async function DetalleTarjetaPage({
     <MarcoPanel
       sesion={sesion}
       actual="/admin/lealtad"
+      miga={{ texto: 'Clientes', ruta: '/admin/lealtad/tarjetas' }}
       titulo={t.nombre ?? 'Cliente sin nombre'}
       descripcion={t.codigo}
     >
-      <SubnavLealtad actual="/admin/lealtad/tarjetas" />
-
       <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
         <MarcaDelNegocio estilo={estiloDeMarca(negocio)} plantilla={negocio.marca.plantilla}>
           <TarjetaSellos

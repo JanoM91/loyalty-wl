@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { listarTarjetas, prisma, programaVigente, type FiltroTarjetas } from '@wl/database';
+import { listarTarjetas, programaVigente, type FiltroTarjetas } from '@wl/database';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
-import { SubnavLealtad } from '@/components/admin/SubnavLealtad';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil, fechaLarga } from '@/lib/lealtad/formato';
@@ -26,9 +25,8 @@ export default async function TarjetasPage({
   const { q, filtro: f } = await searchParams;
   const filtro = (f && f in FILTROS ? f : 'todas') as FiltroTarjetas;
 
-  const [tarjetas, pendientes, programa] = await Promise.all([
+  const [tarjetas, programa] = await Promise.all([
     listarTarjetas({ busqueda: q, filtro, limite: 200 }),
-    prisma.loyaltyAccrual.count({ where: { status: 'PENDIENTE' } }),
     programaVigente(),
   ]);
 
@@ -36,11 +34,9 @@ export default async function TarjetasPage({
     <MarcoPanel
       sesion={sesion}
       actual="/admin/lealtad"
-      titulo="Programa de lealtad"
+      titulo="Clientes"
       descripcion="Los contactos se muestran ocultos en parte: para atender a alguien basta reconocerlo."
     >
-      <SubnavLealtad actual="/admin/lealtad/tarjetas" pendientes={pendientes} />
-
       <form className="mb-4 flex flex-wrap items-end gap-3" role="search">
         <label className="grid min-w-[220px] flex-1 gap-1 text-sm font-semibold text-ink">
           Buscar

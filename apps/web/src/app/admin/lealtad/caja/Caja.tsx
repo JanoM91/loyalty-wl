@@ -50,6 +50,8 @@ interface Props {
   readonly folioObligatorio?: boolean;
   /** El negocio no pide ticket: la visita se suma en un toque, sin pantalla de ticket. */
   readonly sinTicket?: boolean;
+  /** Abre directo el escáner (desde «Sumar sello de visita» del mapa). */
+  readonly empezarCon?: 'visita' | 'premio';
   /** Colores y plantilla del negocio, para mostrar la tarjeta como la ve el cliente. */
   readonly marcaNegocio: { readonly estilo: CSSProperties; readonly plantilla: string };
   readonly sucursal: {
@@ -91,11 +93,12 @@ export function Caja({
   folioObligatorio = false,
   sinTicket = false,
   marcaNegocio,
+  empezarCon,
 }: Props) {
   const marca = useMarca();
   const router = useRouter();
-  const [paso, setPaso] = useState<Paso>('inicio');
-  const [modo, setModo] = useState<Modo>('visita');
+  const [paso, setPaso] = useState<Paso>(empezarCon ? 'escanear' : 'inicio');
+  const [modo, setModo] = useState<Modo>(empezarCon ?? 'visita');
   const [nuevoCliente, setNuevoCliente] = useState(false);
   const [tarjeta, setTarjeta] = useState<VistaCaja | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -253,12 +256,16 @@ export function Caja({
             administración la incorpore.
           </Aviso>
         )}
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3">
           <BotonGrande
             principal
             icono="qr"
-            titulo="Registrar visita"
-            texto="Escanea la tarjeta y toma foto del ticket."
+            titulo="Sumar sello de visita"
+            texto={
+              sinTicket
+                ? 'Escanea la tarjeta del cliente.'
+                : 'Escanea la tarjeta y toma foto del ticket.'
+            }
             onClick={() => empezar('visita')}
           />
           <BotonGrande
@@ -269,7 +276,7 @@ export function Caja({
           />
           <BotonGrande
             icono="persona"
-            titulo="Registrar visita sin tarjeta"
+            titulo="Cliente sin tarjeta a la mano"
             texto="Con su celular o correo. Si todavía no tiene tarjeta, se crea aquí."
             onClick={() => {
               reiniciar();
@@ -325,18 +332,29 @@ export function Caja({
         <Icono nombre="izquierda" width={16} height={16} /> Cancelar
       </button>
       <span className="text-sm font-semibold text-ink">
-        {modo === 'visita' ? 'Registrar visita' : 'Entregar premio'}
+        {modo === 'visita' ? 'Sumar sello de visita' : 'Entregar premio'}
       </span>
     </div>
   );
 
   const pasos =
-    modo === 'visita' ? ['Escanear', 'Foto', 'Datos', 'Listo'] : ['Escanear', 'Premio', 'Listo'];
+    modo === 'visita'
+      ? sinTicket
+        ? ['Escanear', 'Listo']
+        : ['Escanear', 'Foto', 'Datos', 'Listo']
+      : ['Escanear', 'Premio', 'Listo'];
   const indice =
     modo === 'visita'
-      ? { escanear: 0, tarjeta: 0, ticket: foto.vista ? 2 : 1, resultado: 3, canje: 3, inicio: 0 }[
-          paso
-        ]
+      ? sinTicket
+        ? { escanear: 0, tarjeta: 0, ticket: 0, resultado: 1, canje: 1, inicio: 0 }[paso]
+        : {
+            escanear: 0,
+            tarjeta: 0,
+            ticket: foto.vista ? 2 : 1,
+            resultado: 3,
+            canje: 3,
+            inicio: 0,
+          }[paso]
       : { escanear: 0, tarjeta: 0, canje: entrega?.ok ? 2 : 1, ticket: 1, resultado: 2, inicio: 0 }[
           paso
         ];
