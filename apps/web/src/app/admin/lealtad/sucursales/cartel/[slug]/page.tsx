@@ -31,7 +31,7 @@ export default async function CartelPage({ params }: { params: Promise<{ slug: s
       <LogoMarca sobre="claro" className="h-24 text-5xl" />
       <h1 className="text-4xl leading-tight text-balance">Tu visita tiene recompensa</h1>
       <p className="max-w-[34ch] text-lg text-ink-soft">
-        {hitos.map((h) => `${h.posicion} estampas: ${h.nombre.toLowerCase()}.`).join(' ')}
+        {hitos.map((h) => `${h.posicion} sellos: ${h.nombre.toLowerCase()}.`).join(' ')}
       </p>
       <div
         className="aspect-square w-64 rounded-md bg-white p-3 [&_svg]:h-full [&_svg]:w-full"

@@ -54,7 +54,7 @@ export function FotoTarjetaFisica({
       <span className="text-sm font-semibold text-ink">
         Foto de la tarjeta física{' '}
         <span className="font-normal text-muted">
-          {obligatoria ? '(obligatoria a partir de 5 estampas)' : '(opcional)'}
+          {obligatoria ? '(obligatoria a partir de 5 sellos)' : '(opcional)'}
         </span>
       </span>
       <label

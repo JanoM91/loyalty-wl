@@ -114,12 +114,12 @@ export default async function AnaliticaPage() {
 
         <Seccion
           titulo="Camino al premio"
-          nota="Tarjetas por número de estampas en el ciclo actual. Los premios se dan en las posiciones 5 y 10."
+          nota="Tarjetas por número de sellos en el ciclo actual. Los premios se dan en las posiciones 5 y 10."
         >
           <GraficaEstampas filas={a.estampas} />
           <p className="mt-3 text-xs text-muted">
             {num(r.tarjetasCercaPremio)} tarjetas a una visita del siguiente premio ·{' '}
-            {num(r.estampasEnCirculacion)} estampas en circulación.
+            {num(r.estampasEnCirculacion)} sellos en circulación.
           </p>
         </Seccion>
 
@@ -219,14 +219,14 @@ export default async function AnaliticaPage() {
         <h2 className="px-4 pt-4 font-sans text-base font-semibold text-ink">Premios</h2>
         {a.premios.length === 0 ? (
           <p className="px-4 pt-2 pb-4 text-sm text-muted">
-            Todavía nadie ha llegado a su primer premio (5 estampas).
+            Todavía nadie ha llegado a su primer premio (5 sellos).
           </p>
         ) : (
           <table className="mt-3 w-full text-sm">
             <thead>
               <tr className="border-b border-rule text-left text-[11px] text-muted">
                 <th className="px-3 py-2 font-semibold">Premio</th>
-                <th className="px-3 py-2 text-right font-semibold">Estampas</th>
+                <th className="px-3 py-2 text-right font-semibold">Sellos</th>
                 <th className="px-3 py-2 text-right font-semibold">Ganados</th>
                 <th className="px-3 py-2 text-right font-semibold">Entregados</th>
                 <th className="px-3 py-2 text-right font-semibold">Sin canjear</th>
@@ -447,7 +447,7 @@ function GraficaEstampas({ filas }: { filas: AnaliticaLealtad['estampas'] }) {
             <span
               className={`w-full max-w-8 rounded-t-sm ${cerca ? 'bg-agotado' : 'bg-ink'}`}
               style={{ height: `${(f.tarjetas / max) * 100}%`, minHeight: f.tarjetas ? 3 : 0 }}
-              title={`${f.tarjetas} tarjetas con ${f.estampas} estampas`}
+              title={`${f.tarjetas} tarjetas con ${f.estampas} sellos`}
             />
             <span className="font-mono text-ink tabular-nums">{f.tarjetas}</span>
             <span className="text-muted">{f.estampas}</span>

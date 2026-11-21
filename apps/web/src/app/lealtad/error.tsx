@@ -17,7 +17,7 @@ export default function LealtadError({
     <div className="mx-auto grid max-w-md gap-4 rounded-lg border border-rule bg-cream p-6 text-center text-ink">
       <h1 className="font-display text-2xl">No pudimos cargar tu tarjeta</h1>
       <p className="text-sm text-ink-soft">
-        Hubo un problema temporal al consultar tu saldo de estampas. Intenta de nuevo en unos
+        Hubo un problema temporal al consultar tu saldo de sellos. Intenta de nuevo en unos
         segundos.
       </p>
       <div className="flex flex-wrap justify-center gap-3">

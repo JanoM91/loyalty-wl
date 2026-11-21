@@ -48,7 +48,7 @@ export default async function AyudaPage() {
               código: empieza con {negocio.prefijoCodigo}-.
             </li>
             {negocio.ajustes.comprobanteConQr === 'NO_PEDIR' ? (
-              <li>Toca «Sumar estampa». La tarjeta del cliente la muestra al momento.</li>
+              <li>Toca «Sumar sello». La tarjeta del cliente la muestra al momento.</li>
             ) : (
               <>
                 <li>
@@ -56,12 +56,12 @@ export default async function AyudaPage() {
                     ? 'Escribe el folio del ticket o tómale foto. Sin folio ni foto, la visita no se registra.'
                     : 'Pide el ticket y escribe su folio. Si el cliente no lo trae, registra la visita de todos modos: queda anotada sin folio.'}
                 </li>
-                <li>Confirma. La tarjeta del cliente muestra su estampa nueva al momento.</li>
+                <li>Confirma. La tarjeta del cliente muestra su sello nuevo al momento.</li>
               </>
             )}
           </Tarea>
           <p>
-            Cada tarjeta suma una estampa por día en cada sucursal. Si ya sumó hoy aquí, la caja lo
+            Cada tarjeta suma un sello por día en cada sucursal. Si ya sumó hoy aquí, la caja lo
             avisa y no registra otra.
           </p>
 
@@ -93,12 +93,12 @@ export default async function AyudaPage() {
             </li>
             {hitos.map((h) => (
               <li key={h.posicion}>
-                A las {h.posicion} estampas: {h.nombre.toLowerCase()}.
+                Con {h.posicion} sellos: {h.nombre.toLowerCase()}.
               </li>
             ))}
             <li>
-              Al completar las {programa.posiciones} empieza una tarjeta nueva. Estampas y premios
-              no vencen.
+              Al completar las {programa.posiciones} empieza una tarjeta nueva. Sellos y premios no
+              vencen.
             </li>
           </ul>
         </Capitulo>
@@ -112,7 +112,7 @@ export default async function AyudaPage() {
                 </li>
               )}
               <li>
-                En <b>Programa</b>, pestaña «Programa»: cuántas estampas y qué premios.
+                En <b>Programa</b>, pestaña «Programa»: cuántos sellos y qué premios.
               </li>
               <li>
                 En <b>Programa</b>, pestaña «Sucursales y códigos»: enciende cada sucursal e imprime

@@ -20,7 +20,7 @@ const PLANTILLAS: readonly { id: PlantillaMarca; nombre: string; nota: string }[
 const COLORES: readonly { id: keyof Colores; nombre: string; nota: string }[] = [
   { id: 'fondo', nombre: 'Tarjeta', nota: 'Fondo de la tarjeta y de los botones' },
   { id: 'sobreFondo', nombre: 'Texto de la tarjeta', nota: 'Lo que se lee sobre ese fondo' },
-  { id: 'acento', nombre: 'Sellos', nota: 'Estampas ganadas y premios' },
+  { id: 'acento', nombre: 'Sellos', nota: 'Sellos ganados y premios' },
   { id: 'papel', nombre: 'Página', nota: 'Fondo de la pantalla' },
   { id: 'tinta', nombre: 'Texto', nota: 'Lo que se lee sobre la página' },
 ];

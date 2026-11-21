@@ -47,7 +47,7 @@ export default async function PerfilPage({
           />
         </div>
         <p className="text-xs text-muted">
-          Perfil al {porcentaje} %. Completarlo es opcional: tus estampas cuentan igual.
+          Perfil al {porcentaje} %. Completarlo es opcional: tus sellos cuentan igual.
         </p>
       </div>
 

@@ -30,7 +30,7 @@ export default async function VerificarPage() {
       </div>
       {!CORREO_CONFIGURADO && (
         <Aviso tono="atencion" titulo="El envío de correos todavía no está activo">
-          El negocio está terminando de configurarlo. Tus estampas siguen sumando mientras tanto.
+          El negocio está terminando de configurarlo. Tus sellos siguen sumando mientras tanto.
         </Aviso>
       )}
       <FormularioVerificar />

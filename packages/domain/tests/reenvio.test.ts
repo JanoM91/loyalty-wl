@@ -55,7 +55,7 @@ describe('mensajeReenvioWhatsApp', () => {
   it('lleva el enlace, las estampas, la vigencia y el aviso de abrirlo en el navegador', () => {
     const m = mensajeReenvioWhatsApp(base);
     expect(m).toContain('Hola Alejandro');
-    expect(m).toContain('ya lleva 4 estampas');
+    expect(m).toContain('ya lleva 4 sellos');
     expect(m).toContain(URL);
     expect(m).toContain('vence en 3 días');
     expect(m).toContain('Safari o Chrome');
@@ -73,7 +73,7 @@ describe('mensajeReenvioWhatsApp', () => {
   });
 
   it('cuida el singular y la tarjeta sin estampas ni nombre', () => {
-    expect(mensajeReenvioWhatsApp({ ...base, estampas: 1 })).toContain('ya lleva 1 estampa.');
+    expect(mensajeReenvioWhatsApp({ ...base, estampas: 1 })).toContain('ya lleva 1 sello.');
     const vacia = mensajeReenvioWhatsApp({ ...base, nombre: null, estampas: 0 });
     expect(vacia.startsWith('Hola, te escribimos de Café El Buentueste.')).toBe(true);
     expect(vacia).toContain('ya está lista');
@@ -86,7 +86,7 @@ describe('correoReenvio', () => {
     expect(c.asunto).toBe('Tu tarjeta de lealtad de Café El Buentueste te espera');
     const texto = c.parrafos.join(' ');
     expect(texto).toContain('Hola Alejandro');
-    expect(texto).toContain('ya lleva 4 estampas');
+    expect(texto).toContain('ya lleva 4 sellos');
     expect(texto).toContain('tu correo');
     expect(texto).toContain('vence en 3 días');
     // El enlace va en el botón de la plantilla, no en los párrafos.

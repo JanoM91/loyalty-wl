@@ -120,7 +120,7 @@ export function proximoPremio(estampas: number, programa: ProgramaLealtad): Prox
 export function textoProximoPremio(estampas: number, programa: ProgramaLealtad): string {
   const p = proximoPremio(estampas, programa);
   if (!p) return 'Tarjeta completa.';
-  const cuantas = p.faltan === 1 ? 'falta 1 estampa' : `faltan ${p.faltan} estampas`;
+  const cuantas = p.faltan === 1 ? 'falta 1 sello' : `faltan ${p.faltan} sellos`;
   // El dueño puede escribir el premio con «Tu…»: que no salga «para tu tu…».
   const premio = describirPremio(programa, p.premio)
     .nombre.toLowerCase()

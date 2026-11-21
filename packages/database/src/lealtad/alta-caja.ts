@@ -103,13 +103,13 @@ export function validarMigracion(
   // La visita de hoy también cuenta: la tarjeta no puede quedar llena.
   const tope = Math.max(0, programa.posiciones - reglas.margenMigracion - estampasActuales);
   if (v > tope) {
-    return `Con la visita de hoy, la tarjeta no puede pasar de ${programa.posiciones - 1} estampas: captura como máximo ${tope} ${tope === 1 ? 'visita' : 'visitas'} de la tarjeta física.`;
+    return `Con la visita de hoy, la tarjeta no puede pasar de ${programa.posiciones - 1} sellos: captura como máximo ${tope} ${tope === 1 ? 'visita' : 'visitas'} de la tarjeta física.`;
   }
   if (v + estampasActuales + 1 >= reglas.umbralEvidenciaMigracion) {
     if (!d.fotoUrl)
-      return `A partir de ${reglas.umbralEvidenciaMigracion} estampas se necesita la foto de la tarjeta física.`;
+      return `A partir de ${reglas.umbralEvidenciaMigracion} sellos se necesita la foto de la tarjeta física.`;
     if (!d.celular || !d.correo)
-      return `A partir de ${reglas.umbralEvidenciaMigracion} estampas se necesitan el celular y el correo del cliente.`;
+      return `A partir de ${reglas.umbralEvidenciaMigracion} sellos se necesitan el celular y el correo del cliente.`;
   }
   return null;
 }

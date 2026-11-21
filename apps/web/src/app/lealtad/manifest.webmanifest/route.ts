@@ -32,7 +32,7 @@ export async function GET() {
   const manifest = {
     name: `${negocio.nombre} · Tarjeta de lealtad`,
     short_name: negocio.nombre.slice(0, 12),
-    description: `Tu tarjeta de lealtad de ${negocio.nombre}: estampas, premios y tu código para caja.`,
+    description: `Tu tarjeta de lealtad de ${negocio.nombre}: sellos, premios y tu código para caja.`,
     id: `${base}/lealtad/app`,
     start_url: inicio,
     scope: `${base}/lealtad`,

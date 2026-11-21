@@ -68,7 +68,7 @@ export default async function ProgramaPage() {
               <dt className="text-muted">Límite</dt>
               <dd>Una visita por cliente, sucursal y día; un ticket una sola vez.</dd>
               <dt className="text-muted">Vencimientos</dt>
-              <dd>Sin vencimiento de estampas ni de premios.</dd>
+              <dd>Sin vencimiento de sellos ni de premios.</dd>
               <dt className="text-muted">Canje</dt>
               <dd>Requiere un contacto verificado; por ahora, el correo.</dd>
             </dl>

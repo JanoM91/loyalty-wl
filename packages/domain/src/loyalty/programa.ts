@@ -201,7 +201,7 @@ export function validarPrograma(programa: ProgramaLealtad): string[] {
   const tramos = [...programa.tramos].sort((a, b) => a.desdeCentavos - b.desdeCentavos);
   tramos.forEach((tramo, i) => {
     if (tramo.estampas < 0 || !Number.isInteger(tramo.estampas)) {
-      problemas.push(`El tramo ${i + 1} otorga un número de estampas inválido.`);
+      problemas.push(`El tramo ${i + 1} otorga un número de sellos inválido.`);
     }
     if (!Number.isInteger(tramo.desdeCentavos) || tramo.desdeCentavos < 0) {
       problemas.push(`El tramo ${i + 1} empieza en un importe inválido.`);
@@ -216,7 +216,7 @@ export function validarPrograma(programa: ProgramaLealtad): string[] {
       } else if (siguiente.desdeCentavos < tramo.hastaCentavos) {
         problemas.push(`Los tramos ${i + 1} y ${i + 2} se enciman.`);
       } else if (siguiente.desdeCentavos > tramo.hastaCentavos) {
-        problemas.push(`Entre los tramos ${i + 1} y ${i + 2} hay importes sin estampas.`);
+        problemas.push(`Entre los tramos ${i + 1} y ${i + 2} hay importes sin sellos.`);
       }
     }
   });

@@ -71,7 +71,7 @@ export default async function PremiosPage() {
               </span>
               <span className="text-sm text-ink-soft">
                 <b className="block text-[15px] font-semibold text-ink">
-                  {h.nombre} · {h.posicion} estampas
+                  {h.nombre} · {h.posicion} sellos
                 </b>
                 {h.incluye}
               </span>

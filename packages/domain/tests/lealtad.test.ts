@@ -186,10 +186,10 @@ describe('validarPrograma', () => {
       ],
     });
     expect(problemas).toContain('Los tramos 1 y 2 se enciman.');
-    expect(problemas).toContain('Entre los tramos 2 y 3 hay importes sin estampas.');
+    expect(problemas).toContain('Entre los tramos 2 y 3 hay importes sin sellos.');
     expect(problemas).toContain('El tramo 3 no tiene tope y no puede ir antes de otro.');
     expect(problemas).toContain('El tramo 4 termina antes de empezar.');
-    expect(problemas).toContain('El tramo 4 otorga un número de estampas inválido.');
+    expect(problemas).toContain('El tramo 4 otorga un número de sellos inválido.');
   });
 });
 
@@ -274,12 +274,12 @@ describe('próximo premio', () => {
 
   it('lo dice en español, en singular y en plural', () => {
     expect(textoProximoPremio(4, PROGRAMA_BASE)).toBe(
-      'Te falta 1 estampa para tu premio de cortesía.',
+      'Te falta 1 sello para tu premio de cortesía.',
     );
     expect(textoProximoPremio(1, PROGRAMA_BASE)).toBe(
-      'Te faltan 4 estampas para tu premio de cortesía.',
+      'Te faltan 4 sellos para tu premio de cortesía.',
     );
-    expect(textoProximoPremio(7, PROGRAMA_BASE)).toBe('Te faltan 3 estampas para tu premio mayor.');
+    expect(textoProximoPremio(7, PROGRAMA_BASE)).toBe('Te faltan 3 sellos para tu premio mayor.');
     expect(textoProximoPremio(10, PROGRAMA_BASE)).toBe('Tarjeta completa.');
   });
 
@@ -288,9 +288,7 @@ describe('próximo premio', () => {
       ...PROGRAMA_BASE,
       hitos: PROGRAMA_BASE.hitos.map((h) => ({ ...h, nombre: 'Tu sexto corte gratis' })),
     };
-    expect(textoProximoPremio(1, programa)).toBe(
-      'Te faltan 4 estampas para tu sexto corte gratis.',
-    );
+    expect(textoProximoPremio(1, programa)).toBe('Te faltan 4 sellos para tu sexto corte gratis.');
   });
 });
 

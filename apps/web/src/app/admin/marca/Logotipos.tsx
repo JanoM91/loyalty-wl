@@ -21,7 +21,7 @@ const LOGOS: readonly { tipo: TipoLogo; nombre: string; nota: string; oscuro: bo
   {
     tipo: 'iconoUrl',
     nombre: 'Sello',
-    nota: 'Cuadrado. Es la marca de cada estampa ganada.',
+    nota: 'Cuadrado. Es la marca de cada sello ganado.',
     oscuro: true,
   },
 ];

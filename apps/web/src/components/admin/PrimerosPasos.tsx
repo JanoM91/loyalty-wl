@@ -37,8 +37,8 @@ export function PrimerosPasos({
       nuevaPestana: true,
     },
     {
-      titulo: 'Súmate tu primera estampa',
-      texto: 'En Caja, escanea el código de tu tarjeta y toca «Sumar estampa».',
+      titulo: 'Súmate tu primer sello',
+      texto: 'En Caja, escanea el código de tu tarjeta y toca «Sumar sello».',
       href: '/admin/lealtad/caja',
       hecho: visitas > 0,
     },

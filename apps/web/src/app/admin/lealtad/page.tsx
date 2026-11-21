@@ -96,7 +96,7 @@ export default async function LealtadResumenPage() {
         <Indicador
           etiqueta="Visitas acreditadas (7 días)"
           valor={r.visitas}
-          nota="Una estampa por visita"
+          nota="Un sello por visita"
         />
         <Indicador
           etiqueta="Contacto verificado"

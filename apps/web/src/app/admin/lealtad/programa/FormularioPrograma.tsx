@@ -37,7 +37,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo
             id="posiciones"
-            etiqueta="Estampas por tarjeta"
+            etiqueta="Sellos por tarjeta"
             ayuda="Al llenarse empieza una tarjeta nueva. Las imágenes de Wallet están hechas para 10."
           >
             <input
@@ -74,7 +74,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-sans text-base font-semibold text-ink">Premios</h2>
           <p className="text-xs text-muted">
-            En qué estampa se gana cada premio y cómo se llama. Deja el nombre vacío para quitarlo.
+            En qué sello se gana cada premio y cómo se llama. Deja el nombre vacío para quitarlo.
           </p>
         </div>
         <ul className="grid gap-3">
@@ -85,7 +85,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
             >
               <input type="hidden" name={`hito-${i}-clave`} value={h.premio} />
               <input type="hidden" name={`hito-${i}-nombre-anterior`} value={h.nombre} />
-              <Campo id={`hito-${i}-posicion`} etiqueta="Estampa">
+              <Campo id={`hito-${i}-posicion`} etiqueta="Sello">
                 <input
                   id={`hito-${i}-posicion`}
                   name={`hito-${i}-posicion`}
@@ -172,7 +172,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
               className="mt-0.5 h-5 w-5 accent-ink"
             />
             <span className="text-sm">
-              <b className="block font-semibold text-ink">Una estampa por visita</b>
+              <b className="block font-semibold text-ink">Un sello por visita</b>
               Sin importar el importe. Una visita por cliente, por día y por sucursal.
             </span>
           </label>
@@ -207,7 +207,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
               <tr className="border-b border-rule text-left text-[11px] text-muted">
                 <th className="py-1.5 font-semibold">Desde</th>
                 <th className="py-1.5 font-semibold">Hasta</th>
-                <th className="py-1.5 font-semibold">Estampas</th>
+                <th className="py-1.5 font-semibold">Sellos</th>
               </tr>
             </thead>
             <tbody>
@@ -250,7 +250,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
                       type="number"
                       min={0}
                       max={30}
-                      aria-label={`Tramo ${i + 1}: estampas`}
+                      aria-label={`Tramo ${i + 1}: sellos`}
                       defaultValue={t.estampas}
                       className={`${claseEntrada} mt-0 font-mono`}
                     />

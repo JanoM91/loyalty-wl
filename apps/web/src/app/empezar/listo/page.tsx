@@ -122,7 +122,7 @@ export default async function Listo({
           </ol>
 
           <div className="panel col" style={{ gap: 8 }}>
-            <b>Para sumar una estampa</b>
+            <b>Para sumar un sello de visita</b>
             <span className="p">
               Entra a tu panel, abre «Caja» y escanea el código de la tarjeta de tu cliente. Guarda
               esta dirección: es la de tu panel.

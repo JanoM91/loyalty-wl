@@ -55,7 +55,7 @@ export default async function ComoFunciona() {
         etiqueta="Tú, el dueño"
         titulo="El alta la hacemos nosotros"
         pasos={[
-          ['Defines', 'Premio, estampas, sucursales y colores.'],
+          ['Defines', 'Premio, sellos, sucursales y colores.'],
           ['Te damos tu enlace', 'Tu club ya abre desde ese momento.'],
           ['Ajustas tu marca', 'Logo y colores con vista previa.'],
           ['Das acceso', 'Una cuenta de caja por sucursal.'],
@@ -98,7 +98,7 @@ export default async function ComoFunciona() {
             detras="Puedes hacerlo obligatorio."
           />
           <Revela
-            titulo="Estampas y premios"
+            titulo="Sellos y premios"
             pie="Los que tú definas"
             detras="Cambias el número y cada premio."
           />

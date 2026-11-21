@@ -411,7 +411,7 @@ export function Caja({
             >
               {sinTicket ? (
                 <>
-                  <Icono nombre="palomita" /> {ocupado ? 'Sumando…' : 'Sumar estampa'}
+                  <Icono nombre="palomita" /> {ocupado ? 'Sumando…' : 'Sumar sello'}
                 </>
               ) : (
                 <>
@@ -567,7 +567,7 @@ export function Caja({
             <p className="text-xs text-muted">
               Hoy cuenta{' '}
               {programa.modalidad === 'VISITA'
-                ? 'una estampa por visita, sin importar el importe'
+                ? 'un sello por visita, sin importar el importe'
                 : 'por importe'}
               . La propina nunca suma.
             </p>
@@ -636,7 +636,7 @@ export function Caja({
                   {sucursal.nombre} · {new Date().toLocaleDateString('es-MX')}
                 </p>
               </div>
-              <Aviso tono="neutro" titulo="Entregar un premio no suma estampas">
+              <Aviso tono="neutro" titulo="Entregar un premio no suma sellos">
                 Si el cliente también compró, registra esa compra con su ticket.
               </Aviso>
               <BotonSiguiente onClick={reiniciar} />
@@ -765,7 +765,7 @@ function MiniSellos({ estampas, programa }: { estampas: number; programa: Progra
   return (
     <span
       className="flex items-center gap-1"
-      aria-label={`${estampas} de ${programa.posiciones} estampas`}
+      aria-label={`${estampas} de ${programa.posiciones} sellos`}
     >
       {Array.from({ length: programa.posiciones }, (_, i) => {
         const hito = programa.hitos.some((h) => h.posicion === i + 1);
@@ -833,7 +833,7 @@ function Ficha({
               <Icono nombre="cruz" className="mt-0.5 text-danger" />
               <span>
                 <b className="font-semibold">Ya acumuló hoy en esta sucursal.</b> Otra compra hoy
-                aquí no suma estampas.
+                aquí no suma sellos.
               </span>
             </li>
           ) : (
@@ -860,7 +860,7 @@ function Ficha({
                   : '. Debe verificar su correo o su celular antes de canjear.'}
               </>
             ) : tarjeta.proximo ? (
-              `Sin premios disponibles · le ${tarjeta.proximo.faltan === 1 ? 'falta 1 estampa' : `faltan ${tarjeta.proximo.faltan} estampas`} para ${tarjeta.proximo.premio.toLowerCase()}.`
+              `Sin premios disponibles · le ${tarjeta.proximo.faltan === 1 ? 'falta 1 sello' : `faltan ${tarjeta.proximo.faltan} sellos`} para ${tarjeta.proximo.premio.toLowerCase()}.`
             ) : (
               'Sin premios disponibles.'
             )}
@@ -910,7 +910,7 @@ function Resultado(p: {
         <div className="grid justify-items-center gap-1 rounded-lg bg-disponible/10 p-5 text-center">
           <span className="font-display text-5xl leading-none text-disponible">+{r.estampas}</span>
           <p className="font-display text-xl text-ink">
-            {r.estampas === 1 ? 'estampa' : 'estampas'} para {tarjeta.nombre ?? 'la tarjeta'}
+            {r.estampas === 1 ? 'sello' : 'sellos'} para {tarjeta.nombre ?? 'la tarjeta'}
           </p>
           <p className="text-sm text-ink-soft">
             {r.antes.estampas} → {r.despues.estampas} de {p.programa.posiciones}
@@ -960,7 +960,7 @@ function Resultado(p: {
       <div className="grid gap-4">
         <Aviso tono="atencion" titulo="Guardado como pendiente" icono="reloj">
           {r.razon === 'CONTINGENCIA'
-            ? 'Se conserva la fecha real de compra. Administración lo confirmará y entonces sumará la estampa.'
+            ? 'Se conserva la fecha real de compra. Administración lo confirmará y entonces sumará el sello.'
             : 'Administración revisará el ticket con su foto y decidirá.'}
         </Aviso>
         <BotonSiguiente onClick={p.onSiguiente} />

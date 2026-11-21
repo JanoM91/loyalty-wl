@@ -77,7 +77,7 @@ export async function crear(_previo: EstadoFormulario, form: FormData): Promise<
 
   const posiciones = Number(t('posiciones'));
   if (!Number.isInteger(posiciones) || posiciones < 2 || posiciones > 30)
-    return { error: 'La tarjeta lleva entre 2 y 30 estampas.' };
+    return { error: 'La tarjeta lleva entre 2 y 30 sellos.' };
   const premio = t('premio');
   if (premio.length < 2) return { error: 'Escribe el premio de la tarjeta completa.' };
   const intermedio = t('premioIntermedio');
@@ -86,7 +86,7 @@ export async function crear(_previo: EstadoFormulario, form: FormData): Promise<
     intermedio &&
     (!Number.isInteger(posIntermedio) || posIntermedio < 1 || posIntermedio >= posiciones)
   )
-    return { error: 'El premio intermedio va en una estampa anterior a la última.' };
+    return { error: 'El premio intermedio va en un sello anterior al último.' };
 
   const clave = (texto: string) =>
     aSlug(texto).replace(/-/g, '_').toUpperCase().slice(0, 40) || 'PREMIO';
