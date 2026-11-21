@@ -317,9 +317,9 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
         )}
 
         <p className="text-xs text-muted">
-          Al guardar, el cambio entra en vigor de inmediato en caja, en la tarjeta de cada cliente y
-          en Apple y Google Wallet. Los premios ya ganados conservan el nombre con el que se
-          ganaron. Si cambias lo que se promete, actualiza también los términos del programa.
+          Al guardar, el cambio entra en vigor de inmediato en caja y en la tarjeta de cada cliente.
+          Los premios ya ganados conservan el nombre con el que se ganaron. Si cambias lo que se
+          promete, actualiza también los términos del programa.
         </p>
         <div>
           <BotonEnviar texto="Guardar cambios" enviando="Guardando…" />

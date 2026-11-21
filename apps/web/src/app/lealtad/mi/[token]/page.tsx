@@ -7,6 +7,7 @@ import { AvisoNavegadorIntegrado } from '@/components/lealtad/AvisoNavegadorInte
 import { tarjetaDeEsteNavegador } from '@/lib/lealtad/sesion';
 import { BotonMiTarjeta } from './BotonMiTarjeta';
 import { ruta } from '@/lib/negocio';
+import { walletActivo } from '@/lib/wallet/activo';
 
 export const metadata: Metadata = { title: 'Mi tarjeta' };
 export const dynamic = 'force-dynamic';
@@ -61,7 +62,8 @@ export default async function MiTarjetaPage({
         <h1 className="text-2xl text-ink">{nombre ? `Hola, ${nombre}` : 'Mi tarjeta'}</h1>
         <p className="text-sm text-ink-soft">
           Este es tu enlace personal: sirve siempre, en cualquier celular y sin contraseña. Guárdalo
-          o agrega tu tarjeta a Wallet para tenerla a la mano.
+          o agrega tu tarjeta a {walletActivo() ? 'Wallet' : 'tu pantalla de inicio'} para tenerla a
+          la mano.
         </p>
       </div>
       <AvisoNavegadorIntegrado />

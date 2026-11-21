@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (await negocioDeLaPeticion()) return {};
   return metadatosDelSitio(
     'Programa de lealtad digital para tu negocio',
-    'La tarjeta de sellos de tu negocio en el celular de tus clientes, con Apple Wallet y Google Wallet. Sin app y sin papel.',
+    'La tarjeta de sellos de tu negocio en el celular de tus clientes. Sin app y sin papel. Con juegos que dan promociones y mensajes a tus clientes.',
   );
 }
 

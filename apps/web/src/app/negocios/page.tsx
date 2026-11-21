@@ -20,14 +20,26 @@ export const metadata = metadatosDelSitio(
 );
 
 const GIROS = [
-  ['Cafetería', 'Café gratis', 'Reto: 3 visitas en 30 días y tu sello vale doble.'],
-  ['Panadería', 'Pan y café', 'Insignia por probar tres panes nuevos.'],
-  ['Taquería', 'Orden de tacos', 'Martes de sello doble para llenar el día flojo.'],
-  ['Restaurante', 'Postre de la casa', 'Sello doble entre semana.'],
-  ['Bar', 'Coctel de la casa', 'Racha de jueves: cuatro seguidos y hay premio.'],
-  ['Barbería', 'Corte gratis', 'Trae a un amigo: sello para los dos.'],
-  ['Spa y masajes', 'Masaje de 30 min', 'Nivel Oro: prioridad para agendar.'],
-  ['Escuela de arte', 'Clase para un amigo', 'Insignia por cada taller terminado.'],
+  ['Cafetería', 'Café gratis', 'Juega y gana: 800 puntos en una partida y pan dulce de cortesía.'],
+  ['Panadería', 'Pan y café', 'Juega y gana: 5 días jugando en la semana y café de cortesía.'],
+  ['Taquería', 'Orden de tacos', 'Juega y gana: 40 partidas en el mes y 2x1 en tacos.'],
+  [
+    'Restaurante',
+    'Postre de la casa',
+    'Juega y gana: 800 puntos en una partida y postre de cortesía.',
+  ],
+  ['Bar', 'Coctel de la casa', 'Juega y gana: 5 días jugando en la semana y botana de cortesía.'],
+  ['Barbería', 'Corte gratis', 'Juega y gana: 800 puntos en una partida y arreglo de barba.'],
+  [
+    'Spa y masajes',
+    'Masaje de 30 min',
+    'Juega y gana: 5 días jugando en la semana y 10 % en tu masaje.',
+  ],
+  [
+    'Escuela de arte',
+    'Clase para un amigo',
+    'Juega y gana: 40 partidas en el mes y material de cortesía.',
+  ],
 ] as const;
 
 export default async function Negocios() {

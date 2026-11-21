@@ -62,6 +62,8 @@ const TRAZOS = {
     'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
   basura: 'M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v6M14 11v6',
   papel: 'M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5',
+  sobre: 'M3.5 6h17v12h-17zM3.5 6.5l8.5 7 8.5-7',
+  candado: 'M6 11h12v9.5H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3M12 15v2',
 } as const;
 
 export type NombreIconoSitio = keyof typeof TRAZOS;
@@ -136,7 +138,9 @@ const PISTAS: readonly [RegExp, NombreIconoSitio][] = [
   [/racha|constancia|semana/i, 'fuego'],
   [/nivel|bronce|plata|oro/i, 'niveles'],
   [/insignia|medalla/i, 'medalla'],
-  [/juego|arcade|gamific/i, 'control'],
+  [/juego|arcade|gamific|partida/i, 'control'],
+  [/mensaje|correo|escrib/i, 'sobre'],
+  [/trampa|azar|limpio/i, 'candado'],
   [/premio|regalo|gratis|entrega/i, 'regalo'],
   [/aviso|recuerda|notifica/i, 'campana'],
   [/wallet|guarda/i, 'cartera'],

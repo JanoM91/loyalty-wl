@@ -30,8 +30,9 @@ const planes = (lite: PrecioPeriodo) =>
         'club-lealtad.com/tu-negocio',
         'Tu logo, colores y premios',
         '20 combinaciones de color',
-        'Apple Wallet y Google Wallet',
-        'Campañas y reportes los llevamos nosotros',
+        'Tarjeta en su celular, sin app',
+        'Mensajes a tus clientes por correo',
+        'Tus números en el panel',
       ],
     },
     {
@@ -43,8 +44,8 @@ const planes = (lite: PrecioPeriodo) =>
         'Tu propio dominio y página de inicio',
         'Diseño a la medida',
         'Instalación solo para ti',
-        'Apple Wallet y Google Wallet',
-        'Campañas, reportes completos y acompañamiento',
+        'Mensajes a tus clientes por correo',
+        'Reportes completos y acompañamiento',
       ],
     },
   ] as const;
@@ -52,10 +53,10 @@ const planes = (lite: PrecioPeriodo) =>
 const COMPARA = [
   ['Dirección', 'club-lealtad.com/tu-negocio', 'Tu dominio'],
   ['Diseño', 'Plantillas y colores', 'A la medida'],
-  ['Campañas', 'Las lleva Exkalibur', 'Abiertas para ti'],
+  ['Mensajes a clientes', 'Por correo, desde tu panel', 'Por correo, desde tu panel'],
   ['Reportes', 'Esenciales', 'Completos'],
   ['Datos', 'Compartida, aislados', 'Solo tuyos'],
-  ['Gamificación', 'Servicio adicional', 'Servicio adicional'],
+  ['Juega y gana', 'Servicio adicional', 'Servicio adicional'],
 ] as const;
 
 export default async function Planes() {
@@ -128,7 +129,7 @@ export default async function Planes() {
           <Revela
             titulo="Lite"
             pie="Quiero empezar ya"
-            detras="Dejas el cartón esta semana y nosotros llevamos campañas y reportes."
+            detras="Dejas el cartón esta semana. Desde tu panel ves tus números y escribes a tus clientes."
           />
           <Revela
             titulo="Privada"

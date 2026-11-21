@@ -9,6 +9,7 @@ import { InvitacionInstalar } from '@/components/lealtad/InvitacionInstalar';
 import { NavTarjeta } from '@/components/lealtad/NavTarjeta';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
 import { arcadeVisible } from '@/lib/lealtad/arcade';
+import { walletActivo } from '@/lib/wallet/activo';
 import { exigirTarjeta } from '@/lib/lealtad/sesion';
 import { cuponesArcadeDeTarjeta, programaVigente } from '@wl/database';
 
@@ -46,7 +47,9 @@ export default async function TarjetaPage({
       )}
       {guardar && (
         <Aviso tono="info" titulo="Guárdala en tu celular">
-          Elige una: tu pantalla de inicio o tu Wallet. Las dos se actualizan solas con cada sello.{' '}
+          {walletActivo()
+            ? 'Elige una: tu pantalla de inicio o tu Wallet. Las dos se actualizan solas con cada sello.'
+            : 'Agrégala a tu pantalla de inicio: se actualiza sola con cada sello.'}{' '}
           <a href="#guardar" className="font-semibold underline">
             Ver cómo
           </a>
