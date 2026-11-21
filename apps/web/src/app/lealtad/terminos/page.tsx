@@ -8,16 +8,16 @@ export const metadata: Metadata = { title: 'Términos del programa' };
 export const dynamic = 'force-dynamic';
 
 /**
- * Términos y condiciones del programa de lealtad.
+ * Términos del programa de lealtad de un club, para sus clientes.
  *
- * **Es una plantilla general, no asesoría legal.** Parte del texto que
- * Exkalibur redactó para LAPANA y se llena con los datos de cada negocio
- * (razón social, domicilio, correo, sucursales, premios y reglas). Cada
- * negocio debe revisarla con su abogado antes de abrir su programa al público.
+ * **Plantilla general, no asesoría legal.** Es genérica a propósito: sirve
+ * para cualquier giro (barbería, cafetería, salón…) y no promete plazos que un
+ * club en prueba no pueda cumplir. Se llena con los datos del negocio y de su
+ * programa vigente: si cambian los premios, el texto cambia con ellos. Cada
+ * negocio debe revisarla con su abogado.
  *
- * Las cifras salen del programa vigente en la base, así que si la regla
- * cambia, el texto cambia con ella. Al cambiar el texto, cambiar también
- * `VERSION_TERMINOS` en @wl/database: cada tarjeta guarda la versión que aceptó.
+ * Al cambiar el texto, cambiar también `VERSION_TERMINOS` en @wl/database:
+ * cada tarjeta guarda la versión que aceptó.
  */
 export default async function TerminosPage() {
   const [negocio, programa, sitio, sucursales] = await Promise.all([
@@ -32,57 +32,50 @@ export default async function TerminosPage() {
   ]);
   const hitos = [...programa.hitos].sort((a, b) => a.posicion - b.posicion);
   const nombre = negocio.nombre;
-  const legal = negocio.marca.legal;
+  const { legal, contacto } = negocio.marca;
   const organiza = legal.razonSocial ?? nombre;
-  const correo = legal.correoPrivacidad ?? negocio.marca.contacto.correo;
-  const horasContingencia = programa.ventanaContingenciaDias * 24;
-  const comprobanteObligatorio = negocio.ajustes.comprobanteConQr === 'OBLIGATORIO';
+  const correo = legal.correoPrivacidad ?? contacto.correo;
+  const whatsapp = contacto.whatsapp;
+  const varias = sucursales.length > 1;
+  const pideTicket = negocio.ajustes.comprobanteConQr !== 'NO_PEDIR';
+
   return (
     <article className="grid gap-5 text-sm leading-relaxed text-ink-soft">
       <header className="grid gap-1">
         <a href="/lealtad" className="text-sm text-crust-dark underline underline-offset-4">
           ← Programa de lealtad
         </a>
-        <h1 className="text-2xl text-ink">Términos y condiciones del programa de lealtad</h1>
+        <h1 className="text-2xl text-ink">Términos del programa de lealtad</h1>
         <p className="text-xs text-muted">Versión {VERSION_TERMINOS}</p>
       </header>
 
-      <Seccion n={1} titulo="Quién organiza el programa">
+      <Seccion n={1} titulo="Quién ofrece el programa">
         <p>
-          El programa de lealtad (el «Programa») lo organiza {organiza}
+          {organiza}
           {organiza === nombre ? '' : ` («${nombre}»)`}
-          {legal.domicilio ? `, con domicilio en ${legal.domicilio}` : ''}. Participar es gratuito y
-          voluntario, y no requiere comprar nada adicional.
+          {legal.domicilio ? `, con domicilio en ${legal.domicilio},` : ''} ofrece este programa y
+          entrega sus premios. Participar es gratis y voluntario.
         </p>
       </Seccion>
 
-      <Seccion n={2} titulo="Quién puede participar">
-        <p>
-          Personas físicas mayores de edad que se registren en {sitio}/lealtad con un número de
-          celular o un correo electrónico. Cada persona puede tener una sola tarjeta. La tarjeta es
-          personal, no tiene valor monetario y no se puede vender ni cambiar por dinero.
-        </p>
-      </Seccion>
-
-      <Seccion n={3} titulo="Cómo se ganan estampas">
+      <Seccion n={2} titulo="Tu tarjeta">
         <ul className="grid list-disc gap-1.5 pl-5">
           <li>
-            Se gana <b className="font-semibold text-ink">una estampa por cada compra presencial</b>{' '}
-            en una sucursal participante, sin importar el importe, al mostrar el código de la
-            tarjeta en caja
-            {comprobanteObligatorio
-              ? ' y entregar el ticket de esa compra.'
-              : '. En caja se pide el ticket de esa compra para registrar su folio.'}
+            La creas en {sitio}/lealtad con tu celular o tu correo. No necesitas instalar nada.
           </li>
-          <li>Se acredita como máximo una compra por tarjeta, por sucursal y por día.</li>
-          <li>Cada ticket se acredita una sola vez y a una sola tarjeta.</li>
+          <li>Es personal: una tarjeta por persona. No tiene valor en dinero.</li>
+        </ul>
+      </Seccion>
+
+      <Seccion n={3} titulo="Cómo sumas estampas">
+        <ul className="grid list-disc gap-1.5 pl-5">
           <li>
-            Un ticket de hasta {horasContingencia} horas antes puede registrarse como contingencia
-            (por ejemplo, si no hubo internet en caja). Queda pendiente hasta que {nombre} lo
-            valide. Los tickets más antiguos se revisan caso por caso.
+            Muestra el código de tu tarjeta al pagar y sumas{' '}
+            <b className="font-semibold text-ink">una estampa por visita</b>
+            {varias ? ', máximo una al día en cada sucursal' : ', máximo una al día'}.
           </li>
-          <li>Solo las compras presenciales acumulan estampas.</li>
-          <li>Si una compra se cancela o se devuelve, la estampa que generó se retira.</li>
+          {pideTicket && <li>Te pueden pedir el ticket de tu compra para registrar la visita.</li>}
+          <li>Si una compra se cancela o se devuelve, se retira la estampa que dio.</li>
         </ul>
       </Seccion>
 
@@ -90,72 +83,55 @@ export default async function TerminosPage() {
         <ul className="grid list-disc gap-1.5 pl-5">
           {hitos.map((h) => (
             <li key={h.posicion}>
-              Al reunir <b className="font-semibold text-ink">{h.posicion} estampas</b>:{' '}
+              Con <b className="font-semibold text-ink">{h.posicion} estampas</b>:{' '}
               {h.nombre.toLowerCase()}
               {h.incluye ? ` (${h.incluye.replace(/\.$/, '').toLowerCase()})` : ''}.
             </li>
           ))}
-          <li>Al completar las {programa.posiciones} estampas empieza una tarjeta nueva.</li>
+          <li>Al completar tu tarjeta empiezas una nueva.</li>
           <li>
-            Los premios se canjean en cualquier sucursal participante mostrando el código de la
-            tarjeta, y están sujetos a la disponibilidad de producto del día. Si el producto elegido
-            no está disponible, se ofrece otro equivalente.
-          </li>
-          <li>
-            Para canjear un premio la tarjeta debe tener un correo o un celular verificado. Cada
-            premio se entrega una sola vez.
-          </li>
-          <li>
-            Los premios no se cambian por dinero ni por otros productos distintos de los indicados.
+            Para cobrar un premio, verifica tu celular o tu correo desde tu tarjeta. Cada premio se
+            entrega una vez y no se cambia por dinero.
           </li>
         </ul>
       </Seccion>
 
-      <Seccion n={5} titulo="Vigencia de estampas y premios">
+      <Seccion n={5} titulo="Cambios y fin del programa">
         <p>
-          Mientras el Programa esté vigente, las estampas y los premios no vencen. Si {nombre}{' '}
-          decide establecer una vigencia, lo avisará con al menos 30 días naturales de anticipación
-          y aplicará solo a estampas y premios generados después del aviso.
+          {nombre} puede cambiar estas reglas o terminar el programa. Los cambios se publican en
+          esta página y no te quitan las estampas ni los premios que ya ganaste. Si el programa
+          termina, {nombre} te dirá hasta cuándo puedes cobrar los premios que ya tengas.
         </p>
       </Seccion>
 
-      <Seccion n={6} titulo="Sucursales participantes">
+      <Seccion n={6} titulo="Uso indebido">
         <p>
-          {sucursales.length > 0
-            ? `${sucursales.map((b) => b.name).join(', ')}, a partir de la fecha en que cada una se incorpore al Programa. `
-            : 'Las sucursales participantes se anunciarán al arrancar el Programa. '}
-          La lista vigente se publica en {sitio}/lealtad.
+          Si una tarjeta se usa para sumar visitas que no ocurrieron, {nombre} puede quitarle esas
+          estampas o cancelarla.
         </p>
       </Seccion>
 
-      <Seccion n={7} titulo="Uso indebido">
+      <Seccion n={7} titulo="Dudas">
         <p>
-          {nombre} puede suspender o cancelar una tarjeta, y retirar estampas o premios, cuando se
-          acrediten tickets que no corresponden a compras de quien la usa, se intente acreditar un
-          ticket más de una vez o se manipule el Programa de cualquier otra forma. Antes de cancelar
-          una tarjeta, {nombre} lo informará a su titular al contacto registrado.
+          Si algo no cuadra en tu tarjeta,{' '}
+          {correo || whatsapp ? (
+            <>
+              escríbenos
+              {correo ? ` a ${correo}` : ''}
+              {correo && whatsapp ? ' o' : ''}
+              {whatsapp ? ` por WhatsApp al +${whatsapp}` : ''}
+            </>
+          ) : (
+            'pregúntanos en el negocio'
+          )}
+          .
         </p>
       </Seccion>
 
-      <Seccion n={8} titulo="Aclaraciones">
+      <Seccion n={8} titulo="Mensajes y datos personales">
         <p>
-          Si una compra no aparece en tu historial o crees que hay un error, avísanos dentro de los
-          30 días siguientes a la compra{correo ? ` en ${correo}` : ' en cualquier sucursal'}, con
-          el folio del ticket. Lo revisaremos con el registro de caja.
-        </p>
-      </Seccion>
-
-      <Seccion n={9} titulo="Comunicaciones">
-        <p>
-          Te enviaremos avisos sobre tu tarjeta, como premios disponibles y códigos de verificación.
-          Solo te enviaremos promociones si lo aceptaste expresamente, y puedes darte de baja en
-          cualquier momento desde el perfil de tu tarjeta o en el enlace de cada mensaje.
-        </p>
-      </Seccion>
-
-      <Seccion n={10} titulo="Datos personales">
-        <p>
-          El tratamiento de tus datos se describe en el{' '}
+          Te mandamos avisos de tu tarjeta, como códigos de verificación. Promociones, solo si las
+          aceptaste; puedes quitarlas desde tu perfil. Cómo tratamos tus datos está en el{' '}
           <a href="/lealtad/privacidad" className="text-crust-dark underline underline-offset-2">
             aviso de privacidad
           </a>
@@ -163,20 +139,10 @@ export default async function TerminosPage() {
         </p>
       </Seccion>
 
-      <Seccion n={11} titulo="Cambios y terminación del Programa">
+      <Seccion n={9} titulo="Leyes">
         <p>
-          {nombre} puede modificar estos términos o terminar el Programa avisando con al menos 30
-          días naturales de anticipación en {sitio}/lealtad y en las sucursales. Si el Programa
-          termina, los premios ya generados podrán canjearse durante los 60 días naturales
-          siguientes a la fecha de terminación.
-        </p>
-      </Seccion>
-
-      <Seccion n={12} titulo="Legislación aplicable">
-        <p>
-          Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Para cualquier
-          controversia, la Procuraduría Federal del Consumidor es competente en la vía
-          administrativa y, en su caso, los tribunales del domicilio del organizador.
+          Estas reglas se rigen por las leyes de México. Si tienes un problema que no se resuelve
+          con {nombre}, puedes acudir a la Procuraduría Federal del Consumidor (Profeco).
         </p>
       </Seccion>
     </article>

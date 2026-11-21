@@ -1,8 +1,13 @@
 import {
   PROGRAMA_BASE,
+  diasEnPausa,
   esPrefijoCodigo,
   esSlugDeNegocio,
   esZonaHorariaValida,
+  fechaDeBorrado,
+  finDePeriodoPagado,
+  listoParaBorrar,
+  type PeriodoPago,
   type ProgramaLealtad,
 } from '@wl/domain';
 import type { Prisma, PrismaClient } from '@prisma/client';
@@ -282,11 +287,7 @@ export async function direccionLibre(base: string): Promise<string | null> {
   return null;
 }
 
-/**
- * Cambia la fecha de fin de prueba. `null` la quita: el club queda activo sin
- * límite (es lo que se hace al registrar su pago).
- */
-export async function fijarFinDePrueba(id: string, vence: string | null): Promise<void> {
+async function mezclarAjustes(id: string, cambios: Record<string, unknown>): Promise<void> {
   const bd = clienteDuenio();
   const fila = await bd.tenant.findUniqueOrThrow({ where: { id }, select: { settings: true } });
   const ajustes =
@@ -295,6 +296,87 @@ export async function fijarFinDePrueba(id: string, vence: string | null): Promis
       : {};
   await bd.tenant.update({
     where: { id },
-    data: { settings: { ...ajustes, pruebaVence: vence } },
+    data: { settings: { ...ajustes, ...cambios } as Prisma.InputJsonValue },
   });
+}
+
+/**
+ * Da una prueba nueva que vence en `vence`. Quita el periodo pagado, si había:
+ * sirve también como gracia para un club que no renovó.
+ */
+export async function fijarFinDePrueba(id: string, vence: string | null): Promise<void> {
+  await mezclarAjustes(id, { pruebaVence: vence, pagadoHasta: null });
+}
+
+/** Registra un pago de un mes o un año: el club queda activo hasta el fin del periodo. */
+export async function registrarPago(negocio: Negocio, periodo: PeriodoPago): Promise<string> {
+  const hasta = finDePeriodoPagado(periodo, negocio.ajustes.pagadoHasta);
+  await mezclarAjustes(negocio.id, { pagadoHasta: hasta });
+  return hasta;
+}
+
+// ---------------------------------------------------------------------------
+// Borrado de clubes pausados
+// ---------------------------------------------------------------------------
+
+const CLAVE_BORRADO_AUTOMATICO = 'borrado_automatico';
+
+/** ¿Está encendido el borrado automático de clubes con 30 días en pausa? Apagado por omisión. */
+export async function borradoAutomaticoEncendido(): Promise<boolean> {
+  const fila = await clienteDuenio().platformSetting.findUnique({
+    where: { key: CLAVE_BORRADO_AUTOMATICO },
+    select: { value: true },
+  });
+  return fila?.value === true;
+}
+
+export async function fijarBorradoAutomatico(encendido: boolean, quien: string): Promise<void> {
+  await clienteDuenio().platformSetting.upsert({
+    where: { key: CLAVE_BORRADO_AUTOMATICO },
+    create: { key: CLAVE_BORRADO_AUTOMATICO, value: encendido, updatedBy: quien },
+    update: { value: encendido, updatedBy: quien },
+  });
+}
+
+export interface ClubEnPausa {
+  readonly negocio: Negocio;
+  readonly diasEnPausa: number;
+  readonly borrarDesde: Date;
+  readonly listo: boolean;
+  readonly tarjetas: number;
+}
+
+/** Clubes en pausa (prueba o pago vencido), del que más tiempo lleva al que menos. */
+export async function clubesEnPausa(ahora: Date = new Date()): Promise<ClubEnPausa[]> {
+  const salida: ClubEnPausa[] = [];
+  for (const f of await listarNegocios()) {
+    const { pruebaVence, pagadoHasta } = f.negocio.ajustes;
+    const borrarDesde = fechaDeBorrado(pruebaVence, pagadoHasta, ahora);
+    if (!borrarDesde) continue;
+    salida.push({
+      negocio: f.negocio,
+      diasEnPausa: diasEnPausa(pruebaVence, pagadoHasta, ahora),
+      borrarDesde,
+      listo: listoParaBorrar(pruebaVence, pagadoHasta, ahora),
+      tarjetas: f.tarjetas,
+    });
+  }
+  return salida.sort((a, b) => b.diasEnPausa - a.diasEnPausa);
+}
+
+/**
+ * Borra los clubes que cumplieron 30 días en pausa, solo si el borrado
+ * automático está encendido. Lo llama la tarea diaria.
+ */
+export async function borrarClubesVencidos(
+  ahora: Date = new Date(),
+): Promise<{ readonly encendido: boolean; readonly borrados: readonly string[] }> {
+  if (!(await borradoAutomaticoEncendido())) return { encendido: false, borrados: [] };
+  const borrados: string[] = [];
+  for (const c of await clubesEnPausa(ahora)) {
+    if (!c.listo) continue;
+    await borrarNegocio(c.negocio.id);
+    borrados.push(c.negocio.slug);
+  }
+  return { encendido: true, borrados };
 }

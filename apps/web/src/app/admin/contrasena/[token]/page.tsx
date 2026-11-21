@@ -5,7 +5,7 @@ import { FormularioContrasena } from './FormularioContrasena';
 import { LogoMarca } from '@/components/Marca';
 
 export const metadata: Metadata = {
-  title: 'Elegir contraseña · Panel',
+  title: 'Elegir contraseña',
   robots: { index: false, follow: false },
   // El token va en la dirección: que no se filtre como «página de origen» si
   // alguien toca un enlace desde aquí.

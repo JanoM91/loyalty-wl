@@ -47,12 +47,18 @@ export default async function AyudaPage() {
               Escanea el código de la tarjeta del cliente. Si la cámara no lo lee, escribe el
               código: empieza con {negocio.prefijoCodigo}-.
             </li>
-            <li>
-              {folioObligatorio
-                ? 'Escribe el folio del ticket o tómale foto. Sin folio ni foto, la visita no se registra.'
-                : 'Pide el ticket y escribe su folio. Si el cliente no lo trae, registra la visita de todos modos: queda anotada sin folio.'}
-            </li>
-            <li>Confirma. La tarjeta del cliente muestra su estampa nueva al momento.</li>
+            {negocio.ajustes.comprobanteConQr === 'NO_PEDIR' ? (
+              <li>Toca «Sumar estampa». La tarjeta del cliente la muestra al momento.</li>
+            ) : (
+              <>
+                <li>
+                  {folioObligatorio
+                    ? 'Escribe el folio del ticket o tómale foto. Sin folio ni foto, la visita no se registra.'
+                    : 'Pide el ticket y escribe su folio. Si el cliente no lo trae, registra la visita de todos modos: queda anotada sin folio.'}
+                </li>
+                <li>Confirma. La tarjeta del cliente muestra su estampa nueva al momento.</li>
+              </>
+            )}
           </Tarea>
           <p>
             Cada tarjeta suma una estampa por día en cada sucursal. Si ya sumó hoy aquí, la caja lo

@@ -19,7 +19,10 @@ export default async function Empezar() {
       pasos={[
         ['Llenas cinco datos', 'Nombre, giro, premio, WhatsApp y correo.'],
         ['Sacas tu propia tarjeta', 'La pruebas en tu celular antes que nadie.'],
-        ['Pones tu QR a la vista', 'Cada visita suma un sello. El premio avisa solo.'],
+        [
+          'Pones tu QR a la vista',
+          'Cada visita suma un sello. Tu cliente ve su avance en su celular.',
+        ],
       ]}
     />
   );

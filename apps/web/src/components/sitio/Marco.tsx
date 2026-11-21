@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { enlaceWhatsAppServicio } from '@/lib/contacto';
+
 import { minimo } from './medidas';
 import './sitio.css';
 
@@ -20,9 +22,7 @@ export const PAGINAS = [
 
 /** WhatsApp de contacto: `WL_CONTACTO_WHATSAPP` o, si falta, el de Exkalibur. */
 export function enlaceWhatsApp(): string {
-  const numero = (process.env.WL_CONTACTO_WHATSAPP ?? '').replace(/\D/g, '') || '522222551373';
-  const texto = encodeURIComponent('Hola, quiero un programa de lealtad para mi negocio.');
-  return `https://wa.me/${numero}?text=${texto}`;
+  return enlaceWhatsAppServicio('Hola, quiero un programa de lealtad para mi negocio.');
 }
 
 export { minimo };

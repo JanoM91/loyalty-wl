@@ -267,7 +267,8 @@ export async function acreditarVisita(s: SolicitudCaja): Promise<ResultadoCaja> 
   }
   const hoy = fechaLocal(new Date(), negocio.zonaHoraria);
   const programa = await programaVigente();
-  const faltaron = faltantes(s.ticket);
+  // Sin ticket por regla del negocio, no es una captura incompleta.
+  const faltaron = negocio.ajustes.comprobanteConQr === 'NO_PEDIR' ? [] : faltantes(s.ticket);
   // El negocio puede exigir el comprobante también con el QR a la vista.
   if (
     negocio.ajustes.comprobanteConQr === 'OBLIGATORIO' &&

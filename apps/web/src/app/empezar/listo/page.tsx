@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { negocioPorSlug } from '@wl/database';
 import { diasRestantesDePrueba } from '@wl/domain';
 
+import { ArribaAlCargar } from '@/components/sitio/ArribaAlCargar';
 import { Marco } from '@/components/sitio/Marco';
 import { qrSvg } from '@/lib/lealtad/qr';
 import { origenDeLaPeticion } from '@/lib/negocio';
@@ -41,13 +42,14 @@ export default async function Listo({
 
   return (
     <Marco>
+      <ArribaAlCargar />
       <section className="sec" style={{ paddingTop: 64 }}>
         <div className="wrap col" style={{ maxWidth: 860, gap: 28 }}>
           <span className="chip">
             {dias > 0 ? `Prueba gratis: te quedan ${dias} días` : 'Tu club'}
           </span>
           <h1 className="d h1">{negocio.nombre} ya tiene su club.</h1>
-          <p className="lead">Tres pasos y lo estás usando. Guarda esta página.</p>
+          <p className="lead">Tres pasos y lo estás usando. Empieza por tu contraseña.</p>
 
           <ol className="col" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
             <li className="ps">
@@ -56,7 +58,10 @@ export default async function Listo({
               </span>
               <div className="col" style={{ gap: 10, minWidth: 0 }}>
                 <h2 className="d h3">Elige tu contraseña</h2>
-                <p className="p">Con ella entras a tu panel y a tu caja.</p>
+                <p className="p">
+                  Con ella entras a tu panel y a tu caja.
+                  {token ? ' Este botón sirve una sola vez.' : ''}
+                </p>
                 {token ? (
                   <a
                     href={`${base}/admin/contrasena/${token}`}
@@ -85,6 +90,7 @@ export default async function Listo({
                 </p>
                 <a
                   href={`${base}/lealtad/unete/principal`}
+                  target="_blank"
                   className="btn inv"
                   style={{ alignSelf: 'flex-start' }}
                 >
@@ -116,9 +122,10 @@ export default async function Listo({
           </ol>
 
           <div className="panel col" style={{ gap: 8 }}>
-            <b>Para sellar una visita</b>
+            <b>Para sumar una estampa</b>
             <span className="p">
-              Entra a tu panel, abre «Caja» y escanea el QR de la tarjeta de tu cliente.
+              Entra a tu panel, abre «Caja» y escanea el código de la tarjeta de tu cliente. Guarda
+              esta dirección: es la de tu panel.
             </span>
             <a href={`${base}/admin`} className="lk" style={{ alignSelf: 'flex-start' }}>
               {`club-lealtad.com${base}/admin`}
