@@ -18,7 +18,7 @@ export default async function Belleza() {
       titulo="Que tu cliente vuelva contigo, no con otro."
       texto="Tu tarjeta de cliente frecuente, en su celular. Lista en 5 minutos."
       pasos={[
-        ['Llenas cinco datos', 'Nombre, giro, premio, WhatsApp y correo.'],
+        ['Respondes 3 preguntas', 'Tu negocio, tu premio y tu acceso. Entras directo a tu panel.'],
         ['Sacas tu propia tarjeta', 'La pruebas en tu celular antes que nadie.'],
         [
           'Pones tu QR en recepción',

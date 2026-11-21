@@ -30,11 +30,17 @@ export function Paleta({
   comandos,
   buscarClientes,
   claseBoton,
+  variante = 'acciones',
 }: {
   comandos: readonly ComandoPaleta[];
   /** Dirección de la lista de clientes, para «Buscar cliente…». Null: sin búsqueda. */
   buscarClientes: string | null;
   claseBoton?: string;
+  /**
+   * «buscar»: lupa sola en el celular y barra de búsqueda en la computadora.
+   * Debe haber una sola paleta por pantalla: cada una escucha ⌘K.
+   */
+  variante?: 'acciones' | 'buscar';
 }) {
   const router = useRouter();
   const [abierta, setAbierta] = useState(false);
@@ -111,21 +117,52 @@ export function Paleta({
 
   return (
     <>
-      <button
-        ref={boton}
-        type="button"
-        onClick={() => setAbierta(true)}
-        aria-haspopup="dialog"
-        className={
-          claseBoton ??
-          'inline-flex min-h-[44px] items-center gap-2.5 rounded-full border border-rule bg-white/75 pr-2 pl-4 text-[14px] text-muted backdrop-blur hover:text-ink'
-        }
-      >
-        Acciones
-        <kbd className="hidden rounded-md border border-rule px-1.5 py-0.5 font-sans text-[12px] text-ink sm:inline">
-          ⌘K
-        </kbd>
-      </button>
+      {variante === 'buscar' ? (
+        <button
+          ref={boton}
+          type="button"
+          onClick={() => setAbierta(true)}
+          aria-haspopup="dialog"
+          aria-label="Buscar cliente o acción"
+          className={
+            claseBoton ??
+            'inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-[#CDE8DC] bg-white text-ink transition-shadow hover:shadow-[0_10px_24px_-16px_rgba(6,35,28,.6)] lg:w-[320px] lg:justify-start lg:pr-2 lg:pl-3.5 lg:text-[15px] lg:text-[#3C5A51]'
+          }
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14M20 20l-4-4" />
+          </svg>
+          <span className="hidden flex-1 text-left lg:inline">Buscar cliente o acción</span>
+          <kbd className="hidden rounded-md bg-crumb px-1.5 py-0.5 font-sans text-[12px] font-semibold text-ink lg:inline">
+            ⌘K
+          </kbd>
+        </button>
+      ) : (
+        <button
+          ref={boton}
+          type="button"
+          onClick={() => setAbierta(true)}
+          aria-haspopup="dialog"
+          className={
+            claseBoton ??
+            'inline-flex min-h-[44px] items-center gap-2.5 rounded-full border border-rule bg-white/75 pr-2 pl-4 text-[14px] text-muted backdrop-blur hover:text-ink'
+          }
+        >
+          Acciones
+          <kbd className="hidden rounded-md border border-rule px-1.5 py-0.5 font-sans text-[12px] text-ink sm:inline">
+            ⌘K
+          </kbd>
+        </button>
+      )}
 
       {abierta && (
         <div
