@@ -178,11 +178,11 @@ async function vestirCorreo(html: string): Promise<string> {
   const nombre = negocio?.nombre ?? process.env.RESEND_FROM_NAME ?? 'club-lealtad';
   // Sin negocio (correos del sitio, como la bienvenida): colores de club-lealtad.
   const fondo =
-    negocio && COLOR.test(negocio.marca.colores.fondo) ? negocio.marca.colores.fondo : '#06231C';
+    negocio && COLOR.test(negocio.marca.colores.fondo) ? negocio.marca.colores.fondo : '#120A2A';
   const sobre =
     negocio && COLOR.test(negocio.marca.colores.sobreFondo)
       ? negocio.marca.colores.sobreFondo
-      : '#F1FBF6';
+      : '#FFF6EA';
   return html
     .replaceAll(HUECO_NOMBRE, escapar(nombre))
     .replaceAll(HUECO_FONDO, fondo)

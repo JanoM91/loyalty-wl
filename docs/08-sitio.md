@@ -24,6 +24,17 @@ Solo existen en la instalación compartida y fuera de la dirección de un negoci
 - Estilos: `components/sitio/sitio.css`, todos bajo `.cl` para no tocar las pantallas de los negocios. La paleta son las variables del primer bloque.
 - `como-funciona`, `gamificacion`, `planes` y `guia` se agregaron a `SLUGS_RESERVADOS`: ningún negocio puede llamarse así.
 
+## Marca (21 nov 2026)
+
+Jano eligió el logo **«Tarjeta negra»**: una tarjeta negra de sellos con filo lima, el último sello es el premio en coral y hay otra tarjeta coral detrás. El paquete completo (SVG, PNG, íconos, avatar e imagen para compartir) y sus reglas están en `marca/` (raíz del repo, ver `marca/LEEME.md`).
+
+- Paleta (`sitio.css`): noche `#120A2A`, lima `#C6FF3D`, coral `#FF5B3A`, violeta `#6C3BFF` para botones, crema `#FFF6EA` de fondo. `--acc` es el acento de trazos y figuras: coral sobre fondo claro y lima dentro de `.dk`, porque la lima no se ve sobre crema.
+- Tipografía: Fredoka para logotipo y títulos (`@fontsource-variable/fredoka`, se carga solo en el sitio desde `Marco.tsx`), Onest para texto.
+- Logo en encabezado y pie: `Isotipo` y `Logo` en `Marco.tsx`.
+- Favicon, ícono de iPhone e imagen al compartir: archivos `club-lealtad-*` en `apps/web/public`, declarados en `metadatosDelSitio()` (`lib/sitio.ts`). Solo las páginas del sitio los llevan; tarjetas y paneles siguen con la marca de cada negocio.
+- Los correos del sitio (sin negocio) usan noche y crema (`lib/correo.ts`).
+- El panel del dueño (`lib/admin/panel.ts` y clases con `#00C389`/`#5B2EFF`) conserva por ahora la paleta anterior.
+
 ## Decisiones de Jano
 
 - Todos los botones de contacto van a WhatsApp (`WL_CONTACTO_WHATSAPP`; si falta, +52 2222 5513 73). Más adelante irá a un contacto único con un agente de IA.
