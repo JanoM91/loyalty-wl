@@ -1,3 +1,5 @@
+import { arcadeVisible } from '@/lib/lealtad/arcade';
+
 import { Icono, type NombreIcono } from './Iconos';
 
 type Seccion = { href: string; etiqueta: string; icono: NombreIcono };
@@ -7,6 +9,7 @@ const LATERALES_IZQ: readonly Seccion[] = [
   { href: '/lealtad/historial', etiqueta: 'Historial', icono: 'historial' },
 ];
 const TARJETA: Seccion = { href: '/lealtad/tarjeta', etiqueta: 'Mi tarjeta', icono: 'qr' };
+const JUEGOS: Seccion = { href: '/lealtad/juegos', etiqueta: 'Juega y gana', icono: 'control' };
 const LATERALES_DER: readonly Seccion[] = [
   { href: '/lealtad/perfil', etiqueta: 'Perfil', icono: 'persona' },
   { href: '/lealtad/terminos', etiqueta: 'Reglas', icono: 'info' },
@@ -14,12 +17,20 @@ const LATERALES_DER: readonly Seccion[] = [
 
 /**
  * Barra flotante de la tarjeta: Mi tarjeta, Premios, Historial, Perfil y
- * Reglas. Solo íconos; la sección en la que estás va rellena.
+ * Reglas, más Juega y gana si el club tiene el Arcade. Solo íconos; la
+ * sección en la que estás va rellena.
  *
  * Abajo y no arriba: en el celular es donde llega el pulgar, y el cliente la
  * usa de pie frente a la caja con la compra en la otra mano.
  */
-export function NavTarjeta({ actual, premiosListos }: { actual: string; premiosListos: number }) {
+export async function NavTarjeta({
+  actual,
+  premiosListos,
+}: {
+  actual: string;
+  premiosListos: number;
+}) {
+  const conJuegos = await arcadeVisible();
   const enlace = (s: Seccion) => {
     const activa = actual === s.href;
     return (
@@ -51,8 +62,13 @@ export function NavTarjeta({ actual, premiosListos }: { actual: string; premiosL
       className="fixed inset-x-0 bottom-0 z-30 px-5"
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 14px)' }}
     >
-      <ul className="mx-auto grid max-w-[22rem] grid-cols-5 gap-1 rounded-full border border-rule bg-cream/85 p-1.5 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-        {[TARJETA, ...LATERALES_IZQ, ...LATERALES_DER].map(enlace)}
+      <ul
+        className={`mx-auto grid gap-1 rounded-full border border-rule bg-cream/85 p-1.5 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.35)] backdrop-blur-xl ${conJuegos ? 'max-w-[25rem] grid-cols-6' : 'max-w-[22rem] grid-cols-5'}`}
+      >
+        {(conJuegos
+          ? [TARJETA, LATERALES_IZQ[0]!, JUEGOS, ...LATERALES_IZQ.slice(1), ...LATERALES_DER]
+          : [TARJETA, ...LATERALES_IZQ, ...LATERALES_DER]
+        ).map(enlace)}
       </ul>
     </nav>
   );

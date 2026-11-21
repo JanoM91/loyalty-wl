@@ -35,6 +35,8 @@ const TRAZOS = {
   cruz: 'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM9 9l6 6M15 9l-6 6',
   bolsa: 'M5.5 8.5h13l-1 11.5h-11zM9 8.5V7a3 3 0 0 1 6 0v1.5',
   campana: 'M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 21h4',
+  control:
+    'M7.5 7.5h9a5 5 0 0 1 4.8 6.4l-.9 3a2.3 2.3 0 0 1-3.9.9L14.6 16H9.4l-1.9 1.8a2.3 2.3 0 0 1-3.9-.9l-.9-3a5 5 0 0 1 4.8-6.4zM8 10.5v3M6.5 12h3M15.5 11v.01M17.5 13v.01',
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;

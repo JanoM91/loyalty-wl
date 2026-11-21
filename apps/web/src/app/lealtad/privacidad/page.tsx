@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import { arcadeVigente } from '@wl/domain';
+
 import { exigirNegocio } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Aviso de privacidad' };
@@ -22,6 +24,7 @@ export default async function PrivacidadPage() {
   const correo = legal.correoPrivacidad ?? negocio.marca.contacto.correo;
   const dias = negocio.ajustes.diasConservacionFotos;
   const pideTicket = negocio.ajustes.comprobanteConQr !== 'NO_PEDIR';
+  const conJuegos = arcadeVigente(negocio.ajustes.arcade);
 
   return (
     <article className="grid gap-5 text-sm leading-relaxed text-ink-soft">
@@ -50,6 +53,12 @@ export default async function PrivacidadPage() {
               : 'Tus visitas: fecha y sucursal.'}
           </li>
           <li>Los premios que ganas y canjeas.</li>
+          {conJuegos && (
+            <li>
+              Si juegas en «Juega y gana»: tus partidas (juego, día, duración, puntos y nivel) y las
+              promociones que ganas y cobras.
+            </li>
+          )}
         </ul>
         <p>No pedimos ni guardamos datos de pago ni datos sensibles.</p>
       </Seccion>
@@ -57,6 +66,12 @@ export default async function PrivacidadPage() {
       <Seccion titulo="Para qué los usamos">
         <ul className="grid list-disc gap-1.5 pl-5">
           <li>Llevar la cuenta de tus sellos y entregarte tus premios.</li>
+          {conJuegos && (
+            <li>
+              Medir tus retos, entregarte las promociones que ganes y, si el club la tiene, mostrar
+              la lista de la semana con tu nombre abreviado (por ejemplo, «Ana L.»).
+            </li>
+          )}
           <li>Enviarte avisos de tu tarjeta, como códigos de verificación y enlaces de acceso.</li>
           <li>Prevenir el uso indebido del programa.</li>
           <li>
