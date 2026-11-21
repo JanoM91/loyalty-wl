@@ -1,12 +1,18 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { estadoComercialDe } from '@wl/database';
-import { ahorroAnual, diasRestantesDePrueba, fechaDeBorrado, pesos } from '@wl/domain';
+import {
+  ahorroAnual,
+  arcadeVigente,
+  diasRestantesDePrueba,
+  fechaDeBorrado,
+  pesos,
+} from '@wl/domain';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 import { exigirRol } from '@/lib/admin/sesion';
-import { exigirNegocio, ruta, sitioDeLaPeticion } from '@/lib/negocio';
+import { exigirNegocio, ruta, rutaBase, sitioDeLaPeticion } from '@/lib/negocio';
 import { precios } from '@/lib/precios';
 
 export const metadata: Metadata = { title: 'Mi plan' };
@@ -25,11 +31,12 @@ const fecha = (d: Date) =>
  */
 export default async function PlanPage() {
   const sesion = await exigirRol(['ADMIN', 'DUENO']);
-  const [negocio, sitio, { lite }] = await Promise.all([
+  const [negocio, sitio, { lite, arcade }] = await Promise.all([
     exigirNegocio(),
     sitioDeLaPeticion(),
     precios(),
   ]);
+  const base = await rutaBase();
   const ahorro = ahorroAnual(lite);
   // Solo los clubes del asistente pagan el plan Lite; los demás tienen su propio trato.
   if (!negocio.ajustes.alta) redirect(await ruta('/admin'));
@@ -93,6 +100,25 @@ export default async function PlanPage() {
             </a>
           </section>
         </div>
+
+        <section className={`${TARJETA} grid gap-2`}>
+          <span className="text-[14px] font-semibold text-[#3C5A51]">Servicio adicional</span>
+          <h2 className="text-[22px]">Juega y gana</h2>
+          <p className="text-[15px] text-[#3C5A51]">
+            {arcadeVigente(negocio.ajustes.arcade) && negocio.ajustes.arcade?.pagadoHasta
+              ? `Activo, pagado hasta el ${fecha(new Date(negocio.ajustes.arcade.pagadoHasta))}.`
+              : 'Juegos con tu marca dentro de la tarjeta de tus clientes, con retos y promociones que se cobran en tu caja.'}{' '}
+            {arcade.mes !== null
+              ? `${pesos(arcade.mes)} al mes${arcade.anio !== null ? ` o ${pesos(arcade.anio)} al año` : ''}.`
+              : ''}
+          </p>
+          <a
+            href={`${base}/admin/arcade`}
+            className="inline-flex min-h-[48px] items-center justify-center justify-self-start rounded-[16px] border-[1.5px] border-ink px-5 font-semibold text-ink"
+          >
+            Ver Juega y gana
+          </a>
+        </section>
 
         <p className="text-[14px] text-[#3C5A51]">
           Te escribimos por WhatsApp con el enlace de pago y activamos tu club en cuanto se

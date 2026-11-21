@@ -59,6 +59,14 @@ describe('secciones y paleta por rol', () => {
     );
   });
 
+  it('«Juega y gana» lo configura quien administra; la caja cobra sus promociones', () => {
+    expect(seccionesDelPanel('DUENO').map((s) => s.id)).toContain('arcade');
+    expect(seccionesDelPanel('GERENTE').map((s) => s.id)).not.toContain('arcade');
+    expect(comandosDelPanel('SUCURSAL').map((c) => c.id)).toContain('promo-cobrar');
+    expect(comandosDelPanel('SUCURSAL').map((c) => c.id)).not.toContain('arcade');
+    expect(seccionActiva('/admin/arcade')).toBe('arcade');
+  });
+
   it('la paleta ya no ofrece el mapa', () => {
     const ids = comandosDelPanel('DUENO').map((c) => c.id);
     expect(ids).not.toContain('mapa');

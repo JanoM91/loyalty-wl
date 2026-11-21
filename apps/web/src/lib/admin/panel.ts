@@ -104,6 +104,15 @@ const SECCIONES: readonly SeccionPanel[] = [
     roles: DIRECCION,
   },
   {
+    id: 'arcade',
+    texto: 'Juega y gana',
+    descripcion: 'Juegos, retos y promociones para tus clientes',
+    ruta: '/admin/arcade',
+    icono: 'juegos',
+    grupo: 'programa',
+    roles: ADMINISTRA,
+  },
+  {
     id: 'pendientes',
     texto: 'Por revisar',
     descripcion: 'Visitas que la caja te dejó',
@@ -256,6 +265,14 @@ export function comandosDelPanel(rol: Rol): ComandoPanel[] {
       roles: ['ADMIN', 'DUENO', 'GERENTE', 'SUCURSAL'],
     },
     {
+      id: 'promo-cobrar',
+      texto: 'Cobrar promoción del juego',
+      grupo: 'Caja',
+      ruta: '/admin/lealtad/caja?accion=promo',
+      claves: 'caja cupon promocion juego arcade cobrar',
+      roles: ['ADMIN', 'DUENO', 'GERENTE', 'SUCURSAL'],
+    },
+    {
       id: 'caja-abrir',
       texto: 'Abrir la caja',
       grupo: 'Caja',
@@ -302,6 +319,14 @@ export function comandosDelPanel(rol: Rol): ComandoPanel[] {
       ruta: '/admin/lealtad/pendientes',
       claves: 'pendientes revisar contingencia',
       roles: DIRECCION,
+    },
+    {
+      id: 'arcade',
+      texto: 'Configurar Juega y gana',
+      grupo: 'Juega y gana',
+      ruta: '/admin/arcade',
+      claves: 'arcade juegos retos promociones ranking',
+      roles: ADMINISTRA,
     },
     {
       id: 'marca',

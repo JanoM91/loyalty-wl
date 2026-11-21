@@ -189,7 +189,15 @@ describe.skipIf(!CON_BD)('Arcade del club', () => {
     const codigo = cupon!.codigo;
     expect(await db.buscarCuponArcade(codigo.toLowerCase())).toMatchObject({
       estado: 'DISPONIBLE',
-      tarjeta: { nombre: 'Ana López' },
+      tarjeta: { nombre: 'Ana López', verificada: false },
+    });
+    // Sin contacto verificado no se cobra, igual que un premio de sellos.
+    const sinVerificar = await db.canjearCuponArcade(codigo, sucursal, usuario);
+    expect(sinVerificar.ok).toBe(false);
+    if (!sinVerificar.ok) expect(sinVerificar.error).toMatch(/verificar/);
+    await db.prisma.loyaltyCard.update({
+      where: { id: tarjeta },
+      data: { phoneVerifiedAt: new Date() },
     });
     expect(await db.canjearCuponArcade(codigo, sucursal, usuario)).toEqual({ ok: true });
     expect(await db.canjearCuponArcade(codigo, sucursal, usuario)).toEqual({

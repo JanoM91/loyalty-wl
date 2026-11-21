@@ -402,6 +402,18 @@ export async function cuponesArcadeDeTarjeta(
   }));
 }
 
+/** Los cupones de una tarjeta por su código público (detalle del cliente en el panel). */
+export async function cuponesArcadePorCodigo(
+  codigoTarjeta: string,
+  ahora = new Date(),
+): Promise<CuponArcade[]> {
+  const t = await prisma.loyaltyCard.findFirst({
+    where: { publicCode: codigoTarjeta },
+    select: { id: true },
+  });
+  return t ? cuponesArcadeDeTarjeta(t.id, ahora) : [];
+}
+
 export interface RetoConAvance {
   readonly id: string;
   readonly texto: string;
@@ -558,7 +570,12 @@ export async function listaArcade(
 // ---------------------------------------------------------------------------
 
 export interface CuponEnCaja extends CuponArcade {
-  readonly tarjeta: { readonly codigo: string; readonly nombre: string | null };
+  readonly tarjeta: {
+    readonly codigo: string;
+    readonly nombre: string | null;
+    /** Tiene correo o celular verificado: requisito para cobrar, igual que un premio. */
+    readonly verificada: boolean;
+  };
 }
 
 export async function buscarCuponArcade(
@@ -574,7 +591,9 @@ export async function buscarCuponArcade(
       expiresAt: true,
       createdAt: true,
       redeemedAt: true,
-      card: { select: { publicCode: true, name: true } },
+      card: {
+        select: { publicCode: true, name: true, emailVerifiedAt: true, phoneVerifiedAt: true },
+      },
     },
   });
   if (!c) return null;
@@ -585,11 +604,18 @@ export async function buscarCuponArcade(
     vence: c.expiresAt,
     ganado: c.createdAt,
     canjeado: c.redeemedAt,
-    tarjeta: { codigo: c.card.publicCode, nombre: c.card.name },
+    tarjeta: {
+      codigo: c.card.publicCode,
+      nombre: c.card.name,
+      verificada: c.card.emailVerifiedAt !== null || c.card.phoneVerifiedAt !== null,
+    },
   };
 }
 
-/** Marca el cupón como cobrado. Solo si está disponible y vigente. */
+/**
+ * Marca el cupón como cobrado. Solo si está disponible, vigente y la tarjeta
+ * tiene un contacto verificado (la misma regla que los premios de sellos).
+ */
 export async function canjearCuponArcade(
   codigo: string,
   sucursalId: string,
@@ -597,6 +623,17 @@ export async function canjearCuponArcade(
   ahora = new Date(),
 ): Promise<ResultadoArcade> {
   const code = normalizarCodigoCupon(codigo);
+  const previo = await buscarCuponArcade(code, ahora);
+  if (!previo) return { ok: false, error: 'No existe un cupón con ese código.' };
+  if (previo.estado === 'CANJEADO') return { ok: false, error: 'Ese cupón ya se cobró.' };
+  if (previo.estado === 'VENCIDO') return { ok: false, error: 'Ese cupón ya venció.' };
+  if (!previo.tarjeta.verificada) {
+    return {
+      ok: false,
+      error:
+        'Para cobrar, el cliente debe verificar su correo desde su tarjeta, o su celular abriendo el enlace que le manden por WhatsApp desde la caja. La promoción se conserva.',
+    };
+  }
   const r = await prisma.arcadeCoupon.updateMany({
     where: { code, status: 'DISPONIBLE', expiresAt: { gt: ahora } },
     data: {
@@ -607,10 +644,8 @@ export async function canjearCuponArcade(
     },
   });
   if (r.count === 1) return { ok: true };
-  const c = await buscarCuponArcade(code, ahora);
-  if (!c) return { ok: false, error: 'No existe un cupón con ese código.' };
-  if (c.estado === 'CANJEADO') return { ok: false, error: 'Ese cupón ya se cobró.' };
-  return { ok: false, error: 'Ese cupón ya venció.' };
+  // Otra caja lo cobró en el mismo instante.
+  return { ok: false, error: 'Ese cupón ya se cobró.' };
 }
 
 /** Cifras de la semana para el panel. */

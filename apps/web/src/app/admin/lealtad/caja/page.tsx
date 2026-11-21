@@ -104,6 +104,7 @@ export default async function CajaPage({
         empezarCon={accion === 'sumar' ? 'visita' : accion === 'premio' ? 'premio' : undefined}
         codigoInicial={codigoInicial}
         empezarConAlta={accion === 'nuevo'}
+        empezarConPromo={accion === 'promo'}
         marcaNegocio={{ estilo: estiloDeMarca(negocio), plantilla: negocio.marca.plantilla }}
         fotosActivas={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
         pendientes={pendientes}
@@ -116,6 +117,7 @@ export default async function CajaPage({
           sucursal: x.sucursal,
         }))}
         verSucursalSolicitudes={alcance.todas}
+        cupones={negocio.ajustes.arcade ? { prefijo: negocio.prefijoCodigo } : null}
         operaciones={operaciones.map((o) => ({
           cuando: hora(o.cuando),
           quien: o.quien,
