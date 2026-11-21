@@ -55,6 +55,8 @@ export interface SucursalNueva {
   readonly ciudad?: string;
   readonly estado?: string;
   readonly codigoPostal?: string;
+  /** WhatsApp de la sucursal en E.164 sin signos: "522281234567". */
+  readonly whatsapp?: string | null;
   /** Si acredita estampas desde el primer día. */
   readonly participa?: boolean;
 }
@@ -136,6 +138,7 @@ export async function crearNegocio(d: NegocioNuevo): Promise<ResultadoNegocio> {
           city: s.ciudad ?? '',
           state: s.estado ?? '',
           postalCode: s.codigoPostal ?? '',
+          whatsapp: s.whatsapp ?? null,
           loyaltyEnabled: s.participa ?? false,
           loyaltySince: s.participa ? new Date() : null,
         },
@@ -266,6 +269,24 @@ export async function contactoConClub(correo: string, whatsapp: string): Promise
     select: { id: true },
   });
   return fila !== null;
+}
+
+/**
+ * Clubes donde ese correo tiene una cuenta del panel activa y con contraseña.
+ * Sirve para entrar desde el sitio del servicio sin saber la dirección del
+ * club. Como mucho cinco, del más antiguo al más nuevo.
+ */
+export async function clubesDelCorreo(correo: string): Promise<Negocio[]> {
+  const email = correo.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return [];
+  const filas = await clienteDuenio().userAccount.findMany({
+    where: { email, isActive: true, passwordHash: { not: null } },
+    select: { tenantId: true },
+    orderBy: { createdAt: 'asc' },
+    take: 5,
+  });
+  const negocios = await Promise.all(filas.map((f) => negocioPorId(f.tenantId)));
+  return negocios.filter((n): n is Negocio => n !== null);
 }
 
 /** Clubes creados en las últimas `horas`, para frenar altas en ráfaga. */

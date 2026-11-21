@@ -10,11 +10,11 @@ import { ChipAcceso } from './EstadoAcceso';
 export const metadata: Metadata = { title: 'Equipo' };
 export const dynamic = 'force-dynamic';
 
-/** Cuentas del panel. Solo administración las ve y las cambia. */
+/** Cuentas del panel. Solo el dueño las ve y las cambia. */
 export default async function UsuariosPage() {
   const sesion = await exigirRol(ROLES_USUARIOS);
   const usuarios = await listarUsuarios();
-  const roles = opcionesRol();
+  const roles = opcionesRol(usuarios.map((u) => u.rol));
 
   return (
     <MarcoPanel
@@ -52,7 +52,7 @@ export default async function UsuariosPage() {
                     href={`/admin/usuarios/${u.id}`}
                     className="font-semibold text-ink underline-offset-4 hover:underline"
                   >
-                    {u.nombre || 'Sin nombre'}
+                    {u.nombre || u.email.split('@')[0]}
                   </a>
                   {u.id === sesion.userId && (
                     <span className="ml-1.5 text-xs text-muted">(tú)</span>

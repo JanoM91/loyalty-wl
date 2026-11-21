@@ -129,8 +129,8 @@ export default async function AyudaPage() {
             <Tarea titulo="Antes de abrir el programa al público">
               {administra && (
                 <li>
-                  En <b>Marca y datos</b>: tu nombre, tus colores, tus logotipos, tu contacto y tu
-                  domicilio.
+                  En <b>Tu marca</b>: tu logotipo, tu nombre y tus colores. En{' '}
+                  <b>Datos del negocio</b>: tu contacto y tu domicilio.
                 </li>
               )}
               <li>

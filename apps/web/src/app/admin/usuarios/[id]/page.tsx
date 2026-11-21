@@ -68,7 +68,7 @@ export default async function UsuarioPage({ params }: { params: Promise<{ id: st
             sucursalId: u.sucursal?.id ?? '',
             activo: u.activo,
           }}
-          roles={opcionesRol()}
+          roles={opcionesRol([u.rol])}
           sucursales={sucursales}
           esUnoMismo={esUnoMismo}
         />

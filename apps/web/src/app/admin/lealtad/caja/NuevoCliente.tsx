@@ -304,7 +304,7 @@ export function NuevoCliente({
             <Aviso tono="error">{visita.error}</Aviso>
           ) : (
             <Aviso tono="atencion" titulo="La visita quedó pendiente de revisión">
-              Administración la confirmará.
+              El dueño o la gerencia la confirmará.
             </Aviso>
           )}
           {reenviar}

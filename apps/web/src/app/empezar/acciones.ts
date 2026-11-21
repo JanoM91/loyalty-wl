@@ -36,6 +36,8 @@ export interface EstadoAlta {
   readonly error: string | null;
   /** Paso del asistente donde se corrige el dato rechazado. */
   readonly paso: 1 | 2 | 3 | null;
+  /** El correo o el WhatsApp ya tienen club: se ofrece entrar en lugar de crear. */
+  readonly yaTieneClub?: boolean;
 }
 
 const fallo = (error: string, paso: 1 | 2 | 3 = 3): EstadoAlta => ({ error, paso });
@@ -100,6 +102,8 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   const sellos = Number(t('sellos'));
   if (!Number.isInteger(sellos) || sellos < 3 || sellos > 12)
     return fallo('La tarjeta lleva entre 3 y 12 sellos.', 2);
+  const duenio = t('duenio').replace(/\s+/g, ' ');
+  if (duenio.length < 2 || duenio.length > 80) return fallo('Escribe tu nombre.');
   const whatsapp = aWhatsApp(t('whatsapp'));
   if (!whatsapp) return fallo('Escribe tu WhatsApp con 10 dígitos.');
   const correo = t('correo').toLowerCase();
@@ -135,9 +139,12 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
     );
   }
   if (await contactoConClub(correo, whatsapp)) {
-    return fallo(
-      'Ya hay un club con ese correo o ese WhatsApp. Escríbenos y te ayudamos a entrar.',
-    );
+    return {
+      error:
+        'Ya tienes un club con ese correo o ese WhatsApp. Entra con el correo con el que lo creaste.',
+      paso: 3,
+      yaTieneClub: true,
+    };
   }
 
   const slug = await direccionLibre(aSlug(nombre) || 'club');
@@ -156,6 +163,8 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
       plantilla: combinacion.plantilla,
       colores: coloresDelLogo ?? combinacion.colores,
       contacto: { correo, whatsapp, sitio: null },
+      // El correo del alta también atiende aclaraciones y datos personales.
+      legal: { razonSocial: null, domicilio: null, correoPrivacidad: correo },
     },
     ajustes: {
       plan: 'LITE',
@@ -176,14 +185,15 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
       tramos: [],
       ventanaContingenciaDias: 2,
     },
-    sucursales: [{ slug: 'principal', nombre: 'Principal', participa: true }],
+    // El WhatsApp del alta queda también en la sucursal: el cliente lo ve en
+    // su tarjeta y la sucursal no nace con el aviso de «sin contacto».
+    sucursales: [{ slug: 'principal', nombre: 'Principal', participa: true, whatsapp }],
   });
   if (!r.ok) return fallo(r.error);
 
-  // El asistente no pide el nombre de la persona: la cuenta nace sin él. La
-  // contraseña se fija con el mismo enlace de un solo uso que usa la
+  // La contraseña se fija con el mismo enlace de un solo uso que usa la
   // invitación, sin mostrarlo: así queda en la bitácora igual que siempre.
-  const invitacion = await invitarDuenio(r.negocio, { email: correo, nombre: '' });
+  const invitacion = await invitarDuenio(r.negocio, { email: correo, nombre: duenio });
   if (!invitacion.ok) return fallo(invitacion.error);
   const acceso = await conNegocio(r.negocio, async () => {
     const fijada = await definirContrasenaConEnlace(invitacion.token, contrasena);
@@ -226,7 +236,7 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   console.warn(`[alta] club nuevo: ${slug} (${giro.id}, ${origen || 'sin origen'})`);
   const avisos = process.env.WL_AVISOS_CORREO?.trim();
   if (avisos) {
-    const texto = `Club nuevo en prueba: ${nombre} (${giro.nombre}).\nDirección: /${slug}\nWhatsApp: +${whatsapp}\nCorreo: ${correo}\nOrigen: ${origen || 'sin dato'}`;
+    const texto = `Club nuevo en prueba: ${nombre} (${giro.nombre}).\nDueño: ${duenio}\nDirección: /${slug}\nWhatsApp: +${whatsapp}\nCorreo: ${correo}\nOrigen: ${origen || 'sin dato'}`;
     try {
       await enviarCorreo({
         para: avisos,

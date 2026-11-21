@@ -76,7 +76,8 @@ export async function pedirRecuperacion(
   const { token, email, nombre } = r;
   if (!email) return { error: 'Escribe un correo válido.', enviado: false };
 
-  if (token && nombre) {
+  // Las cuentas creadas en el alta pueden no tener nombre: igual se manda.
+  if (token && nombre !== null) {
     after(async () => {
       const envio = await mandarRecuperacion({ email, nombre, token });
       if (!envio.ok) console.error('No salió el correo de recuperación del panel:', envio.error);

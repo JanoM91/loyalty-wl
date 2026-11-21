@@ -45,7 +45,7 @@ interface Paso {
 
 /**
  * Inicio del panel: lo de hoy en una sola pantalla. Los clubes nuevos ven
- * primero «Arranca en 3 pasos»; después, botones grandes para la caja, los
+ * primero «Arranca»; después, botones grandes para la caja, los
  * números de la semana, lo que está por revisar y los últimos movimientos.
  * Las cuentas de caja no llegan aquí (`exigirSesion()` las manda a la caja);
  * los roles sin acceso al programa van a la ayuda.
@@ -97,7 +97,7 @@ export default async function AdminInicioPage() {
     };
   }
 
-  // Lo que falta en «Marca y datos» para que las reglas del club estén completas.
+  // Lo que falta en «Tu marca» y «Datos del negocio» para que el club esté completo.
   const { legal, contacto } = negocio.marca;
   const faltan = [
     !negocio.marca.logoUrl && !negocio.marca.logoClaroUrl ? 'tu logotipo' : null,
@@ -270,7 +270,11 @@ export default async function AdminInicioPage() {
                   <p className={`text-[13px] ${SUAVE}`}>Te falta {enLista(faltan)}.</p>
                 </div>
                 <a
-                  href={`${base}/admin/marca`}
+                  href={
+                    faltan[0] === 'tu logotipo'
+                      ? `${base}/admin/marca#logotipo`
+                      : `${base}/admin/datos`
+                  }
                   className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-[#5B2EFF] underline underline-offset-4"
                 >
                   Completar

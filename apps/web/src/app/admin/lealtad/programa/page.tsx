@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { programaVigente, versionesDelPrograma, VERSION_TERMINOS } from '@wl/database';
+import { programaVigente, versionesDelPrograma } from '@wl/database';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
@@ -42,7 +42,7 @@ export default async function ProgramaPage() {
       sesion={sesion}
       actual="/admin/lealtad"
       titulo="Premio y reglas"
-      descripcion={`Qué gana tu cliente y cuántos sellos pide. Versión ${programa.version} · términos ${VERSION_TERMINOS}`}
+      descripcion="Qué gana tu cliente y cuántos sellos pide."
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <FormularioPrograma key={programa.version} programa={programa} />
@@ -61,7 +61,7 @@ export default async function ProgramaPage() {
           </section>
 
           <section className="grid content-start gap-3 rounded-lg border border-rule bg-cream p-4">
-            <h2 className="font-sans text-base font-semibold text-ink">Historial de versiones</h2>
+            <h2 className="font-sans text-base font-semibold text-ink">Cambios anteriores</h2>
             <ol className="grid gap-2 text-sm">
               {versiones.map((v) => (
                 <li
