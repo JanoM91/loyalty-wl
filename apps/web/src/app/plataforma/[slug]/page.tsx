@@ -1,13 +1,35 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { estadoComercialDe, listarNegocios } from '@wl/database';
-import { diasEnPausa, diasRestantesDePrueba, fechaDeBorrado } from '@wl/domain';
+import {
+  estadoComercialDe,
+  listarNegocios,
+  plantillaArcade,
+  preciosDelServicio,
+} from '@wl/database';
+import {
+  arcadeVigente,
+  diasEnPausa,
+  diasRestantesDePrueba,
+  fechaDeBorrado,
+  pesos,
+} from '@wl/domain';
 
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
+import { CamposPermisos } from '../FormPermisos';
 import { MarcoPlataforma } from '../Marco';
-import { borrar, modalidad, pago, prueba, reinvitar, suspender } from '../acciones';
+import {
+  arcadeActivo,
+  arcadePago,
+  arcadePermisos,
+  borrar,
+  modalidad,
+  pago,
+  prueba,
+  reinvitar,
+  suspender,
+} from '../acciones';
 
 export const metadata: Metadata = { title: 'Negocio' };
 export const dynamic = 'force-dynamic';
@@ -47,6 +69,19 @@ export default async function NegocioPage({
   const conFechas = Boolean(alta || pruebaVence || pagadoHasta);
   const enPausa = diasEnPausa(pruebaVence, pagadoHasta);
   const borrarDesde = fechaDeBorrado(pruebaVence, pagadoHasta);
+  const [precios, plantilla] = await Promise.all([preciosDelServicio(), plantillaArcade()]);
+  const arcade = negocio.ajustes.arcade;
+  const arcadeVence = arcade?.pagadoHasta ?? null;
+  const arcadeAlDia = arcadeVigente(arcade);
+  let arcadeEstado = 'Sin activar. Al registrar el primer pago se activa con la plantilla.';
+  if (arcade && arcadeVence) {
+    const vencido = Date.parse(arcadeVence) <= Date.now();
+    arcadeEstado = vencido
+      ? `Vencido el ${fecha(arcadeVence)}: los clientes no pueden jugar.`
+      : arcade.activo
+        ? `Activo, pagado hasta el ${fecha(arcadeVence)}.`
+        : `Apagado (pagado hasta el ${fecha(arcadeVence)}).`;
+  }
 
   return (
     <MarcoPlataforma
@@ -152,6 +187,60 @@ export default async function NegocioPage({
             </form>
           </section>
         )}
+
+        <section id="arcade" className="grid gap-4 rounded-xl border border-rule p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl text-ink">Arcade del club</h2>
+            {arcadeAlDia && (
+              <span className="rounded-full bg-ink px-3 py-1 text-[13px] font-semibold text-cream">
+                Los clientes juegan
+              </span>
+            )}
+          </div>
+          <p className="text-[15px] text-ink">{arcadeEstado}</p>
+          <div className="flex flex-wrap gap-3">
+            {(['MES', 'ANIO'] as const).map((periodo) => {
+              const precio = periodo === 'MES' ? precios.arcade.mes : precios.arcade.anio;
+              return (
+                <form key={periodo} action={arcadePago}>
+                  <input type="hidden" name="slug" value={negocio.slug} />
+                  <input type="hidden" name="periodo" value={periodo} />
+                  <button type="submit" className={BOTON}>
+                    {periodo === 'MES' ? 'Registrar un mes' : 'Registrar un año'}
+                    {precio !== null ? ` (${pesos(precio)})` : ''}
+                  </button>
+                </form>
+              );
+            })}
+            {arcade && (
+              <form action={arcadeActivo}>
+                <input type="hidden" name="slug" value={negocio.slug} />
+                <input type="hidden" name="activo" value={arcade.activo ? '0' : '1'} />
+                <button type="submit" className={BOTON}>
+                  {arcade.activo ? 'Apagar' : 'Encender'}
+                </button>
+              </form>
+            )}
+          </div>
+          <details className="grid gap-4">
+            <summary className="min-h-[44px] cursor-pointer py-2 text-[15px] font-semibold text-ink">
+              Permisos de este club{arcade ? '' : ' (hoy, los de la plantilla)'}
+            </summary>
+            <form action={arcadePermisos} className="mt-3 grid gap-5">
+              <input type="hidden" name="slug" value={negocio.slug} />
+              <CamposPermisos p={arcade ?? plantilla} />
+              <div>
+                <button type="submit" className={BOTON}>
+                  Guardar permisos
+                </button>
+              </div>
+            </form>
+          </details>
+          <p className="max-w-prose text-[13px] text-muted">
+            Cada pago suma un mes o un año al periodo del Arcade, aparte del de Lite. El dueño
+            configura juegos, retos y premios dentro de estos permisos desde su panel.
+          </p>
+        </section>
 
         <section className="grid gap-3">
           <h2 className="text-xl text-ink">Direcciones</h2>

@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { pesos } from '@wl/domain';
 
 import { Apartado, Correo, Documento, TITULAR } from '@/components/sitio/Legal';
 import { Marco, enlaceWhatsApp } from '@/components/sitio/Marco';
+import { precios } from '@/lib/precios';
 import { exigirSitioDelServicio, metadatosDelSitio } from '@/lib/sitio';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +22,7 @@ export const metadata = metadatosDelSitio(
  */
 export default async function Terminos() {
   await exigirSitioDelServicio();
+  const { lite } = await precios();
   return (
     <Marco>
       <Documento
@@ -94,8 +97,17 @@ export default async function Terminos() {
         <Apartado titulo="5. Precio y pago">
           <ul>
             <li>
-              Lite cuesta <b>$269 MXN al mes</b> o <b>$2,699 MXN al año</b>, IVA incluido. Se paga
-              por adelantado con el enlace de pago que te enviamos.
+              Lite cuesta{' '}
+              <b>
+                {lite.mes !== null ? `${pesos(lite.mes)} MXN al mes` : 'lo publicado en este sitio'}
+              </b>
+              {lite.anio !== null ? (
+                <>
+                  {' '}
+                  o <b>{pesos(lite.anio)} MXN al año</b>
+                </>
+              ) : null}
+              , IVA incluido. Se paga por adelantado con el enlace de pago que te enviamos.
             </li>
             <li>Activamos tu club al confirmar el pago. No hay cargos automáticos.</li>
             <li>

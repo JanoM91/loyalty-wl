@@ -30,6 +30,12 @@ export function MarcoPlataforma({
           <a href="/plataforma/nuevo" className="rounded-full px-4 py-2 text-muted hover:text-ink">
             Nuevo negocio
           </a>
+          <a
+            href="/plataforma/ajustes"
+            className="rounded-full px-4 py-2 text-muted hover:text-ink"
+          >
+            Precios y Arcade
+          </a>
         </nav>
         <div className="ml-auto flex items-center gap-4 text-[13px] text-muted">
           <span>{sesion.nombre}</span>

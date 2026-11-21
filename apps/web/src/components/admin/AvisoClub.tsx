@@ -4,8 +4,7 @@ import { diasRestantesDePrueba, fechaDeBorrado } from '@wl/domain';
 import type { Sesion } from '@/lib/admin/sesion';
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 import { exigirNegocio, sitioDeLaPeticion } from '@/lib/negocio';
-
-const PRECIO = '$269 al mes o $2,699 al año, IVA incluido';
+import { precios, textoPrecio } from '@/lib/precios';
 
 /**
  * Aviso en todo el panel de un club del asistente: los últimos dos días de
@@ -26,6 +25,8 @@ export async function AvisoClub({ sesion }: { sesion: Sesion }) {
   );
   const borrado = fechaDeBorrado(pruebaVence, pagadoHasta);
   const pausa = estado === 'PAUSADO';
+  const lite = textoPrecio((await precios()).lite);
+  const PRECIO = lite ? `${lite}, IVA incluido` : 'escríbenos y te pasamos el precio';
 
   return (
     <div

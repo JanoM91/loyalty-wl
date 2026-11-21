@@ -300,7 +300,7 @@ export async function direccionLibre(base: string): Promise<string | null> {
   return null;
 }
 
-async function mezclarAjustes(id: string, cambios: Record<string, unknown>): Promise<void> {
+export async function mezclarAjustes(id: string, cambios: Record<string, unknown>): Promise<void> {
   const bd = clienteDuenio();
   const fila = await bd.tenant.findUniqueOrThrow({ where: { id }, select: { settings: true } });
   const ajustes =

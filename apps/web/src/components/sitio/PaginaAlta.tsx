@@ -1,4 +1,6 @@
-import type { GrupoGiro } from '@wl/domain';
+import { pesos, type GrupoGiro } from '@wl/domain';
+
+import { precios } from '@/lib/precios';
 
 import { Asistente } from './Asistente';
 import { MedirAlCargar } from './Medicion';
@@ -8,7 +10,7 @@ import { Cierre, Cinta, Marco, Pasos, Seccion } from './Marco';
  * Página de destino de la campaña: de un vistazo, qué es y el asistente a la
  * vista. Una por giro (`/belleza`, `/cafeterias`) y la general (`/empezar`).
  */
-export function PaginaAlta({
+export async function PaginaAlta({
   ruta,
   grupo,
   etiqueta,
@@ -23,6 +25,7 @@ export function PaginaAlta({
   texto: string;
   pasos: readonly (readonly [string, string])[];
 }) {
+  const { lite } = await precios();
   return (
     <Marco actual={ruta}>
       <MedirAlCargar evento="ViewContent" datos={{ content_name: ruta.slice(1) }} />
@@ -44,9 +47,12 @@ export function PaginaAlta({
               <li>
                 <b>7 días gratis.</b> Sin tarjeta bancaria.
               </li>
-              <li>
-                <b>$269 al mes</b> después, o $2,699 al año. IVA incluido.
-              </li>
+              {lite.mes !== null && (
+                <li>
+                  <b>{pesos(lite.mes)} al mes</b> después
+                  {lite.anio !== null ? `, o ${pesos(lite.anio)} al año` : ''}. IVA incluido.
+                </li>
+              )}
               <li>
                 <b>Sin app.</b> Tus clientes la guardan en su celular.
               </li>
