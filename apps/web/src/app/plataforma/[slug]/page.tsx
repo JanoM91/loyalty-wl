@@ -2,11 +2,12 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { estadoComercialDe, listarNegocios } from '@wl/database';
+import { diasEnPausa, diasRestantesDePrueba, fechaDeBorrado } from '@wl/domain';
 
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
 import { MarcoPlataforma } from '../Marco';
-import { modalidad, prueba, reinvitar, suspender } from '../acciones';
+import { borrar, modalidad, pago, prueba, reinvitar, suspender } from '../acciones';
 
 export const metadata: Metadata = { title: 'Negocio' };
 export const dynamic = 'force-dynamic';
@@ -14,16 +15,24 @@ export const dynamic = 'force-dynamic';
 const BOTON =
   'min-h-[44px] rounded-full border border-rule px-5 text-[15px] text-ink hover:border-ink';
 
+const fecha = (iso: string | Date | null) =>
+  iso
+    ? new Date(iso).toLocaleDateString('es-MX', {
+        timeZone: 'America/Mexico_City',
+        dateStyle: 'long',
+      })
+    : '';
+
 /** Ficha de un negocio: sus direcciones, su estado y la invitación de su dueño. */
 export default async function NegocioPage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ enlace?: string }>;
+  searchParams: Promise<{ enlace?: string; borrar?: string }>;
 }) {
   const sesion = await exigirPlataforma();
-  const [{ slug }, { enlace }] = await Promise.all([params, searchParams]);
+  const [{ slug }, { enlace, borrar: borrarError }] = await Promise.all([params, searchParams]);
   const fila = (await listarNegocios()).find((n) => n.negocio.slug === slug);
   if (!fila) notFound();
   const { negocio } = fila;
@@ -34,13 +43,10 @@ export default async function NegocioPage({
   const privada = negocio.ajustes.plan === 'PRIVADA';
   const comercial = estadoComercialDe(negocio);
   const alta = negocio.ajustes.alta;
-  const vence = negocio.ajustes.pruebaVence
-    ? new Date(negocio.ajustes.pruebaVence).toLocaleString('es-MX', {
-        timeZone: 'America/Mexico_City',
-        dateStyle: 'long',
-        timeStyle: 'short',
-      })
-    : null;
+  const { pruebaVence, pagadoHasta } = negocio.ajustes;
+  const conFechas = Boolean(alta || pruebaVence || pagadoHasta);
+  const enPausa = diasEnPausa(pruebaVence, pagadoHasta);
+  const borrarDesde = fechaDeBorrado(pruebaVence, pagadoHasta);
 
   return (
     <MarcoPlataforma
@@ -62,14 +68,18 @@ export default async function NegocioPage({
           </section>
         )}
 
-        {(alta || vence) && (
+        {conFechas && (
           <section className="grid gap-3">
             <h2 className="text-xl text-ink">Prueba y pago</h2>
             <p className="text-[15px] text-ink">
-              {comercial === 'PRUEBA' && `En prueba. Vence el ${vence}.`}
+              {comercial === 'PRUEBA' &&
+                `En prueba: vence el ${fecha(pruebaVence)} (${diasRestantesDePrueba(pruebaVence)} días).`}
+              {comercial === 'ACTIVO' &&
+                (pagadoHasta
+                  ? `Pagado hasta el ${fecha(pagadoHasta)}.`
+                  : 'Activo sin límite (sin fecha de pago).')}
               {comercial === 'PAUSADO' &&
-                `Pausado: la prueba venció el ${vence}. La caja no sella y no se crean tarjetas.`}
-              {comercial === 'ACTIVO' && 'Pago registrado: activo sin límite.'}
+                `En pausa desde hace ${enPausa} ${enPausa === 1 ? 'día' : 'días'}: ${pagadoHasta ? 'no renovó' : 'la prueba venció'}. La caja no sella y no se crean tarjetas. Se puede borrar desde el ${fecha(borrarDesde)}.`}
             </p>
             {alta && (
               <p className="text-[15px] text-muted">
@@ -80,26 +90,66 @@ export default async function NegocioPage({
                 >
                   WhatsApp +{alta.whatsapp}
                 </a>
+                {alta.legal ? ` · aceptó términos del ${alta.legal}` : ''}
               </p>
             )}
             <div className="flex flex-wrap gap-3">
-              {comercial !== 'ACTIVO' && (
-                <form action={prueba}>
+              {(['MES', 'ANIO'] as const).map((periodo) => (
+                <form key={periodo} action={pago}>
                   <input type="hidden" name="slug" value={negocio.slug} />
-                  <input type="hidden" name="accion" value="pago" />
+                  <input type="hidden" name="periodo" value={periodo} />
                   <button type="submit" className={BOTON}>
-                    Registrar pago y activar
+                    {periodo === 'MES' ? 'Registrar pago de un mes' : 'Registrar pago de un año'}
                   </button>
                 </form>
-              )}
+              ))}
               <form action={prueba}>
                 <input type="hidden" name="slug" value={negocio.slug} />
-                <input type="hidden" name="accion" value="extender" />
                 <button type="submit" className={BOTON}>
                   Dar 7 días de prueba desde hoy
                 </button>
               </form>
             </div>
+            <p className="max-w-prose text-[13px] text-muted">
+              Cada pago suma un mes o un año a partir del fin del periodo pagado (o de hoy, si ya
+              venció). Dar 7 días quita el periodo pagado y deja el club en prueba.
+            </p>
+          </section>
+        )}
+
+        {conFechas && comercial !== 'ACTIVO' && (
+          <section className="grid gap-3 rounded-xl border border-agotado/40 p-6">
+            <h2 className="text-xl text-ink">Borrar este club</h2>
+            <p className="max-w-prose text-[15px] text-ink">
+              Borra el club, sus {fila.tarjetas} {fila.tarjetas === 1 ? 'tarjeta' : 'tarjetas'}, su
+              historial y las cuentas de su equipo. No tiene vuelta atrás.
+              {comercial === 'PAUSADO' && enPausa < 30
+                ? ` Ojo: lleva ${enPausa} ${enPausa === 1 ? 'día' : 'días'} en pausa; los términos prometen conservarlo 30.`
+                : ''}
+            </p>
+            {borrarError && (
+              <p className="text-[15px] font-semibold text-agotado">
+                No se borró: escribe la dirección exacta del club.
+              </p>
+            )}
+            <form action={borrar} className="flex flex-wrap items-end gap-3">
+              <input type="hidden" name="slug" value={negocio.slug} />
+              <label className="grid gap-1.5 text-[14px] text-muted">
+                Para confirmar, escribe «{negocio.slug}»
+                <input
+                  name="confirmacion"
+                  required
+                  autoComplete="off"
+                  className="min-h-[44px] border border-rule bg-cream px-3.5 text-[15px] text-ink"
+                />
+              </label>
+              <button
+                type="submit"
+                className="min-h-[44px] rounded-full bg-agotado px-5 text-[15px] font-semibold text-cream"
+              >
+                Borrar para siempre
+              </button>
+            </form>
           </section>
         )}
 

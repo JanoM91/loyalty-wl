@@ -25,7 +25,7 @@ import { programaVigente } from './programa';
 export const NOMBRE_COOKIE_TARJETA = 'wl_card';
 
 /** Versión de los términos del programa que acepta quien se da de alta. */
-export const VERSION_TERMINOS = '2026-10';
+export const VERSION_TERMINOS = '2026-11';
 
 /**
  * Más de un año. Una tarjeta de lealtad que se cierra sola cada mes es una

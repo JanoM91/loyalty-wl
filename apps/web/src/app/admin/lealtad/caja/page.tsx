@@ -90,6 +90,7 @@ export default async function CajaPage({
         sucursal={{ slug: sucursal.slug, nombre: sucursal.nombre, participa: sucursal.participa }}
         hoy={fechaLocal(new Date(), negocio.zonaHoraria)}
         folioObligatorio={negocio.ajustes.comprobanteConQr === 'OBLIGATORIO'}
+        sinTicket={negocio.ajustes.comprobanteConQr === 'NO_PEDIR'}
         fotosActivas={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
         pendientes={pendientes}
         programa={programa}

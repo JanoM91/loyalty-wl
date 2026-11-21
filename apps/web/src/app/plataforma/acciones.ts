@@ -5,13 +5,17 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import {
   NOMBRE_COOKIE_PLATAFORMA,
+  borrarNegocio,
   cambiarEstadoNegocio,
   cambiarPlan,
   crearNegocio,
   entrarPlataforma,
+  estadoComercialDe,
+  fijarBorradoAutomatico,
   fijarFinDePrueba,
   invitarDuenio,
   negocioPorSlug,
+  registrarPago,
   salirPlataforma,
 } from '@wl/database';
 import { COMBINACIONES, esPrefijoCodigo, esSlugDeNegocio, vencimientoDePrueba } from '@wl/domain';
@@ -183,19 +187,56 @@ export async function reinvitar(form: FormData): Promise<void> {
   );
 }
 
-/**
- * Periodo de prueba de un club creado desde el asistente. «pago»: se registró
- * su pago y queda activo sin límite. «extender»: siete días más desde hoy.
- */
+/** «extender»: siete días de prueba desde hoy (también sirve de gracia a quien no renovó). */
 export async function prueba(form: FormData): Promise<void> {
   await exigirPlataforma();
   const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (negocio) await fijarFinDePrueba(negocio.id, vencimientoDePrueba());
+  revalidatePath('/plataforma');
+  redirect(`/plataforma/${negocio?.slug ?? ''}`);
+}
+
+/** Registra el pago de un mes o un año: el club queda activo hasta el fin del periodo. */
+export async function pago(form: FormData): Promise<void> {
+  const sesion = await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
   if (negocio) {
-    await fijarFinDePrueba(
-      negocio.id,
-      form.get('accion') === 'extender' ? vencimientoDePrueba() : null,
-    );
+    const periodo = form.get('periodo') === 'ANIO' ? 'ANIO' : 'MES';
+    const hasta = await registrarPago(negocio, periodo);
+    console.warn(`[pago] ${negocio.slug}: ${periodo} hasta ${hasta} (registró ${sesion.email})`);
   }
   revalidatePath('/plataforma');
   redirect(`/plataforma/${negocio?.slug ?? ''}`);
+}
+
+/** Enciende o apaga el borrado automático de clubes con 30 días en pausa. */
+export async function borradoAutomatico(form: FormData): Promise<void> {
+  const sesion = await exigirPlataforma();
+  await fijarBorradoAutomatico(form.get('encender') === '1', sesion.email);
+  revalidatePath('/plataforma');
+  redirect('/plataforma');
+}
+
+/**
+ * Borra un club y todos sus datos, sin vuelta atrás. Solo clubes en prueba o
+ * en pausa (nunca uno pagado o dado de alta por Exkalibur), y solo si quien lo
+ * pide escribe su dirección para confirmar.
+ */
+export async function borrar(form: FormData): Promise<void> {
+  const sesion = await exigirPlataforma();
+  const slug = String(form.get('slug') ?? '');
+  const negocio = await negocioPorSlug(slug);
+  if (!negocio) redirect('/plataforma');
+  const confirmacion = String(form.get('confirmacion') ?? '')
+    .trim()
+    .toLowerCase();
+  const estado = estadoComercialDe(negocio);
+  if (confirmacion !== negocio.slug || estado === 'ACTIVO') {
+    redirect(`/plataforma/${negocio.slug}?borrar=no`);
+  }
+  await borrarNegocio(negocio.id);
+  console.warn(`[borrado] ${negocio.slug} (${estado}) borrado a mano por ${sesion.email}`);
+  revalidatePath('/plataforma');
+  revalidatePath('/negocios');
+  redirect(`/plataforma?borrado=${encodeURIComponent(negocio.slug)}`);
 }

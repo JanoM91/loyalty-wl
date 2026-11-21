@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import { COMBINACIONES } from '../src/marca/combinaciones';
 import { GIROS, girosOrdenados } from '../src/alta/giros';
-import { diasRestantesDePrueba, estadoComercial, vencimientoDePrueba } from '../src/alta/prueba';
+import {
+  diasEnPausa,
+  diasRestantesDePrueba,
+  estadoComercial,
+  fechaDeBorrado,
+  finDePeriodoPagado,
+  listoParaBorrar,
+  vencimientoDePrueba,
+} from '../src/alta/prueba';
 
 describe('periodo de prueba', () => {
   const inicio = new Date('2026-11-21T14:00:00.000Z');
@@ -45,5 +53,45 @@ describe('giros del asistente', () => {
     const lista = girosOrdenados('cafe');
     expect(lista[0]?.grupo).toBe('cafe');
     expect(lista).toHaveLength(GIROS.length);
+  });
+});
+
+describe('pago, pausa y borrado', () => {
+  const vence = '2026-11-28T14:00:00.000Z';
+
+  it('un periodo pagado manda sobre la prueba', () => {
+    const pagado = '2026-12-28T14:00:00.000Z';
+    expect(estadoComercial(vence, new Date('2026-12-01T00:00:00Z'), pagado)).toBe('ACTIVO');
+    expect(estadoComercial(vence, new Date('2026-12-28T14:00:00Z'), pagado)).toBe('PAUSADO');
+  });
+
+  it('el pago empieza hoy si ya venció, o al final del periodo vigente', () => {
+    const hoy = new Date('2026-12-10T12:00:00.000Z');
+    expect(finDePeriodoPagado('MES', null, hoy)).toBe('2027-01-10T12:00:00.000Z');
+    expect(finDePeriodoPagado('ANIO', null, hoy)).toBe('2027-12-10T12:00:00.000Z');
+    expect(finDePeriodoPagado('MES', '2026-12-20T00:00:00.000Z', hoy)).toBe(
+      '2027-01-20T00:00:00.000Z',
+    );
+    expect(finDePeriodoPagado('MES', '2026-12-01T00:00:00.000Z', hoy)).toBe(
+      '2027-01-10T12:00:00.000Z',
+    );
+  });
+
+  it('cuenta los días en pausa y se puede borrar a los 30', () => {
+    expect(diasEnPausa(vence, null, new Date('2026-11-27T00:00:00Z'))).toBe(0);
+    expect(diasEnPausa(vence, null, new Date('2026-12-08T14:00:00Z'))).toBe(10);
+    expect(fechaDeBorrado(vence, null, new Date('2026-12-01T00:00:00Z'))?.toISOString()).toBe(
+      '2026-12-28T14:00:00.000Z',
+    );
+    expect(listoParaBorrar(vence, null, new Date('2026-12-28T13:59:00Z'))).toBe(false);
+    expect(listoParaBorrar(vence, null, new Date('2026-12-28T14:00:00Z'))).toBe(true);
+  });
+
+  it('un club activo o en prueba nunca está listo para borrar', () => {
+    expect(listoParaBorrar(null, null)).toBe(false);
+    expect(listoParaBorrar(vence, null, new Date('2026-11-25T00:00:00Z'))).toBe(false);
+    expect(
+      fechaDeBorrado(vence, '2027-11-28T00:00:00Z', new Date('2027-01-01T00:00:00Z')),
+    ).toBeNull();
   });
 });

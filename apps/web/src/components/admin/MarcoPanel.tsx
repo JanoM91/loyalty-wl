@@ -4,6 +4,8 @@ import type { Sesion } from '@/lib/admin/sesion';
 import { salir } from '@/app/admin/entrar/acciones';
 import { LogoMarca } from '@/components/Marca';
 
+import { AvisoClub } from './AvisoClub';
+
 /**
  * Navegación del panel.
  *
@@ -83,7 +85,7 @@ export function MarcoPanel({
 
         <div className="ml-auto flex items-center gap-4 text-[13px] text-muted">
           <a href="/admin/cuenta" title="Mi cuenta: cambiar contraseña" className="hover:text-ink">
-            {sesion.nombre}
+            {sesion.nombre || 'Mi cuenta'}
           </a>
           {/* Cerrar sesión cambia el estado del servidor: va en un formulario y
               no en un enlace, que cualquier precarga podría disparar. */}
@@ -94,6 +96,8 @@ export function MarcoPanel({
           </form>
         </div>
       </header>
+
+      <AvisoClub sesion={sesion} />
 
       <main id="contenido" className="mt-8 min-w-0">
         <div className="flex flex-wrap items-end justify-between gap-4">

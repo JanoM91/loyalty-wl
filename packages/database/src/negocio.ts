@@ -71,8 +71,13 @@ export interface MarcaNegocio {
   };
 }
 
-/** Qué hacer con el folio o la foto del ticket al registrar una visita. */
-export type ReglaComprobante = 'PEDIDO' | 'OBLIGATORIO';
+/**
+ * Qué hacer con el folio o la foto del ticket al registrar una visita.
+ * NO_PEDIR: la caja sella en un toque, sin pantalla de ticket (lo normal en
+ * negocios que no dan ticket, como una barbería). Es lo que reciben los clubes
+ * creados desde el asistente.
+ */
+export type ReglaComprobante = 'NO_PEDIR' | 'PEDIDO' | 'OBLIGATORIO';
 
 /**
  * Modalidad contratada.
@@ -103,6 +108,11 @@ export interface AjustesNegocio {
    * porque ya pagó o porque lo dio de alta Exkalibur. Ver `estadoComercial`.
    */
   readonly pruebaVence: string | null;
+  /**
+   * Fin del último periodo pagado (fecha ISO). Si existe, manda sobre la
+   * prueba: activo hasta esa fecha y pausado después.
+   */
+  readonly pagadoHasta: string | null;
   /** Lo que dejó el dueño en el asistente de alta. Null si lo creó Exkalibur. */
   readonly alta: AltaNegocio | null;
 }
@@ -144,6 +154,7 @@ export const AJUSTES_POR_OMISION: AjustesNegocio = {
   margenMigracion: 2,
   diasConservacionFotos: 90,
   pruebaVence: null,
+  pagadoHasta: null,
   alta: null,
 };
 
@@ -157,7 +168,9 @@ const color = (v: unknown, respaldo: string): string =>
 const entero = (v: unknown, respaldo: number, min: number, max: number): number =>
   typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max ? v : respaldo;
 const regla = (v: unknown, respaldo: ReglaComprobante): ReglaComprobante =>
-  v === 'PEDIDO' || v === 'OBLIGATORIO' ? v : respaldo;
+  v === 'NO_PEDIR' || v === 'PEDIDO' || v === 'OBLIGATORIO' ? v : respaldo;
+const fechaIso = (v: unknown): string | null =>
+  typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? v : null;
 
 /** Lee la marca guardada en la base; lo que falte o venga mal toma su valor por omisión. */
 export function leerMarca(json: unknown): MarcaNegocio {
@@ -200,18 +213,20 @@ export function leerMarca(json: unknown): MarcaNegocio {
 export function leerAjustes(json: unknown): AjustesNegocio {
   const a = objeto(json);
   const d = AJUSTES_POR_OMISION;
+  const alta = leerAlta(a.alta);
+  // Los clubes del asistente sellan sin pedir ticket, salvo que el dueño lo cambie.
+  const reglaAlta = (v: unknown, respaldo: ReglaComprobante) =>
+    regla(v, alta ? 'NO_PEDIR' : respaldo);
   return {
     plan: a.plan === 'PRIVADA' ? 'PRIVADA' : d.plan,
-    comprobanteConQr: regla(a.comprobanteConQr, d.comprobanteConQr),
-    comprobanteSinTarjeta: regla(a.comprobanteSinTarjeta, d.comprobanteSinTarjeta),
+    comprobanteConQr: reglaAlta(a.comprobanteConQr, d.comprobanteConQr),
+    comprobanteSinTarjeta: reglaAlta(a.comprobanteSinTarjeta, d.comprobanteSinTarjeta),
     umbralEvidenciaMigracion: entero(a.umbralEvidenciaMigracion, d.umbralEvidenciaMigracion, 1, 30),
     margenMigracion: entero(a.margenMigracion, d.margenMigracion, 1, 10),
     diasConservacionFotos: entero(a.diasConservacionFotos, d.diasConservacionFotos, 1, 3650),
-    pruebaVence:
-      typeof a.pruebaVence === 'string' && !Number.isNaN(Date.parse(a.pruebaVence))
-        ? a.pruebaVence
-        : null,
-    alta: leerAlta(a.alta),
+    pruebaVence: fechaIso(a.pruebaVence),
+    pagadoHasta: fechaIso(a.pagadoHasta),
+    alta,
   };
 }
 
@@ -229,9 +244,9 @@ function leerAlta(json: unknown): AltaNegocio | null {
   };
 }
 
-/** En prueba, pausado por prueba vencida, o activo. No mira si está suspendido. */
+/** En prueba, pausado (prueba o pago vencido), o activo. No mira si está suspendido. */
 export function estadoComercialDe(negocio: Negocio, ahora: Date = new Date()): EstadoComercial {
-  return estadoComercial(negocio.ajustes.pruebaVence, ahora);
+  return estadoComercial(negocio.ajustes.pruebaVence, ahora, negocio.ajustes.pagadoHasta);
 }
 
 // ---------------------------------------------------------------------------

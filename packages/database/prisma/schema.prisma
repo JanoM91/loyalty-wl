@@ -754,3 +754,15 @@ model PlatformSession {
   @@index([expiresAt])
   @@map("platform_session")
 }
+
+/// Ajustes de toda la plataforma (no de un negocio), como el borrado
+/// automático de clubes pausados. Como las tablas `platform_*`, el rol de la
+/// aplicación no tiene permisos sobre ella: solo el rol dueño la lee y escribe.
+model PlatformSetting {
+  key       String   @id @db.VarChar(60)
+  value     Json
+  updatedBy String?  @map("updated_by") @db.VarChar(160)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("platform_setting")
+}

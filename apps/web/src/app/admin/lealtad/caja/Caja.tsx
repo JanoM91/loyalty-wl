@@ -47,6 +47,8 @@ export interface OperacionReciente {
 interface Props {
   /** El negocio exige folio o foto también con el QR a la vista. */
   readonly folioObligatorio?: boolean;
+  /** El negocio no pide ticket: la visita se suma en un toque, sin pantalla de ticket. */
+  readonly sinTicket?: boolean;
   readonly sucursal: {
     readonly slug: string;
     readonly nombre: string;
@@ -84,6 +86,7 @@ export function Caja({
   solicitudes,
   verSucursalSolicitudes,
   folioObligatorio = false,
+  sinTicket = false,
 }: Props) {
   const marca = useMarca();
   const router = useRouter();
@@ -402,11 +405,19 @@ export function Caja({
           {modo === 'visita' && (
             <button
               type="button"
-              disabled={tarjeta.acumuloHoyAqui || !sucursal.participa}
-              onClick={() => setPaso('ticket')}
+              disabled={tarjeta.acumuloHoyAqui || !sucursal.participa || ocupado}
+              onClick={() => (sinTicket ? acreditar() : setPaso('ticket'))}
               className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-sm bg-ink px-6 text-base font-semibold text-cream hover:bg-ink-soft disabled:opacity-40"
             >
-              <Icono nombre="camara" /> Registrar el ticket
+              {sinTicket ? (
+                <>
+                  <Icono nombre="palomita" /> {ocupado ? 'Sumando…' : 'Sumar estampa'}
+                </>
+              ) : (
+                <>
+                  <Icono nombre="camara" /> Registrar el ticket
+                </>
+              )}
             </button>
           )}
           {tarjeta.premiosDisponibles.length > 0 && (

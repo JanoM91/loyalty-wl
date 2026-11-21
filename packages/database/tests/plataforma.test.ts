@@ -107,11 +107,28 @@ describe.skipIf(!CON_BD)('panel de plataforma', () => {
       // El alta del dueño se conserva al cambiar la fecha.
       expect(pausado.ajustes.alta?.correo).toBe(correo);
 
-      // Pago registrado: activo sin límite.
-      await db.fijarFinDePrueba(club.id, null);
+      // Los clubes del asistente no piden ticket en caja.
+      expect(pausado.ajustes.comprobanteConQr).toBe('NO_PEDIR');
+
+      // Pago de un mes: activo hasta el fin del periodo.
+      const hasta = await db.registrarPago(pausado, 'MES');
       const activo = (await db.negocioPorSlug('prueba-asistente'))!;
+      expect(activo.ajustes.pagadoHasta).toBe(hasta);
       expect(db.estadoComercialDe(activo)).toBe('ACTIVO');
       expect((await alta('2281112244', activo)).ok).toBe(true);
+      expect((await db.clubesEnPausa()).some((c) => c.negocio.id === club.id)).toBe(false);
+
+      // 31 días después de que venza el pago: en pausa y listo para borrar.
+      const despues = new Date(Date.parse(hasta) + 31 * 24 * 60 * 60 * 1000);
+      expect((await db.clubesEnPausa(despues)).find((c) => c.negocio.id === club.id)?.listo).toBe(
+        true,
+      );
+
+      // Con el borrado automático apagado no se borra nada.
+      await db.fijarBorradoAutomatico(false, 'pruebas');
+      expect(await db.borradoAutomaticoEncendido()).toBe(false);
+      expect(await db.borrarClubesVencidos(despues)).toEqual({ encendido: false, borrados: [] });
+      expect(await db.negocioPorSlug('prueba-asistente')).not.toBeNull();
     } finally {
       await db.borrarNegocio(club.id);
     }

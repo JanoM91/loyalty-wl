@@ -21,6 +21,7 @@ export default async function PrivacidadPage() {
   const responsable = legal.razonSocial ?? negocio.nombre;
   const correo = legal.correoPrivacidad ?? negocio.marca.contacto.correo;
   const dias = negocio.ajustes.diasConservacionFotos;
+  const pideTicket = negocio.ajustes.comprobanteConQr !== 'NO_PEDIR';
 
   return (
     <article className="grid gap-5 text-sm leading-relaxed text-ink-soft">
@@ -44,7 +45,9 @@ export default async function PrivacidadPage() {
           <li>Tu celular o tu correo electrónico, para identificar tu tarjeta.</li>
           <li>Tu nombre y el día y mes de tu cumpleaños, si decides darlos.</li>
           <li>
-            Tus visitas: fecha, sucursal y folio del ticket; en algunos casos, una foto del ticket.
+            {pideTicket
+              ? 'Tus visitas: fecha, sucursal y folio del ticket; en algunos casos, una foto del ticket.'
+              : 'Tus visitas: fecha y sucursal.'}
           </li>
           <li>Los premios que ganas y canjeas.</li>
         </ul>
@@ -73,8 +76,9 @@ export default async function PrivacidadPage() {
 
       <Seccion titulo="Cuánto tiempo los conservamos">
         <p>
-          Las fotos de tickets se borran a los {dias} días de la compra. Los demás datos se
-          conservan mientras tu tarjeta esté activa y el programa siga vigente.
+          {pideTicket ? `Las fotos de tickets se borran a los ${dias} días de la compra. ` : ''}Tus
+          datos se conservan mientras tu tarjeta esté activa y el programa siga vigente. Si el
+          programa termina, se borran.
         </p>
       </Seccion>
 

@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
-import { resumenLealtad } from '@wl/database';
+import { estadoComercialDe, resumenLealtad } from '@wl/database';
+import { diasRestantesDePrueba } from '@wl/domain';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
+import { PrimerosPasos } from '@/components/admin/PrimerosPasos';
 import { SubnavLealtad } from '@/components/admin/SubnavLealtad';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil } from '@/lib/lealtad/formato';
+import { exigirNegocio, ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Programa de lealtad' };
 export const dynamic = 'force-dynamic';
@@ -21,7 +24,13 @@ const porcentaje = (a: number, b: number) => (b === 0 ? '—' : `${Math.round((a
  */
 export default async function LealtadResumenPage() {
   const sesion = await exigirRol(ROLES_PROGRAMA);
-  const r = await resumenLealtad(7);
+  const [r, negocio, unete] = await Promise.all([
+    resumenLealtad(7),
+    exigirNegocio(),
+    ruta('/lealtad/unete/principal'),
+  ]);
+  const { alta, pruebaVence } = negocio.ajustes;
+  const { legal, contacto } = negocio.marca;
   const maxVisitas = Math.max(1, ...r.porDia.map((d) => d.visitas));
   const apagadas = r.porSucursal.filter((s) => !s.participa);
 
@@ -32,6 +41,18 @@ export default async function LealtadResumenPage() {
       titulo="Programa de lealtad"
       descripcion={`Del ${fechaCivil(new Date(`${r.desde}T00:00:00Z`))} al ${fechaCivil(new Date(`${r.hasta}T00:00:00Z`))}. Solo compras identificadas con tarjeta; no son las ventas totales.`}
     >
+      {alta && (
+        <PrimerosPasos
+          diasPrueba={
+            estadoComercialDe(negocio) === 'PRUEBA' ? diasRestantesDePrueba(pruebaVence) : null
+          }
+          tarjetas={r.tarjetas}
+          visitas={r.visitas}
+          unete={unete}
+          conDatos={Boolean(legal.domicilio && (contacto.correo || contacto.whatsapp))}
+        />
+      )}
+
       <SubnavLealtad actual="/admin/lealtad" pendientes={r.pendientes} />
 
       <div className="grid gap-3">

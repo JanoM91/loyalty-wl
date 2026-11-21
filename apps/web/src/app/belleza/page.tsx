@@ -20,7 +20,10 @@ export default async function Belleza() {
       pasos={[
         ['Llenas cinco datos', 'Nombre, giro, premio, WhatsApp y correo.'],
         ['Sacas tu propia tarjeta', 'La pruebas en tu celular antes que nadie.'],
-        ['Pones tu QR en recepción', 'Cada cita suma un sello. El premio avisa solo.'],
+        [
+          'Pones tu QR en recepción',
+          'Cada cita suma un sello. Tu cliente ve su avance en su celular.',
+        ],
       ]}
     />
   );
