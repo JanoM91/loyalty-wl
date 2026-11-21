@@ -34,6 +34,8 @@ const TRAZOS = {
     'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M3 20a6 6 0 0 1 12 0M17 11a3 3 0 1 0 0-6M21 20a5 5 0 0 0-4-4.9',
   tienda: 'M4 10v10h16V10M3 10l2-6h14l2 6M3 10h18M9 20v-6h6v6',
   cerrar: 'M6 6l12 12M18 6L6 18',
+  juegos:
+    'M7.5 7.5h9a5 5 0 0 1 4.8 6.4l-.9 3a2.3 2.3 0 0 1-3.9.9L14.6 16H9.4l-1.9 1.8a2.3 2.3 0 0 1-3.9-.9l-.9-3a5 5 0 0 1 4.8-6.4zM8 10.5v3M6.5 12h3M15.5 11v.01M17.5 13v.01',
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;

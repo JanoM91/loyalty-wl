@@ -12,6 +12,7 @@ import { MarcaDelNegocio } from '@/components/admin/MarcaDelNegocio';
 import { Escaner } from './Escaner';
 import { reducirFoto } from './foto';
 import { NuevoCliente } from './NuevoCliente';
+import { CobrarCupon } from './CobrarCupon';
 import { MigrarFisica } from './MigrarFisica';
 import { SolicitudesAcceso, type FilaSolicitud } from './SolicitudesAcceso';
 import { useMarca } from '@/components/Marca';
@@ -56,6 +57,8 @@ interface Props {
   readonly codigoInicial?: string;
   /** Abre directo el alta de un cliente nuevo (desde «Clientes» vacío). */
   readonly empezarConAlta?: boolean;
+  /** Abre directo el cobro de una promoción del juego (desde la paleta). */
+  readonly empezarConPromo?: boolean;
   /** Colores y plantilla del negocio, para mostrar la tarjeta como la ve el cliente. */
   readonly marcaNegocio: { readonly estilo: CSSProperties; readonly plantilla: string };
   readonly sucursal: {
@@ -71,6 +74,8 @@ interface Props {
   /** «Olvidé mi contraseña» de tarjetas solo con celular. */
   readonly solicitudes: readonly FilaSolicitud[];
   readonly verSucursalSolicitudes: boolean;
+  /** El club tiene «Juega y gana»: la caja cobra sus promociones. Lleva el prefijo de los códigos. */
+  readonly cupones?: { readonly prefijo: string } | null;
 }
 
 const CAMPO =
@@ -100,12 +105,15 @@ export function Caja({
   empezarCon,
   codigoInicial,
   empezarConAlta = false,
+  empezarConPromo = false,
+  cupones = null,
 }: Props) {
   const marca = useMarca();
   const router = useRouter();
   const [paso, setPaso] = useState<Paso>(empezarCon || codigoInicial ? 'escanear' : 'inicio');
   const [modo, setModo] = useState<Modo>(empezarCon ?? 'visita');
   const [nuevoCliente, setNuevoCliente] = useState(empezarConAlta);
+  const [cobrarPromo, setCobrarPromo] = useState(empezarConPromo);
   const [tarjeta, setTarjeta] = useState<VistaCaja | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
@@ -129,6 +137,7 @@ export function Caja({
   function reiniciar() {
     setPaso('inicio');
     setNuevoCliente(false);
+    setCobrarPromo(false);
     setTarjeta(null);
     setError(null);
     setTicket(ticketVacio(hoy));
@@ -248,6 +257,10 @@ export function Caja({
   // Pantallas
   // -------------------------------------------------------------------------
 
+  if (cobrarPromo && cupones) {
+    return <CobrarCupon sucursal={sucursal} prefijo={cupones.prefijo} onTerminar={reiniciar} />;
+  }
+
   if (nuevoCliente) {
     return (
       <NuevoCliente
@@ -297,6 +310,17 @@ export function Caja({
               setNuevoCliente(true);
             }}
           />
+          {cupones && (
+            <BotonGrande
+              icono="control"
+              titulo="Cobrar promoción del juego"
+              texto="El cliente te enseña el código que ganó en «Juega y gana»."
+              onClick={() => {
+                reiniciar();
+                setCobrarPromo(true);
+              }}
+            />
+          )}
         </div>
 
         <SolicitudesAcceso filas={solicitudes} verSucursal={verSucursalSolicitudes} />

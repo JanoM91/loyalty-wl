@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { detalleTarjeta, programaVigente } from '@wl/database';
+import { cuponesArcadePorCodigo, detalleTarjeta, programaVigente } from '@wl/database';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
@@ -31,7 +31,10 @@ export default async function DetalleTarjetaPage({
   const { codigo } = await params;
   const t = await detalleTarjeta(decodeURIComponent(codigo));
   if (!t) notFound();
-  const programa = await programaVigente();
+  const [programa, cupones] = await Promise.all([
+    programaVigente(),
+    negocio.ajustes.arcade ? cuponesArcadePorCodigo(t.codigo) : Promise.resolve([]),
+  ]);
 
   return (
     <MarcoPanel
@@ -172,6 +175,35 @@ export default async function DetalleTarjetaPage({
           </ul>
         )}
       </section>
+
+      {cupones.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg text-ink">Promociones de «Juega y gana»</h2>
+          <ul className="mt-3 divide-y divide-rule overflow-hidden rounded-lg border border-rule bg-cream text-sm">
+            {cupones.map((c) => (
+              <li
+                key={c.codigo}
+                className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5"
+              >
+                <span>
+                  <b className="font-semibold text-ink">{c.titulo}</b>{' '}
+                  <span className="text-muted">
+                    · <span className="font-mono">{c.codigo}</span> · ganada el{' '}
+                    {fechaLarga(c.ganado)}
+                  </span>
+                </span>
+                <span className="text-xs">
+                  {c.estado === 'DISPONIBLE'
+                    ? `Disponible hasta el ${fechaLarga(c.vence)}`
+                    : c.estado === 'CANJEADO'
+                      ? `Cobrada ${c.canjeado ? fechaLarga(c.canjeado) : ''}`
+                      : 'Venció'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <p className="mt-8 text-xs text-muted">
         Ajustes de saldo, revocar y reemitir la tarjeta llegan en la fase 2. Cada ajuste quedará con

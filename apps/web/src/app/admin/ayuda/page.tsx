@@ -76,6 +76,20 @@ export default async function AyudaPage() {
             desde la misma pantalla.
           </p>
 
+          {negocio.ajustes.arcade && (
+            <Tarea titulo="Cobrar una promoción de «Juega y gana»">
+              <li>Toca «Cobrar promoción del juego».</li>
+              <li>
+                Escribe el código que el cliente ve en su tarjeta, en «Juega y gana». Empieza con{' '}
+                {negocio.prefijoCodigo}-.
+              </li>
+              <li>
+                Revisa qué promoción es y toca «Cobrar y entregar». Cada código se cobra una sola
+                vez y antes de que venza; igual que los premios, necesita el contacto verificado.
+              </li>
+            </Tarea>
+          )}
+
           <Tarea titulo="El cliente no trae su tarjeta">
             <li>Toca «Registrar visita sin tarjeta».</li>
             <li>Búscalo por su celular o su correo. Si no tiene tarjeta, se crea ahí mismo.</li>

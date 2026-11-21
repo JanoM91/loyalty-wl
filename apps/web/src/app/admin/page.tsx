@@ -5,9 +5,10 @@ import {
   bitacoraLealtad,
   estadoComercialDe,
   prisma,
+  resumenArcade,
   resumenLealtad,
 } from '@wl/database';
-import { diasRestantesDePrueba, fechaDeBorrado, pesos } from '@wl/domain';
+import { arcadeVigente, diasRestantesDePrueba, fechaDeBorrado, pesos } from '@wl/domain';
 
 import { Icono, type NombreIcono } from '@/components/admin/Icono';
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
@@ -78,6 +79,7 @@ export default async function AdminInicioPage() {
   const { pruebaVence, pagadoHasta, alta } = negocio.ajustes;
   const comercial = estadoComercialDe(negocio);
   const liteMes = (await precios()).lite.mes;
+  const juegos = arcadeVigente(negocio.ajustes.arcade) ? await resumenArcade() : null;
   let estado: { texto: string; boton: string } | null = null;
   if (comercial === 'PRUEBA') {
     const dias = diasRestantesDePrueba(pruebaVence);
@@ -321,6 +323,24 @@ export default async function AdminInicioPage() {
           </div>
 
           <div className="flex min-w-0 flex-col gap-4">
+            {juegos && (
+              <a
+                href={`${base}/admin/arcade`}
+                className={`${TARJETA} flex min-h-[64px] items-center gap-3 px-4 py-3 text-ink`}
+              >
+                <span className="grid size-9 flex-none place-items-center rounded-[12px] bg-[#D8F5E9] text-[#06231C]">
+                  <Icono nombre="juegos" tam={20} />
+                </span>
+                <span className="flex-1 text-[15px]">
+                  <b>Juega y gana:</b> {juegos.partidas.toLocaleString('es-MX')}{' '}
+                  {juegos.partidas === 1 ? 'partida' : 'partidas'} y{' '}
+                  {juegos.cuponesCobrados.toLocaleString('es-MX')}{' '}
+                  {juegos.cuponesCobrados === 1 ? 'promoción cobrada' : 'promociones cobradas'} esta
+                  semana
+                </span>
+                <Icono nombre="chevron" tam={20} />
+              </a>
+            )}
             {r.pendientes > 0 && (
               <a
                 href={`${base}/admin/lealtad/pendientes`}

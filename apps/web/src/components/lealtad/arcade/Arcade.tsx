@@ -43,7 +43,8 @@ function iconoDeJuego(id: IdJugable, tema: TemaSinFuente): string {
   return i === 'producto' ? (tema.prods[0] ?? 'estrella') : i;
 }
 
-function Miniatura({ nombre, tema }: { nombre: string; tema: TemaSinFuente }) {
+/** Un dibujo del Arcade en un canvas pequeño, con los colores de la marca. */
+export function Miniatura({ nombre, tema }: { nombre: string; tema: TemaSinFuente }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (ref.current) miniatura(ref.current, nombre, { ...tema, fuente: fuenteDelDocumento() });
