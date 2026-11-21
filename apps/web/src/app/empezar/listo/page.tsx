@@ -6,6 +6,7 @@ import { diasRestantesDePrueba } from '@wl/domain';
 import { Copiar } from '@/components/Copiar';
 import { ArribaAlCargar } from '@/components/sitio/ArribaAlCargar';
 import { Marco } from '@/components/sitio/Marco';
+import { MedirAlCargar } from '@/components/sitio/Medicion';
 import { fechaLarga } from '@/lib/lealtad/formato';
 import { origenDeLaPeticion } from '@/lib/negocio';
 import { exigirSitioDelServicio } from '@/lib/sitio';
@@ -43,6 +44,17 @@ export default async function Listo({
   return (
     <Marco>
       <ArribaAlCargar />
+      {/* Alta completa: lo que optimiza la campaña. Una vez por club. */}
+      <MedirAlCargar
+        evento={['CompleteRegistration', 'StartTrial']}
+        datos={{
+          content_name: negocio.ajustes.alta.origen || 'empezar',
+          currency: 'MXN',
+          value: 0,
+          predicted_ltv: 2699,
+        }}
+        unaVez={`alta-${negocio.slug}`}
+      />
       <section className="sec" style={{ paddingTop: 56 }}>
         <div className="wrap col" style={{ maxWidth: 620, gap: 24 }}>
           {dias > 0 && vence ? (

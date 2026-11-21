@@ -101,13 +101,14 @@ const COLOR = /^#[0-9a-f]{6}$/i;
 /** Pone el nombre y los colores del negocio en un correo armado con la plantilla. */
 async function vestirCorreo(html: string): Promise<string> {
   const negocio = await negocioDeLaPeticion();
-  const nombre = negocio?.nombre ?? 'Programa de lealtad';
+  const nombre = negocio?.nombre ?? process.env.RESEND_FROM_NAME ?? 'club-lealtad';
+  // Sin negocio (correos del sitio, como la bienvenida): colores de club-lealtad.
   const fondo =
-    negocio && COLOR.test(negocio.marca.colores.fondo) ? negocio.marca.colores.fondo : '#14100c';
+    negocio && COLOR.test(negocio.marca.colores.fondo) ? negocio.marca.colores.fondo : '#06231C';
   const sobre =
     negocio && COLOR.test(negocio.marca.colores.sobreFondo)
       ? negocio.marca.colores.sobreFondo
-      : '#fbf7f1';
+      : '#F1FBF6';
   return html
     .replaceAll(HUECO_NOMBRE, escapar(nombre))
     .replaceAll(HUECO_FONDO, fondo)

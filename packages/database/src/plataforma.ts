@@ -275,6 +275,19 @@ export function altasRecientes(horas = 24): Promise<number> {
   });
 }
 
+/**
+ * Clubes creados en las últimas `horas` desde la misma red (huella de la IP,
+ * guardada en `ajustes.alta.red`). Frena a un robot que cambia de correo.
+ */
+export function altasRecientesDesde(red: string, horas = 24): Promise<number> {
+  return clienteDuenio().tenant.count({
+    where: {
+      createdAt: { gte: new Date(Date.now() - horas * 60 * 60 * 1000) },
+      settings: { path: ['alta', 'red'], equals: red },
+    },
+  });
+}
+
 /** Primera dirección libre a partir de `base`: "barberia-leon", "barberia-leon-2"… */
 export async function direccionLibre(base: string): Promise<string | null> {
   const bd = clienteDuenio();

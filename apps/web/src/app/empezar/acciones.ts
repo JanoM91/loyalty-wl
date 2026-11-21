@@ -1,9 +1,11 @@
 'use server';
 
+import { createHash } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import {
   altasRecientes,
+  altasRecientesDesde,
   conNegocio,
   contactoConClub,
   crearNegocio,
@@ -18,7 +20,8 @@ import { COMBINACIONES, esPrefijoCodigo, giroPorId, vencimientoDePrueba } from '
 import { VERSION_LEGAL } from '@/components/sitio/Legal';
 import { contextoPeticion, guardarSesionEnNavegador } from '@/lib/admin/sesion';
 import { enviarCorreo } from '@/lib/correo';
-import { negocioDeLaPeticion } from '@/lib/negocio';
+import { mandarBienvenida } from '@/lib/correo-bienvenida';
+import { negocioDeLaPeticion, origenDeLaPeticion } from '@/lib/negocio';
 
 export interface EstadoAlta {
   readonly error: string | null;
@@ -30,6 +33,19 @@ const fallo = (error: string, paso: 1 | 2 | 3 = 3): EstadoAlta => ({ error, paso
 
 /** Tope de clubes nuevos por día en todo el sitio: frena altas en ráfaga. */
 const TOPE_DIARIO = 40;
+/** Tope de clubes nuevos por día desde una misma red (misma IP). */
+const TOPE_POR_RED = 3;
+
+/**
+ * Huella corta de la IP: sirve para contar altas desde la misma red sin
+ * guardar la dirección. Lleva una sal del servidor para que no se pueda
+ * revertir probando direcciones.
+ */
+function huellaDeRed(ip: string | null): string | null {
+  if (!ip) return null;
+  const sal = process.env.WL_SAL_RED ?? process.env.CRON_SECRET ?? '';
+  return createHash('sha256').update(`${sal}:${ip}`).digest('hex').slice(0, 20);
+}
 
 /** "Barbería León" → "barberia-leon". */
 function aSlug(texto: string): string {
@@ -92,6 +108,13 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   if ((await altasRecientes(24)) >= TOPE_DIARIO) {
     return fallo('Hoy recibimos muchas solicitudes. Escríbenos por WhatsApp y lo armamos.');
   }
+  const contexto = await contextoPeticion();
+  const red = huellaDeRed(contexto.ip);
+  if (red && (await altasRecientesDesde(red, 24)) >= TOPE_POR_RED) {
+    return fallo(
+      'Ya se crearon varios clubes desde esta conexión hoy. Escríbenos por WhatsApp y lo armamos.',
+    );
+  }
   if (await contactoConClub(correo, whatsapp)) {
     return fallo(
       'Ya hay un club con ese correo o ese WhatsApp. Escríbenos y te ayudamos a entrar.',
@@ -105,6 +128,7 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   const clave = aSlug(premio).replace(/-/g, '_').toUpperCase().slice(0, 40) || 'PREMIO';
 
   const origen = t('origen').slice(0, 20);
+  const pruebaVence = vencimientoDePrueba();
   const r = await crearNegocio({
     slug,
     nombre,
@@ -116,8 +140,15 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
     },
     ajustes: {
       plan: 'LITE',
-      pruebaVence: vencimientoDePrueba(),
-      alta: { giro: giro.id, correo, whatsapp, origen, legal: VERSION_LEGAL },
+      pruebaVence,
+      alta: {
+        giro: giro.id,
+        correo,
+        whatsapp,
+        origen,
+        legal: VERSION_LEGAL,
+        ...(red ? { red } : {}),
+      },
     },
     programa: {
       posiciones: sellos,
@@ -135,7 +166,6 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   // invitación, sin mostrarlo: así queda en la bitácora igual que siempre.
   const invitacion = await invitarDuenio(r.negocio, { email: correo, nombre: '' });
   if (!invitacion.ok) return fallo(invitacion.error);
-  const contexto = await contextoPeticion();
   const acceso = await conNegocio(r.negocio, async () => {
     const fijada = await definirContrasenaConEnlace(invitacion.token, contrasena);
     if (!fijada.ok) return null;
@@ -161,6 +191,18 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
     } catch {
       // El aviso no debe impedir el alta.
     }
+  }
+
+  // Bienvenida al dueño. Sin Resend no sale; el alta no depende de esto.
+  try {
+    await mandarBienvenida({
+      para: correo,
+      club: nombre,
+      direccion: `${await origenDeLaPeticion()}/${slug}`,
+      pruebaVence,
+    });
+  } catch (e) {
+    console.warn('[alta] no se pudo mandar la bienvenida', e);
   }
 
   revalidatePath('/plataforma');

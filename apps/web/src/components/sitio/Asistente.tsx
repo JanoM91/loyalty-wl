@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } 
 import { COMBINACIONES, girosOrdenados, type CombinacionMarca, type GrupoGiro } from '@wl/domain';
 
 import { crearClub, type EstadoAlta } from '@/app/empezar/acciones';
+import { medir } from '@/lib/medicion';
 
 const INICIAL: EstadoAlta = { error: null, paso: null };
 
@@ -175,7 +176,10 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
     setAviso('');
     if (paso < 3) {
       e.preventDefault();
+      medir(paso === 1 ? 'AsistentePaso2' : 'AsistentePaso3', { origen });
       setPaso((paso + 1) as 2 | 3);
+    } else {
+      medir('Lead', { content_name: origen });
     }
   }
 
