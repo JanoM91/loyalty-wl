@@ -26,6 +26,7 @@ import {
 } from '@wl/domain';
 
 import { VERSION_LEGAL } from '@/components/sitio/Legal';
+import { urlConfirmacionCorreo } from '@/lib/admin/confirmar-correo';
 import { contextoPeticion, guardarSesionEnNavegador } from '@/lib/admin/sesion';
 import { enviarCorreo } from '@/lib/correo';
 import { almacenListo, subirImagenDeMarca } from '@/lib/imagenes-de-marca';
@@ -249,13 +250,16 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
     }
   }
 
-  // Bienvenida al dueño. Sin Resend no sale; el alta no depende de esto.
+  // Bienvenida al dueño, con el enlace para confirmar su correo. Sin Resend
+  // no sale; el alta no depende de esto.
   try {
+    const direccion = `${await origenDeLaPeticion()}/${slug}`;
     await mandarBienvenida({
       para: correo,
       club: nombre,
-      direccion: `${await origenDeLaPeticion()}/${slug}`,
+      direccion,
       pruebaVence,
+      confirmar: urlConfirmacionCorreo(direccion, r.negocio.id, invitacion.usuarioId, correo),
     });
   } catch (e) {
     console.warn('[alta] no se pudo mandar la bienvenida', e);

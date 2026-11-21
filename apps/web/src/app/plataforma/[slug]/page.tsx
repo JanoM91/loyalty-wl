@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import {
+  TOPE_MENSAJES_POR_OMISION,
   estadoComercialDe,
   listarNegocios,
   plantillaArcade,
@@ -24,6 +25,7 @@ import {
   arcadePago,
   arcadePermisos,
   borrar,
+  mensajesAjustes,
   modalidad,
   pago,
   prueba,
@@ -239,6 +241,48 @@ export default async function NegocioPage({
           <p className="max-w-prose text-[13px] text-muted">
             Cada pago suma un mes o un año al periodo del Arcade, aparte del de Lite. El dueño
             configura juegos, retos y premios dentro de estos permisos desde su panel.
+          </p>
+        </section>
+
+        <section id="mensajes" className="grid gap-4 rounded-xl border border-rule p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl text-ink">Mensajes a clientes</h2>
+            {negocio.ajustes.mensajes?.activo && (
+              <span className="rounded-full bg-ink px-3 py-1 text-[13px] font-semibold text-cream">
+                Encendido
+              </span>
+            )}
+          </div>
+          <form action={mensajesAjustes} className="flex flex-wrap items-end gap-4">
+            <input type="hidden" name="slug" value={negocio.slug} />
+            <label className="flex min-h-[44px] items-center gap-2 text-[15px] text-ink">
+              <input
+                type="checkbox"
+                name="activo"
+                defaultChecked={Boolean(negocio.ajustes.mensajes?.activo)}
+                className="h-5 w-5"
+              />
+              El dueño puede mandar correos
+            </label>
+            <label className="grid gap-1.5 text-[14px] text-muted">
+              Correos al mes
+              <input
+                name="tope"
+                type="number"
+                min={0}
+                max={100000}
+                defaultValue={negocio.ajustes.mensajes?.topeMensual ?? TOPE_MENSAJES_POR_OMISION}
+                className="min-h-[44px] w-32 border border-rule bg-cream px-3.5 text-[15px] text-ink"
+              />
+            </label>
+            <button type="submit" className={BOTON}>
+              Guardar
+            </button>
+          </form>
+          <p className="max-w-prose text-[13px] text-muted">
+            Cada destinatario cuenta un correo. Solo llega a clientes que aceptaron promociones y
+            verificaron su correo; un mensaje al día como máximo. Revisa que el plan de Resend
+            alcance para la suma de todos los clubes.
           </p>
         </section>
 

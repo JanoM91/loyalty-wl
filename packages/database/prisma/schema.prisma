@@ -71,6 +71,7 @@ model Tenant {
   arcadeConfig ArcadeConfig?
   arcadePlays ArcadePlay[]
   arcadeCoupons ArcadeCoupon[]
+  clubMessages ClubMessage[]
 
   @@map("tenant")
 }
@@ -206,6 +207,7 @@ model UserAccount {
   loyaltyPrograms    LoyaltyProgram[] @relation("ProgramCreatedBy")
   loyaltyEnrollments LoyaltyCard[]    @relation("EnrolledBy")
   loyaltyAccessRequests LoyaltyAccessRequest[] @relation("AccessRequestResolvedBy")
+  clubMessages       ClubMessage[]    @relation("ClubMessageBy")
 
   @@index([role])
   @@unique([tenantId, email])
@@ -852,4 +854,28 @@ model ArcadeCoupon {
   @@index([tenantId])
   @@index([status, expiresAt])
   @@map("arcade_coupon")
+}
+
+/// «Mensajes a tus clientes»: un correo del negocio a quienes aceptaron
+/// promociones. Se guarda el mensaje y cuántos salieron; los destinatarios
+/// no, para no duplicar datos personales. La plataforma enciende el servicio y
+/// fija el tope mensual (`ajustes.mensajes`).
+model ClubMessage {
+  id        String  @id @default(uuid()) @db.Uuid
+  tenantId  String  @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subject    String   @db.VarChar(120)
+  body       String   @db.Text
+  /// ENVIANDO, ENVIADO o FALLO.
+  status     String   @default("ENVIANDO") @db.VarChar(12)
+  recipients Int      @default(0)
+  sent       Int      @default(0)
+  failed     Int      @default(0)
+  createdById String? @map("created_by_id") @db.Uuid
+  createdBy   UserAccount? @relation("ClubMessageBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  finishedAt DateTime? @map("finished_at") @db.Timestamptz
+
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@map("club_message")
 }

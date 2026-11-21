@@ -123,7 +123,22 @@ export interface AjustesNegocio {
    * plataforma.
    */
   readonly arcade: PermisosArcade | null;
+  /**
+   * «Mensajes a tus clientes»: si el club puede mandar correos a quienes
+   * aceptaron promociones y cuántos al mes. Null: nunca se le ha activado.
+   * Solo lo cambia la plataforma.
+   */
+  readonly mensajes: AjustesMensajes | null;
 }
+
+export interface AjustesMensajes {
+  readonly activo: boolean;
+  /** Correos al mes, contando cada destinatario. */
+  readonly topeMensual: number;
+}
+
+/** Tope por omisión al encender el servicio a un club. */
+export const TOPE_MENSAJES_POR_OMISION = 500;
 
 export interface AltaNegocio {
   readonly giro: string;
@@ -167,6 +182,7 @@ export const AJUSTES_POR_OMISION: AjustesNegocio = {
   pagadoHasta: null,
   alta: null,
   arcade: null,
+  mensajes: null,
 };
 
 type Desconocido = Record<string, unknown>;
@@ -239,6 +255,16 @@ export function leerAjustes(json: unknown): AjustesNegocio {
     pagadoHasta: fechaIso(a.pagadoHasta),
     alta,
     arcade: leerPermisosArcade(a.arcade),
+    mensajes: leerAjustesMensajes(a.mensajes),
+  };
+}
+
+export function leerAjustesMensajes(json: unknown): AjustesMensajes | null {
+  if (typeof json !== 'object' || json === null || Array.isArray(json)) return null;
+  const m = json as Desconocido;
+  return {
+    activo: m.activo === true,
+    topeMensual: entero(m.topeMensual, TOPE_MENSAJES_POR_OMISION, 0, 100_000),
   };
 }
 

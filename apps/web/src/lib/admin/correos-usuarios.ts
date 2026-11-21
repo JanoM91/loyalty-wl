@@ -110,3 +110,29 @@ export async function mandarRecuperacion(datos: {
     ),
   });
 }
+
+/** Enlace para confirmar el correo de la cuenta («Mi cuenta»). */
+export async function mandarConfirmacionCorreo(datos: {
+  readonly email: string;
+  readonly nombre: string;
+  readonly url: string;
+}): Promise<ResultadoCorreo> {
+  const { nombre: negocio } = await exigirNegocio();
+  const PIE = await pie();
+  const hola = datos.nombre.trim() ? `Hola, ${primerNombre(datos.nombre)}:` : 'Hola:';
+  const intro = `Confirma que este es tu correo del panel de ${negocio}. Así, si un día olvidas tu contraseña, te mandamos aquí el enlace para elegir otra.`;
+  return enviarCorreo({
+    para: datos.email,
+    asunto: `Confirma tu correo del panel de ${negocio}`,
+    texto: `${hola} ${intro} ${datos.url}`,
+    html: plantillaCorreo(
+      'Confirma tu correo',
+      [hola, intro],
+      {
+        texto: 'Confirmar mi correo',
+        url: datos.url,
+      },
+      PIE,
+    ),
+  });
+}

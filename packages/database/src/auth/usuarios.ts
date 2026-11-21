@@ -633,3 +633,68 @@ export async function cambiarContrasenaPropia(
   const sesionesCerradas = await cerrarOtrasSesiones(userId, tokenSesionActual);
   return { ok: true, sesionesCerradas };
 }
+
+// ---------------------------------------------------------------------------
+// Confirmar el correo de la cuenta
+// ---------------------------------------------------------------------------
+
+/**
+ * Datos para confirmar el correo de una cuenta: a qué correo se firma el
+ * enlace y si ya estaba confirmado. Null si la cuenta no existe o está
+ * desactivada.
+ */
+export async function cuentaParaConfirmar(
+  userId: string,
+): Promise<{ email: string; nombre: string; confirmado: boolean } | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(userId)) return null;
+  const u = await prisma.userAccount.findUnique({
+    where: { id: userId },
+    select: { email: true, name: true, isActive: true, emailVerifiedAt: true },
+  });
+  if (!u || !u.isActive) return null;
+  return { email: u.email, nombre: u.name, confirmado: u.emailVerifiedAt !== null };
+}
+
+/**
+ * Marca como comprobado el correo de la cuenta: quien abrió el enlace lo
+ * recibió ahí. Con esto «Olvidé mi contraseña» ya le manda el enlace. Solo si
+ * el correo sigue siendo el mismo con el que se firmó.
+ */
+export async function confirmarCorreoUsuario(userId: string, email: string): Promise<boolean> {
+  const r = await prisma.userAccount.updateMany({
+    where: { id: userId, email: normalizarCorreo(email) ?? '', emailVerifiedAt: null },
+    data: { emailVerifiedAt: new Date() },
+  });
+  if (r.count > 0) {
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'usuario.correo_confirmado',
+        entityType: 'user_account',
+        entityId: userId,
+      },
+    });
+  }
+  return r.count > 0;
+}
+
+/** Hasta 3 enlaces de confirmación por hora y cuenta; deja constancia de cada uno. */
+export async function puedeMandarConfirmacion(userId: string): Promise<boolean> {
+  const recientes = await prisma.auditLog.count({
+    where: {
+      userId,
+      action: 'usuario.enlace_confirmacion',
+      createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
+    },
+  });
+  if (recientes >= 3) return false;
+  await prisma.auditLog.create({
+    data: {
+      userId,
+      action: 'usuario.enlace_confirmacion',
+      entityType: 'user_account',
+      entityId: userId,
+    },
+  });
+  return true;
+}

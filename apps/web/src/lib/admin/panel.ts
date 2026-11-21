@@ -122,6 +122,15 @@ const SECCIONES: readonly SeccionPanel[] = [
     roles: DIRECCION,
   },
   {
+    id: 'mensajes',
+    texto: 'Mensajes a clientes',
+    descripcion: 'Escríbeles a quienes aceptaron promociones',
+    ruta: '/admin/mensajes',
+    icono: 'chat',
+    grupo: 'clientes',
+    roles: ADMINISTRA,
+  },
+  {
     id: 'numeros',
     texto: 'Números',
     descripcion: 'Quién vuelve y cuánto',
@@ -335,6 +344,14 @@ export function comandosDelPanel(rol: Rol): ComandoPanel[] {
       grupo: 'Juega y gana',
       ruta: '/admin/arcade',
       claves: 'arcade juegos retos promociones ranking',
+      roles: ADMINISTRA,
+    },
+    {
+      id: 'mensajes',
+      texto: 'Escribir a mis clientes',
+      grupo: 'Mensajes',
+      ruta: '/admin/mensajes',
+      claves: 'mensaje correo promoción campaña avisar escribir',
       roles: ADMINISTRA,
     },
     {

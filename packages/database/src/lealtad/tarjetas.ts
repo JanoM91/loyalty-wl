@@ -359,7 +359,11 @@ export async function actualizarPerfil(
       walletUpdatedAt: new Date(),
       // La fecha del consentimiento es evidencia: solo cambia cuando cambia.
       ...(promociones !== actual.marketingOptIn
-        ? { marketingOptInAt: promociones ? new Date() : null }
+        ? {
+            marketingOptInAt: promociones ? new Date() : null,
+            // Volver a aceptar desde el perfil deshace una baja anterior.
+            ...(promociones ? { campaignOptOutAt: null } : {}),
+          }
         : {}),
     },
   });

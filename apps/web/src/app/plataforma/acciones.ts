@@ -11,6 +11,7 @@ import {
   crearNegocio,
   entrarPlataforma,
   estadoComercialDe,
+  fijarAjustesMensajes,
   fijarBorradoAutomatico,
   fijarFinDePrueba,
   invitarDuenio,
@@ -22,6 +23,7 @@ import {
   registrarPago,
   registrarPagoArcade,
   salirPlataforma,
+  TOPE_MENSAJES_POR_OMISION,
 } from '@wl/database';
 import {
   COMBINACIONES,
@@ -334,4 +336,18 @@ export async function arcadeActivo(form: FormData): Promise<void> {
   await fijarPermisosArcade(negocio.id, { ...actual, activo: form.get('activo') === '1' });
   revalidatePath('/plataforma');
   redirect(`/plataforma/${negocio.slug}#arcade`);
+}
+
+/** «Mensajes a clientes»: encender o apagar y fijar el tope mensual del club. */
+export async function mensajesAjustes(form: FormData): Promise<void> {
+  await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (!negocio) redirect('/plataforma');
+  const tope = Number(String(form.get('tope') ?? '').replace(/[^\d]/g, ''));
+  await fijarAjustesMensajes(negocio.id, {
+    activo: form.get('activo') === 'on',
+    topeMensual: Number.isFinite(tope) ? tope : TOPE_MENSAJES_POR_OMISION,
+  });
+  revalidatePath('/plataforma');
+  redirect(`/plataforma/${negocio.slug}#mensajes`);
 }
