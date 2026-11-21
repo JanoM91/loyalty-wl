@@ -79,7 +79,12 @@ export async function tokenDeEsteNavegador(): Promise<string | undefined> {
  * de acceso y la de definir contraseña, para que las dos pongan la cookie
  * exactamente igual.
  */
-export async function guardarSesionEnNavegador(token: string, expira: Date): Promise<void> {
+export async function guardarSesionEnNavegador(
+  token: string,
+  expira: Date,
+  /** Dirección del club; por omisión, la de la petición actual. */
+  base?: string,
+): Promise<void> {
   const galletas = await cookies();
   galletas.set(NOMBRE_COOKIE, token, {
     // httpOnly: el JavaScript de la página no puede leer esta cookie, así que
@@ -94,7 +99,7 @@ export async function guardarSesionEnNavegador(token: string, expira: Date): Pro
     sameSite: 'lax',
     // Solo viaja en las direcciones de este negocio: en la instalación
     // compartida, la sesión de un negocio no pisa la de otro.
-    path: (await rutaBase()) || '/',
+    path: (base ?? (await rutaBase())) || '/',
     expires: expira,
   });
 }

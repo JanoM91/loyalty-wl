@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 import { LogoMarca } from '@/components/Marca';
-import { exigirNegocio } from '@/lib/negocio';
+import { sesionActual } from '@/lib/admin/sesion';
+import { exigirNegocio, rutaBase } from '@/lib/negocio';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { nombre } = await exigirNegocio();
@@ -28,10 +29,23 @@ export async function generateViewport(): Promise<Viewport> {
  * quien abre su tarjeta frente a la caja necesita su código, no el menú.
  */
 export default async function LealtadLayout({ children }: { children: ReactNode }) {
-  const negocio = await exigirNegocio();
+  const [negocio, base, panel] = await Promise.all([exigirNegocio(), rutaBase(), sesionActual()]);
   const sitio = negocio.marca.contacto.sitio;
   return (
     <div className="min-h-screen bg-crumb">
+      {/* Quien tiene sesión en el panel de este club ve su tarjeta como la verá
+          su cliente, con un regreso a su panel. Los clientes no la ven. */}
+      {panel ? (
+        <div className="flex items-center justify-between gap-3 bg-[#06231C] py-2 pr-2.5 pl-4 text-[13px] text-[#F1FBF6]">
+          <span>Así lo verá tu cliente</span>
+          <a
+            href={`${base}/admin`}
+            className="inline-flex min-h-[40px] items-center rounded-[11px] bg-[#00C389] px-3 font-bold text-[#06231C]"
+          >
+            Volver a mi panel
+          </a>
+        </div>
+      ) : null}
       {/* Con credenciales: el manifest personaliza start_url según la sesión. */}
       <link rel="manifest" href="/lealtad/manifest.webmanifest" crossOrigin="use-credentials" />
       <header className="mx-auto flex max-w-md items-center px-5 pt-5 pb-1">

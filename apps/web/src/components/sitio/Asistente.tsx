@@ -1,11 +1,16 @@
 'use client';
 
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { COMBINACIONES, girosOrdenados, type CombinacionMarca, type GrupoGiro } from '@wl/domain';
 
 import { crearClub, type EstadoAlta } from '@/app/empezar/acciones';
 
-const INICIAL: EstadoAlta = { error: null };
+const INICIAL: EstadoAlta = { error: null, paso: null };
+
+/** Mínimo de la contraseña; debe coincidir con `LONGITUD_MINIMA_CONTRASENA`. */
+const MINIMO_CLAVE = 10;
+
+const TITULOS = ['Tu negocio', 'Tu premio', 'Tu acceso'] as const;
 
 function aRgb(hex: string): [number, number, number] {
   const n = Number.parseInt(hex.slice(1), 16);
@@ -67,12 +72,19 @@ function combinacionCercana(color: [number, number, number]): CombinacionMarca {
 }
 
 /**
- * Asistente de alta: cinco datos y un color, y el club queda creado en prueba.
+ * Asistente de alta en tres pasos cortos: tu negocio, tu premio y tu acceso.
+ * Arriba se arma la tarjeta en vivo. Todos los campos viven en un solo
+ * formulario; los pasos que no se ven se ocultan, así el envío lleva todo.
  * `grupo` decide qué giros salen primero; `origen` anota desde qué página llegó.
  */
 export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string }) {
   const giros = useMemo(() => girosOrdenados(grupo), [grupo]);
   const [estado, enviar, enviando] = useActionState(crearClub, INICIAL);
+
+  const [paso, setPaso] = useState<1 | 2 | 3>(1);
+  const [aviso, setAviso] = useState('');
+  const titulo = useRef<HTMLHeadingElement>(null);
+  const primeraVez = useRef(true);
 
   const [nombre, setNombre] = useState('');
   const [giroId, setGiroId] = useState(giros[0]!.id);
@@ -83,6 +95,10 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
   const [combinacionId, setCombinacionId] = useState(giro.combinaciones[0]!);
   const [deFoto, setDeFoto] = useState<string | null>(null);
   const [avisoFoto, setAvisoFoto] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [clave, setClave] = useState('');
+  const [verClave, setVerClave] = useState(false);
 
   const opciones = giro.combinaciones
     .map((id) => COMBINACIONES.find((c) => c.id === id))
@@ -95,6 +111,20 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
     deFoto && !opciones.some((c) => c.id === deFoto)
       ? (COMBINACIONES.find((c) => c.id === deFoto) ?? null)
       : null;
+
+  // Si el servidor rechaza un dato, se regresa al paso donde se escribe.
+  useEffect(() => {
+    if (estado.paso) setPaso(estado.paso);
+  }, [estado]);
+
+  // Al cambiar de paso, el foco va a su título: el lector de pantalla lo anuncia.
+  useEffect(() => {
+    if (primeraVez.current) {
+      primeraVez.current = false;
+      return;
+    }
+    titulo.current?.focus();
+  }, [paso]);
 
   function cambiarGiro(id: string) {
     const nuevo = giros.find((g) => g.id === id);
@@ -121,8 +151,76 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
     setAvisoFoto(`Tomamos «${c.nombre}» de tu foto.`);
   }
 
+  function revisar(n: 1 | 2 | 3): string {
+    if (n === 1 && nombre.trim().length < 2) return 'Escribe el nombre de tu negocio.';
+    if (n === 2 && premio.trim().length < 2) return 'Escribe el premio de tu tarjeta.';
+    if (n === 3) {
+      if (whatsapp.replace(/\D/g, '').length < 10) return 'Escribe tu WhatsApp con 10 dígitos.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())) return 'Escribe un correo válido.';
+      if (clave.length < MINIMO_CLAVE)
+        return `Tu contraseña necesita al menos ${MINIMO_CLAVE} caracteres.`;
+    }
+    return '';
+  }
+
+  // «Siguiente» y Enter pasan por aquí: en los pasos 1 y 2 avanzan; en el 3
+  // el formulario sigue a la acción del servidor.
+  function alEnviar(e: FormEvent<HTMLFormElement>) {
+    const problema = revisar(paso);
+    if (problema) {
+      e.preventDefault();
+      setAviso(problema);
+      return;
+    }
+    setAviso('');
+    if (paso < 3) {
+      e.preventDefault();
+      setPaso((paso + 1) as 2 | 3);
+    }
+  }
+
+  function atras() {
+    setAviso('');
+    if (paso > 1) setPaso((paso - 1) as 1 | 2);
+  }
+
+  const error = aviso || estado.error;
+
   return (
-    <form action={enviar} className="fm">
+    <form
+      action={enviar}
+      onSubmit={alEnviar}
+      // Al corregir un dato, el aviso anterior sobra.
+      onChange={() => aviso && setAviso('')}
+      noValidate
+      className="fm"
+    >
+      <div className="ap">
+        {paso > 1 ? (
+          <button type="button" className="atr" onClick={atras} aria-label="Paso anterior">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M15 5l-7 7 7 7"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ) : null}
+        <div className="col" style={{ flex: 1, gap: 7 }}>
+          <span className="sm2">
+            Paso {paso} de 3 · {TITULOS[paso - 1]}
+          </span>
+          <div className="apb" aria-hidden="true">
+            {[1, 2, 3].map((n) => (
+              <span key={n} className={n <= paso ? 'on' : undefined} />
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div
         className="pv"
         style={{ background: elegida.colores.fondo, color: elegida.colores.sobreFondo }}
@@ -132,121 +230,156 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
           <span className="d h3">{nombre.trim() || 'Tu negocio'}</span>
           <span className="sm2">Así se verá</span>
         </div>
-        <div className="row" style={{ alignItems: 'baseline', gap: 10 }}>
-          <span className="big" style={{ fontSize: 72 }}>
-            1
-          </span>
-          <span style={{ fontWeight: 600 }}>de {sellos} sellos</span>
-        </div>
-        <div className="pvs">
-          {Array.from({ length: sellos }, (_, i) => (
-            <span
-              key={i}
-              className="pvd"
-              style={
-                i === 0
-                  ? { background: elegida.colores.acento, borderColor: elegida.colores.acento }
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-        <span style={{ fontWeight: 600 }}>{premio.trim() || giro.premio}</span>
+        {paso > 1 ? (
+          <>
+            <div className="row" style={{ alignItems: 'baseline', gap: 10 }}>
+              <span className="big" style={{ fontSize: 64 }}>
+                1
+              </span>
+              <span style={{ fontWeight: 600 }}>de {sellos} sellos</span>
+            </div>
+            <div className="pvs">
+              {Array.from({ length: sellos }, (_, i) => (
+                <span
+                  key={i}
+                  className="pvd"
+                  style={
+                    i === 0
+                      ? { background: elegida.colores.acento, borderColor: elegida.colores.acento }
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+            <span style={{ fontWeight: 600 }}>{premio.trim() || giro.premio}</span>
+          </>
+        ) : null}
       </div>
 
-      <label className="fl" htmlFor="alta-nombre">
-        Nombre de tu negocio
+      <section className="paso" hidden={paso !== 1} aria-labelledby="alta-t1">
+        <h2 id="alta-t1" ref={paso === 1 ? titulo : undefined} tabIndex={-1} className="d h3">
+          ¿Cómo se llama tu negocio?
+        </h2>
         <input
           id="alta-nombre"
+          aria-labelledby="alta-t1"
           name="nombre"
           className="in"
-          required
           maxLength={80}
           autoComplete="organization"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
         />
-      </label>
-
-      <label className="fl" htmlFor="alta-giro">
-        Giro
-        <select
-          id="alta-giro"
-          name="giro"
-          className="in"
-          value={giroId}
-          onChange={(e) => cambiarGiro(e.target.value)}
-        >
-          {giros.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.nombre}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <div className="fr">
-        <label className="fl" htmlFor="alta-premio" style={{ flex: '3 1 220px' }}>
-          Premio
-          <input
-            id="alta-premio"
-            name="premio"
-            className="in"
-            required
-            maxLength={80}
-            value={premio}
-            onChange={(e) => {
-              setTocado(true);
-              setPremio(e.target.value);
-            }}
-          />
-        </label>
-        <label className="fl" htmlFor="alta-sellos" style={{ flex: '1 1 110px' }}>
-          Sellos
-          <select
-            id="alta-sellos"
-            name="sellos"
-            className="in"
-            value={sellos}
-            onChange={(e) => {
-              setTocado(true);
-              setSellos(Number(e.target.value));
-            }}
-          >
-            {[3, 4, 5, 6, 7, 8, 9, 10, 12].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
+        <fieldset className="fs">
+          <legend className="fl" style={{ marginBottom: 8 }}>
+            ¿Qué tipo de negocio es?
+          </legend>
+          <input type="hidden" name="giro" value={giroId} />
+          <div className="gch">
+            {giros.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                className="ch"
+                aria-pressed={g.id === giroId}
+                onClick={() => cambiarGiro(g.id)}
+              >
+                {g.nombre}
+              </button>
             ))}
-          </select>
-        </label>
-      </div>
+          </div>
+        </fieldset>
+        <p className="p" style={{ fontSize: 15 }}>
+          Para {giro.nombre.toLowerCase()} te sugerimos{' '}
+          <b style={{ color: 'var(--ink)' }}>
+            {giro.sellos} sellos y «{giro.premio.toLowerCase()}»
+          </b>
+          . Lo cambias en el siguiente paso.
+        </p>
+      </section>
 
-      <fieldset className="fs">
-        <legend className="fl">Color de tu tarjeta</legend>
-        <div className="sws">
-          {[...opciones, ...(extra ? [extra] : [])].map((c) => (
-            <label key={c.id} className="sw" title={c.nombre}>
-              <input
-                type="radio"
-                name="combinacion"
-                value={c.id}
-                checked={c.id === combinacionId}
-                onChange={() => setCombinacionId(c.id)}
-              />
-              <span
-                style={{ background: c.colores.fondo, borderColor: c.colores.acento }}
-                aria-hidden="true"
-              />
-              <span className="oc">{c.nombre}</span>
-            </label>
-          ))}
+      <section className="paso" hidden={paso !== 2} aria-labelledby="alta-t2">
+        <h2 id="alta-t2" ref={paso === 2 ? titulo : undefined} tabIndex={-1} className="d h3">
+          ¿Qué gana tu cliente?
+        </h2>
+        <input
+          id="alta-premio"
+          aria-labelledby="alta-t2"
+          name="premio"
+          className="in"
+          maxLength={80}
+          value={premio}
+          onChange={(e) => {
+            setTocado(true);
+            setPremio(e.target.value);
+          }}
+        />
+        <div className="stp">
+          <span id="alta-sellos" className="fl">
+            Sellos de visita para ganarlo
+          </span>
+          <input type="hidden" name="sellos" value={sellos} />
+          <div
+            role="group"
+            aria-labelledby="alta-sellos"
+            className="row"
+            style={{ gap: 6, flexWrap: 'nowrap', flex: 'none' }}
+          >
+            <button
+              type="button"
+              aria-label="Un sello menos"
+              disabled={sellos <= 3}
+              onClick={() => {
+                setTocado(true);
+                setSellos(Math.max(3, sellos - 1));
+              }}
+            >
+              −
+            </button>
+            <span className="stn" aria-live="polite">
+              {sellos}
+            </span>
+            <button
+              type="button"
+              aria-label="Un sello más"
+              disabled={sellos >= 12}
+              onClick={() => {
+                setTocado(true);
+                setSellos(Math.min(12, sellos + 1));
+              }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+        <fieldset className="fs">
+          <legend className="fl" style={{ marginBottom: 8 }}>
+            Color de tu tarjeta
+          </legend>
+          <div className="sws">
+            {[...opciones, ...(extra ? [extra] : [])].map((c) => (
+              <label key={c.id} className="sw" title={c.nombre}>
+                <input
+                  type="radio"
+                  name="combinacion"
+                  value={c.id}
+                  checked={c.id === combinacionId}
+                  onChange={() => setCombinacionId(c.id)}
+                />
+                <span
+                  style={{ background: c.colores.fondo, borderColor: c.colores.acento }}
+                  aria-hidden="true"
+                />
+                <span className="oc">{c.nombre}</span>
+              </label>
+            ))}
+          </div>
           <label
             className="tab"
             htmlFor="alta-foto"
-            style={{ display: 'inline-flex', alignItems: 'center' }}
+            style={{ display: 'inline-flex', alignItems: 'center', alignSelf: 'flex-start' }}
           >
-            Usar mi logotipo
+            Tomar el color de mi logotipo
           </label>
           <input
             id="alta-foto"
@@ -255,64 +388,101 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
             className="oc"
             onChange={(e) => void leerFoto(e.target.files?.[0])}
           />
-        </div>
-        <span className="sm2" aria-live="polite">
-          {avisoFoto || 'La foto no se sube: solo se lee su color en tu teléfono.'}
-        </span>
-      </fieldset>
+          <span className="sm2" aria-live="polite">
+            {avisoFoto || 'La foto no se sube: solo leemos su color en tu celular.'}
+          </span>
+        </fieldset>
+      </section>
 
-      <div className="fr">
-        <label className="fl" htmlFor="alta-whatsapp" style={{ flex: '1 1 200px' }}>
+      <section className="paso" hidden={paso !== 3} aria-labelledby="alta-t3">
+        <div className="col" style={{ gap: 4 }}>
+          <h2 id="alta-t3" ref={paso === 3 ? titulo : undefined} tabIndex={-1} className="d h3">
+            Tu acceso al panel
+          </h2>
+          <p className="p" style={{ fontSize: 15 }}>
+            Con esto entras a tu panel y a tu caja desde cualquier celular.
+          </p>
+        </div>
+        <label className="fl" htmlFor="alta-whatsapp">
           Tu WhatsApp
           <input
             id="alta-whatsapp"
             name="whatsapp"
             className="in"
-            required
             inputMode="tel"
             autoComplete="tel-national"
             placeholder="10 dígitos"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
           />
         </label>
-        <label className="fl" htmlFor="alta-correo" style={{ flex: '1 1 200px' }}>
+        <label className="fl" htmlFor="alta-correo">
           Tu correo
           <input
             id="alta-correo"
             name="correo"
             type="email"
             className="in"
-            required
             maxLength={160}
             autoComplete="email"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
           />
         </label>
-      </div>
+        <label className="fl" htmlFor="alta-clave">
+          Elige una contraseña
+          <span className="vk">
+            <input
+              id="alta-clave"
+              name="clave"
+              type={verClave ? 'text' : 'password'}
+              className="in"
+              minLength={MINIMO_CLAVE}
+              autoComplete="new-password"
+              value={clave}
+              onChange={(e) => setClave(e.target.value)}
+              aria-describedby="alta-clave-ayuda"
+            />
+            <button type="button" onClick={() => setVerClave(!verClave)}>
+              {verClave ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </span>
+          <span id="alta-clave-ayuda" className="sm2" style={{ fontWeight: 500 }}>
+            Mínimo {MINIMO_CLAVE} caracteres. Una frase que recuerdes funciona bien.
+          </span>
+        </label>
+        <p className="p" style={{ fontSize: 14, lineHeight: 1.45 }}>
+          Al crear tu club aceptas los{' '}
+          <a href="/terminos" target="_blank" className="ul">
+            términos del servicio
+          </a>
+          . Usamos tu WhatsApp y tu correo para operar tu club y avisarte de tu prueba; lee el{' '}
+          <a href="/privacidad" target="_blank" className="ul">
+            aviso de privacidad
+          </a>
+          .
+        </p>
+      </section>
 
       {/* Campo trampa para robots: oculto a personas y a lectores de pantalla. */}
       <input name="sitio_web" tabIndex={-1} autoComplete="off" className="oc" aria-hidden="true" />
       <input type="hidden" name="origen" value={origen} />
 
-      {estado.error ? (
+      {error ? (
         <p className="er" role="alert">
-          {estado.error}
+          {error}
         </p>
       ) : null}
 
-      <p className="p" style={{ fontSize: 14, lineHeight: 1.45 }}>
-        Al crear tu club aceptas los{' '}
-        <a href="/terminos" target="_blank" className="ul">
-          términos del servicio
-        </a>
-        . Usamos tu WhatsApp y tu correo para operar tu club y avisarte de tu prueba; lee el{' '}
-        <a href="/privacidad" target="_blank" className="ul">
-          aviso de privacidad
-        </a>
-        .
-      </p>
-
-      <button type="submit" className="btn" disabled={enviando}>
-        {enviando ? 'Creando tu club…' : 'Crear mi club gratis'}
-      </button>
+      {paso < 3 ? (
+        <button type="submit" className="btn">
+          Siguiente
+        </button>
+      ) : (
+        <button type="submit" className="btn" disabled={enviando}>
+          {enviando ? 'Creando tu club…' : 'Crear mi club gratis'}
+        </button>
+      )}
       <span className="sm2">7 días gratis. Sin tarjeta bancaria.</span>
     </form>
   );

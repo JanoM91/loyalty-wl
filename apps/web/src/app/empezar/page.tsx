@@ -17,7 +17,7 @@ export default async function Empezar() {
       titulo="Tu tarjeta de cliente frecuente, en 5 minutos."
       texto="En el celular de tus clientes. Sin app y sin papel."
       pasos={[
-        ['Llenas cinco datos', 'Nombre, giro, premio, WhatsApp y correo.'],
+        ['Respondes 3 preguntas', 'Tu negocio, tu premio y tu acceso. Entras directo a tu panel.'],
         ['Sacas tu propia tarjeta', 'La pruebas en tu celular antes que nadie.'],
         [
           'Pones tu QR a la vista',

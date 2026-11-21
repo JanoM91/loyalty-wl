@@ -50,7 +50,7 @@ interface Props {
   readonly folioObligatorio?: boolean;
   /** El negocio no pide ticket: la visita se suma en un toque, sin pantalla de ticket. */
   readonly sinTicket?: boolean;
-  /** Abre directo el escáner (desde «Sumar sello de visita» del mapa). */
+  /** Abre directo el escáner (desde «Sumar sello» del inicio o la paleta). */
   readonly empezarCon?: 'visita' | 'premio';
   /** Colores y plantilla del negocio, para mostrar la tarjeta como la ve el cliente. */
   readonly marcaNegocio: { readonly estilo: CSSProperties; readonly plantilla: string };
