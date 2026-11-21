@@ -12,7 +12,7 @@ export function TarjetaDemo() {
     <div className="col" style={{ flex: '1 1 360px', minWidth: 0, alignItems: 'center', gap: 18 }}>
       <div className="col toast" aria-live="polite">
         <span className="sm2">Café Demo · ahora</span>
-        <b>{llena ? 'Tienes un premio listo' : `Llevas ${estampas} de 8 estampas`}</b>
+        <b>{llena ? 'Tienes un premio listo' : `Llevas ${estampas} de 8 sellos`}</b>
       </div>
       <div className="col card float">
         <div className="row" style={{ justifyContent: 'space-between', gap: 12 }}>
@@ -21,7 +21,7 @@ export function TarjetaDemo() {
         </div>
         <div className="row" style={{ alignItems: 'baseline', gap: 10 }}>
           <span className="big">{estampas}</span>
-          <span style={{ fontWeight: 600 }}>de 8 estampas</span>
+          <span style={{ fontWeight: 600 }}>de 8 sellos</span>
         </div>
         <div className="stamps" aria-hidden="true">
           {Array.from({ length: 8 }, (_, i) => (

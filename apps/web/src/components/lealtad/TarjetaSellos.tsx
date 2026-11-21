@@ -61,7 +61,7 @@ export function TarjetaSellos({
 
   return (
     <section
-      aria-label={`Tarjeta de lealtad: ${estampas} de ${programa.posiciones} estampas`}
+      aria-label={`Tarjeta de lealtad: ${estampas} de ${programa.posiciones} sellos`}
       className={`grid w-full rounded-xl bg-ink text-cream ${compacta ? 'gap-4 p-5' : 'gap-6 p-6'}`}
     >
       <div className="flex items-center justify-between gap-3">
@@ -98,7 +98,7 @@ export function TarjetaSellos({
           return (
             <li
               key={posicion}
-              aria-label={`Estampa ${posicion}${sellada ? ', sellada' : ''}${hito ? `, premio: ${hito.nombre}` : ''}`}
+              aria-label={`Sello ${posicion}${sellada ? ', marcado' : ''}${hito ? `, premio: ${hito.nombre}` : ''}`}
               className={[
                 'relative grid aspect-square min-w-0 place-items-center overflow-hidden rounded-full text-[13px] tabular-nums',
                 sellada
@@ -138,7 +138,7 @@ export function TarjetaSellos({
             return (
               <li key={h.posicion} className="flex items-baseline justify-between gap-3">
                 <span className="min-w-0">
-                  {h.nombre} <span className="text-cream/55">· {h.posicion} estampas</span>
+                  {h.nombre} <span className="text-cream/55">· {h.posicion} sellos</span>
                 </span>
                 <span
                   className={`flex-none rounded-full px-2.5 py-0.5 text-[13px] whitespace-nowrap ${listo ? 'bg-crust-light font-semibold text-[var(--wl-fondo)]' : 'text-cream/70'}`}

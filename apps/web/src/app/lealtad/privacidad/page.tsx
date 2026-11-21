@@ -56,7 +56,7 @@ export default async function PrivacidadPage() {
 
       <Seccion titulo="Para qué los usamos">
         <ul className="grid list-disc gap-1.5 pl-5">
-          <li>Llevar la cuenta de tus estampas y entregarte tus premios.</li>
+          <li>Llevar la cuenta de tus sellos y entregarte tus premios.</li>
           <li>Enviarte avisos de tu tarjeta, como códigos de verificación y enlaces de acceso.</li>
           <li>Prevenir el uso indebido del programa.</li>
           <li>

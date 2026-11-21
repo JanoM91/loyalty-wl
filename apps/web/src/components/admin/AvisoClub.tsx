@@ -35,8 +35,8 @@ export async function AvisoClub({ sesion }: { sesion: Sesion }) {
       <p className="max-w-prose">
         {pausa ? (
           <>
-            <b className="font-semibold">Tu club está en pausa.</b> La caja no suma estampas y no se
-            crean tarjetas nuevas. Tus clientes y sus estampas siguen guardados
+            <b className="font-semibold">Tu club está en pausa.</b> La caja no suma sellos y no se
+            crean tarjetas nuevas. Tus clientes y sus sellos siguen guardados
             {borrado
               ? ` hasta el ${borrado.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long' })}`
               : ''}

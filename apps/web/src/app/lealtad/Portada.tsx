@@ -35,7 +35,7 @@ export function Portada({
         </h1>
         <p className="max-w-[34ch] text-[17px] text-muted">
           {frase ? `${frase}. ` : ''}
-          Cada visita es una estampa
+          Cada visita es un sello
           {segundo && primero
             ? `; con ${primero.posicion} ya te llevas ${primero.nombre.toLowerCase().replace(/^tu\s+/, '')}.`
             : '.'}
@@ -53,8 +53,8 @@ export function Portada({
       <ol className="grid gap-5">
         {[
           ['Crea tu tarjeta', 'Con tu celular o tu correo. No instalas nada.'],
-          ['Muéstrala en caja', 'Una estampa por visita, en cualquier sucursal.'],
-          ['Cobra tu premio', 'Tus estampas y premios no vencen.'],
+          ['Muéstrala en caja', 'Un sello por visita, en cualquier sucursal.'],
+          ['Cobra tu premio', 'Tus sellos y premios no vencen.'],
         ].map(([titulo, texto], i) => (
           <li key={titulo} className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-baseline gap-2">
             <span className="font-display text-2xl text-muted tabular-nums">{i + 1}</span>

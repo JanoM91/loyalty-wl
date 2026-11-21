@@ -141,7 +141,7 @@ export function construirObjeto(
   const nombre = t.nombre?.trim() || 'Tu tarjeta';
   const premiosTexto = [...programa.hitos]
     .sort((a, b) => a.posicion - b.posicion)
-    .map((h) => `${h.posicion} estampas: ${h.nombre}.`)
+    .map((h) => `${h.posicion} sellos: ${h.nombre}.`)
     .join(' ');
 
   return {
@@ -151,7 +151,7 @@ export function construirObjeto(
     accountId: t.codigo,
     accountName: nombre,
     loyaltyPoints: {
-      label: 'Estampas',
+      label: 'Sellos',
       balance: { string: `${t.estampas} de ${programa.posiciones}` },
     },
     secondaryLoyaltyPoints: {
@@ -161,7 +161,7 @@ export function construirObjeto(
     barcode: { type: 'QR_CODE', value: id.urlQr, alternateText: t.codigo },
     heroImage: imagen(
       urlImagenTira(n, t.estampas),
-      `${t.estampas} de ${programa.posiciones} estampas`,
+      `${t.estampas} de ${programa.posiciones} sellos`,
     ),
     textModulesData: [
       {
@@ -177,7 +177,7 @@ export function construirObjeto(
       {
         id: 'como',
         header: 'Cómo funciona',
-        body: 'Muestra el código en caja en cada compra y recibes tus estampas. La tarjeta se actualiza sola.',
+        body: 'Muestra el código en caja en cada compra y recibes tus sellos. La tarjeta se actualiza sola.',
       },
       { id: 'premios', header: 'Premios', body: premiosTexto },
     ],

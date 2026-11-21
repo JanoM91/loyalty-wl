@@ -48,7 +48,7 @@ export function Inicio() {
           <Revela
             titulo="Sellos de mentira"
             pie="Antes"
-            detras="Cada estampa se escanea en caja y queda registrada con el folio del ticket."
+            detras="Cada sello se escanea en caja y queda registrado con el folio del ticket."
           />
           <Revela
             titulo="Descuentos que duelen"
@@ -104,7 +104,7 @@ export function Inicio() {
           <Revela
             titulo="Retos"
             pie="Frecuencia"
-            detras="3 visitas en 30 días y la siguiente estampa vale doble."
+            detras="3 visitas en 30 días y el siguiente sello vale doble."
           />
           <Revela
             titulo="Rachas"

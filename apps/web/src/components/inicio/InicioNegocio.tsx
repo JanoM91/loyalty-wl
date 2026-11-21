@@ -48,8 +48,8 @@ export function InicioNegocio({
             </h1>
             <p className="max-w-[40ch] text-[18px] text-muted">
               {mayor
-                ? `Cada visita suma una estampa. En la ${mayor.posicion}, ${mayor.nombre.toLowerCase()} va por nuestra cuenta.`
-                : 'Cada visita suma una estampa en tu tarjeta.'}
+                ? `Cada visita suma un sello. En la ${mayor.posicion}, ${mayor.nombre.toLowerCase()} va por nuestra cuenta.`
+                : 'Cada visita suma un sello en tu tarjeta.'}
             </p>
             <div className="flex flex-wrap gap-3">
               <a

@@ -80,7 +80,7 @@ export default async function TarjetasPage({
               <th className="px-3 py-2 font-semibold">Cliente</th>
               <th className="px-3 py-2 font-semibold">Contacto</th>
               <th className="px-3 py-2 font-semibold">Estado</th>
-              <th className="px-3 py-2 text-right font-semibold">Estampas</th>
+              <th className="px-3 py-2 text-right font-semibold">Sellos</th>
               <th className="px-3 py-2 text-right font-semibold">Premios</th>
               <th className="px-3 py-2 font-semibold">Última visita</th>
               <th className="px-3 py-2 font-semibold">Alta</th>

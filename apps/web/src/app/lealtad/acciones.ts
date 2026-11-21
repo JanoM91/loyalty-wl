@@ -96,7 +96,7 @@ export async function enviarCodigo(_previo: Estado): Promise<Estado> {
     return {
       error: envio.configurado
         ? envio.error
-        : 'El envío de correos todavía no está activo. Mientras tanto, tus estampas siguen sumando.',
+        : 'El envío de correos todavía no está activo. Mientras tanto, tus sellos siguen sumando.',
     };
   }
 

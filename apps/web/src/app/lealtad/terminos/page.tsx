@@ -67,15 +67,15 @@ export default async function TerminosPage() {
         </ul>
       </Seccion>
 
-      <Seccion n={3} titulo="Cómo sumas estampas">
+      <Seccion n={3} titulo="Cómo sumas sellos">
         <ul className="grid list-disc gap-1.5 pl-5">
           <li>
             Muestra el código de tu tarjeta al pagar y sumas{' '}
-            <b className="font-semibold text-ink">una estampa por visita</b>
+            <b className="font-semibold text-ink">un sello por visita</b>
             {varias ? ', máximo una al día en cada sucursal' : ', máximo una al día'}.
           </li>
           {pideTicket && <li>Te pueden pedir el ticket de tu compra para registrar la visita.</li>}
-          <li>Si una compra se cancela o se devuelve, se retira la estampa que dio.</li>
+          <li>Si una compra se cancela o se devuelve, se retira el sello que dio.</li>
         </ul>
       </Seccion>
 
@@ -83,7 +83,7 @@ export default async function TerminosPage() {
         <ul className="grid list-disc gap-1.5 pl-5">
           {hitos.map((h) => (
             <li key={h.posicion}>
-              Con <b className="font-semibold text-ink">{h.posicion} estampas</b>:{' '}
+              Con <b className="font-semibold text-ink">{h.posicion} sellos</b>:{' '}
               {h.nombre.toLowerCase()}
               {h.incluye ? ` (${h.incluye.replace(/\.$/, '').toLowerCase()})` : ''}.
             </li>
@@ -99,7 +99,7 @@ export default async function TerminosPage() {
       <Seccion n={5} titulo="Cambios y fin del programa">
         <p>
           {nombre} puede cambiar estas reglas o terminar el programa. Los cambios se publican en
-          esta página y no te quitan las estampas ni los premios que ya ganaste. Si el programa
+          esta página y no te quitan los sellos ni los premios que ya ganaste. Si el programa
           termina, {nombre} te dirá hasta cuándo puedes cobrar los premios que ya tengas.
         </p>
       </Seccion>

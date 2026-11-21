@@ -20,7 +20,7 @@ export const metadata = metadatosDelSitio(
 );
 
 const GIROS = [
-  ['Cafetería', 'Café gratis', 'Reto: 3 visitas en 30 días y tu estampa vale doble.'],
+  ['Cafetería', 'Café gratis', 'Reto: 3 visitas en 30 días y tu sello vale doble.'],
   ['Panadería', 'Pan y café', 'Insignia por probar tres panes nuevos.'],
   ['Taquería', 'Orden de tacos', 'Martes de sello doble para llenar el día flojo.'],
   ['Restaurante', 'Postre de la casa', 'Sello doble entre semana.'],

@@ -144,7 +144,7 @@ export function FormularioNuevo() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo
             nombre="posiciones"
-            etiqueta="Estampas para completar la tarjeta"
+            etiqueta="Sellos para completar la tarjeta"
             type="number"
             min={2}
             max={30}
@@ -172,7 +172,7 @@ export function FormularioNuevo() {
           />
           <Campo
             nombre="posicionIntermedio"
-            etiqueta="En qué estampa se gana"
+            etiqueta="En qué sello se gana"
             type="number"
             min={1}
             max={29}

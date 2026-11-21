@@ -81,7 +81,7 @@ export function rgbDeHex(hex: string): string {
  */
 export function avisoEstampas(estampas: number, ciclo: number): string {
   if (estampas === 0 && ciclo > 1) return '¡Completaste tu tarjeta! Empiezas la nueva con %@.';
-  return '¡Gracias por tu visita! Llevas %@ estampas.';
+  return '¡Gracias por tu visita! Llevas %@ sellos.';
 }
 
 export interface CampoPase {
@@ -139,7 +139,7 @@ export function construirPassJson(
 
   const premiosTexto = [...programa.hitos]
     .sort((a, b) => a.posicion - b.posicion)
-    .map((h) => `${h.posicion} estampas: ${h.nombre}${h.incluye ? ` (${h.incluye})` : ''}`)
+    .map((h) => `${h.posicion} sellos: ${h.nombre}${h.incluye ? ` (${h.incluye})` : ''}`)
     .join('\n');
 
   return {
@@ -169,7 +169,7 @@ export function construirPassJson(
       headerFields: [
         {
           key: 'estampas',
-          label: 'ESTAMPAS',
+          label: 'SELLOS',
           value: `${t.estampas} de ${posiciones}`,
           textAlignment: 'PKTextAlignmentRight',
           changeMessage: avisoEstampas(t.estampas, t.ciclo),
@@ -222,7 +222,7 @@ export function construirPassJson(
           key: 'como',
           label: 'Cómo funciona',
           value:
-            'Muestra el código en caja en cada compra y recibes tus estampas. La tarjeta se actualiza sola en tu iPhone.',
+            'Muestra el código en caja en cada compra y recibes tus sellos. La tarjeta se actualiza sola en tu iPhone.',
         },
         { key: 'premios', label: 'Premios', value: premiosTexto },
         {

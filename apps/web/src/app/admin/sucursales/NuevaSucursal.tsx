@@ -44,8 +44,7 @@ export function NuevaSucursal() {
           role="status"
           className="border-l-[3px] border-disponible px-3 py-2 text-[15px] text-ink"
         >
-          Sucursal creada. Para que sume estampas, enciéndela en Programa, en «Sucursales y
-          códigos».
+          Sucursal creada. Para que sume sellos, enciéndela en Programa, en «Sucursales y códigos».
         </p>
       )}
       <button

@@ -93,7 +93,7 @@ export type RespuestaNuevoCliente =
   | { readonly ok: false; readonly error: string };
 
 function textoBienvenida(nombre: string, estampas: number, url: string, negocio: string): string {
-  const cuantas = estampas === 1 ? '1 estampa' : `${estampas} estampas`;
+  const cuantas = estampas === 1 ? '1 sello' : `${estampas} sellos`;
   return [
     `Hola ${nombre.split(' ')[0]}, te damos la bienvenida al programa de lealtad de ${negocio}.`,
     `Tu tarjeta digital ya tiene ${cuantas}. Este es tu enlace personal: guárdalo, sirve siempre y en cualquier celular, sin contraseña.`,
@@ -128,7 +128,7 @@ async function mandarBienvenida(t: {
       html: plantillaCorreo(
         'Te damos la bienvenida al programa de lealtad',
         [
-          `Hola ${t.nombre.split(' ')[0]}, en caja te dimos de alta y tu tarjeta digital ya tiene ${t.estampas === 1 ? '1 estampa' : `${t.estampas} estampas`}.`,
+          `Hola ${t.nombre.split(' ')[0]}, en caja te dimos de alta y tu tarjeta digital ya tiene ${t.estampas === 1 ? '1 sello' : `${t.estampas} sellos`}.`,
           'Toca el botón para abrir tu tarjeta. Es tu enlace personal: guarda este correo, sirve siempre y en cualquier celular, sin contraseña.',
           'Al abrirla puedes agregarla a la pantalla de inicio de tu celular para tenerla a la mano.',
           'Te avisaremos de promociones por este medio. Si no quieres recibirlas, desactívalas en tu perfil cuando gustes.',

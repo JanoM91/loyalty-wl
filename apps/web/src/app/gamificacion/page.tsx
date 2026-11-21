@@ -18,11 +18,11 @@ export const metadata = metadatosDelSitio(
 );
 
 const MECANICAS = [
-  ['Retos', 'Mueve: frecuencia', '3 visitas en 30 días y tu siguiente estampa vale doble.'],
+  ['Retos', 'Mueve: frecuencia', '3 visitas en 30 días y tu siguiente sello vale doble.'],
   ['Rachas', 'Mueve: constancia', 'Semanas seguidas con una visita. Romperla duele.'],
   ['Niveles', 'Mueve: permanencia', 'Bronce, Plata y Oro según las visitas del año.'],
   ['Insignias', 'Mueve: variedad y ticket', 'Probó tres panes nuevos. Visitó las dos sucursales.'],
-  ['Referidos', 'Mueve: clientes nuevos', 'Invita a un amigo y los dos ganan una estampa.'],
+  ['Referidos', 'Mueve: clientes nuevos', 'Invita a un amigo y los dos ganan un sello.'],
   [
     'Ruleta y sorteos',
     'Mueve: días flojos',

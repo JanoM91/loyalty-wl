@@ -33,7 +33,7 @@ export default async function TarjetaPage({
     <>
       {nueva && (
         <Aviso tono="ok" titulo="Tu tarjeta está lista">
-          Muestra este código en caja en tu próxima compra para sumar tu primera estampa.
+          Muestra este código en caja en tu próxima compra para sumar tu primer sello de visita.
         </Aviso>
       )}
       {guardar && (
@@ -70,7 +70,7 @@ export default async function TarjetaPage({
 
       {!t.verificada && (
         <Aviso tono="atencion" titulo="Verifica tu correo o tu celular para canjear">
-          Tus estampas ya cuentan.{' '}
+          Tus sellos ya cuentan.{' '}
           <a
             href={t.correo ? '/lealtad/verificar' : '/lealtad/perfil#correo'}
             className="font-semibold underline"
@@ -113,7 +113,7 @@ export default async function TarjetaPage({
       <InvitacionInstalar forzar={Boolean(guardar)} />
 
       <p className="text-xs text-muted">
-        Estampas y premios sin vencimiento. Si el negocio define una vigencia, la verás aquí con
+        Sellos y premios sin vencimiento. Si el negocio define una vigencia, la verás aquí con
         anticipación.
       </p>
 

@@ -27,7 +27,7 @@ export default async function PendientesPage() {
       sesion={sesion}
       actual="/admin/lealtad"
       titulo="Programa de lealtad"
-      descripcion="Lo que la caja no pudo resolver sola. Aprobar suma la estampa con la fecha real de la compra."
+      descripcion="Lo que la caja no pudo resolver sola. Aprobar suma el sello con la fecha real de la compra."
     >
       <SubnavLealtad actual="/admin/lealtad/pendientes" pendientes={pendientes.length} />
 

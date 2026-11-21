@@ -109,7 +109,7 @@ export default async function DetalleTarjetaPage({
                 <th className="px-3 py-2 font-semibold">Sucursal</th>
                 <th className="px-3 py-2 font-semibold">Ticket</th>
                 <th className="px-3 py-2 font-semibold">Estado</th>
-                <th className="px-3 py-2 text-right font-semibold">Estampas</th>
+                <th className="px-3 py-2 text-right font-semibold">Sellos</th>
               </tr>
             </thead>
             <tbody>

@@ -40,7 +40,7 @@ export function saludoTarjeta(nombre: string | null | undefined): string {
 /** "ya lleva 1 estampa" / "ya lleva 4 estampas" / "ya está lista". */
 function estadoEstampas(estampas: number): string {
   if (estampas <= 0) return 'ya está lista';
-  return estampas === 1 ? 'ya lleva 1 estampa' : `ya lleva ${estampas} estampas`;
+  return estampas === 1 ? 'ya lleva 1 sello' : `ya lleva ${estampas} sellos`;
 }
 
 export interface DatosReenvio {

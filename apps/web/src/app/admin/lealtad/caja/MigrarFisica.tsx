@@ -57,7 +57,7 @@ export function MigrarFisica({
       <h3 className="text-base font-semibold text-ink">Tarjeta física → digital</h3>
       <p className="text-sm text-ink-soft">
         Se hace una sola vez. Con la visita de hoy, la tarjeta no puede pasar de{' '}
-        {programa.posiciones - 1} estampas: máximo {tope} {tope === 1 ? 'visita' : 'visitas'}.
+        {programa.posiciones - 1} sellos: máximo {tope} {tope === 1 ? 'visita' : 'visitas'}.
       </p>
       <label className="grid gap-1.5 text-sm font-semibold text-ink">
         Visitas selladas en la tarjeta física
@@ -78,7 +78,7 @@ export function MigrarFisica({
       />
       {faltaContacto && (
         <Aviso tono="atencion" titulo="Falta un contacto">
-          A partir de 5 estampas la tarjeta debe tener celular y correo. Pide al cliente que agregue
+          A partir de 5 sellos la tarjeta debe tener celular y correo. Pide al cliente que agregue
           el que falta desde su perfil, o captura menos visitas por ahora.
         </Aviso>
       )}

@@ -124,7 +124,7 @@ export function FormularioAlta({ sucursal }: { sucursal: string | null }) {
         <span>
           Quiero recibir promociones y novedades de {marca.nombre} por este medio.{' '}
           <span className="text-muted">
-            Puedes desactivarlo cuando quieras desde tu perfil; no afecta tus estampas.
+            Puedes desactivarlo cuando quieras desde tu perfil; no afecta tus sellos.
           </span>
         </span>
       </label>

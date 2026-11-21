@@ -589,9 +589,9 @@ export async function operacionesDeHoy(sucursalId: string, limite = 8): Promise<
       quien: v.card.name ?? `Tarjeta ${v.card.publicCode}`,
       que:
         v.captureSource === ORIGEN_MIGRACION
-          ? `Tarjeta física migrada · +${v.stampsAwarded} ${v.stampsAwarded === 1 ? 'estampa' : 'estampas'}`
+          ? `Tarjeta física migrada · +${v.stampsAwarded} ${v.stampsAwarded === 1 ? 'sello' : 'sellos'}`
           : v.status === 'ACREDITADA'
-            ? `Visita acreditada · +${v.stampsAwarded} ${v.stampsAwarded === 1 ? 'estampa' : 'estampas'}`
+            ? `Visita acreditada · +${v.stampsAwarded} ${v.stampsAwarded === 1 ? 'sello' : 'sellos'}`
             : v.status === 'PENDIENTE'
               ? 'Pendiente de revisión'
               : 'Visita rechazada',

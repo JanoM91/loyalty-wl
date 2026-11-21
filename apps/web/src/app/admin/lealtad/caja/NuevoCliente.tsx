@@ -291,7 +291,7 @@ export function NuevoCliente({
               titulo={`Visita acreditada a ${t.nombre ?? t.codigo}`}
               icono="palomita"
             >
-              {visita.antes.estampas} → {visita.despues.estampas} de {programa.posiciones} estampas
+              {visita.antes.estampas} → {visita.despues.estampas} de {programa.posiciones} sellos
               {visita.premios.length > 0
                 ? ' · ¡ganó un premio! Entrégalo con «Entregar premio».'
                 : '.'}
@@ -404,7 +404,7 @@ export function NuevoCliente({
       <div className="grid max-w-2xl gap-4">
         <Aviso tono="ok" titulo={`${t.nombre} ya es cliente leal`} icono="palomita">
           Tarjeta <span className="font-mono">{t.codigo}</span> · {t.estampas}{' '}
-          {t.estampas === 1 ? 'estampa' : 'estampas'}
+          {t.estampas === 1 ? 'sello' : 'sellos'}
           {resultado.visitasMigradas > 0
             ? ` (${resultado.visitasMigradas} de su tarjeta física + la de hoy)`
             : ' (la visita de hoy)'}
@@ -597,7 +597,7 @@ export function NuevoCliente({
             <b className="block font-semibold">Trae tarjeta física con sellos</b>
             <span className="text-ink-soft">
               Sus visitas pasan a la tarjeta digital. Con la de hoy, máximo{' '}
-              {programa.posiciones - 1} estampas en total ({tope} de la tarjeta física).
+              {programa.posiciones - 1} sellos en total ({tope} de la tarjeta física).
             </span>
           </span>
         </label>
@@ -622,7 +622,7 @@ export function NuevoCliente({
             />
             {pideEvidencia && (
               <p className="text-xs text-ink-soft">
-                A partir de 5 estampas en total se necesitan la foto de la tarjeta, el celular y el
+                A partir de 5 sellos en total se necesitan la foto de la tarjeta, el celular y el
                 correo del cliente.
               </p>
             )}
