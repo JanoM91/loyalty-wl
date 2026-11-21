@@ -19,6 +19,8 @@ export const metadata = metadatosDelSitio(
 const PLANES = [
   {
     nombre: 'Lite',
+    precio: '$269 al mes',
+    nota: 'o $2,699 al año. IVA incluido. 7 días gratis.',
     oscuro: false,
     incluye: [
       'club-lealtad.com/tu-negocio',
@@ -30,6 +32,8 @@ const PLANES = [
   },
   {
     nombre: 'Privada',
+    precio: 'Cotización en la demo',
+    nota: 'Según tu marca y tus sucursales.',
     oscuro: true,
     incluye: [
       'Tu propio dominio y página de inicio',
@@ -67,14 +71,19 @@ export default async function Planes() {
               <span className="d" style={{ fontSize: 60, fontWeight: 800 }}>
                 {p.nombre}
               </span>
-              <b className="d h3">Cotización en la demo</b>
+              <b className="d h3">{p.precio}</b>
+              <span className="p">{p.nota}</span>
               <ul>
                 {p.incluye.map((x) => (
                   <li key={x}>{x}</li>
                 ))}
               </ul>
-              <a href={whatsapp} className="btn" style={{ marginTop: 'auto' }}>
-                Quiero {p.nombre}
+              <a
+                href={p.oscuro ? whatsapp : '/empezar'}
+                className="btn"
+                style={{ marginTop: 'auto' }}
+              >
+                {p.oscuro ? 'Quiero Privada' : 'Probar Lite gratis'}
               </a>
             </div>
           ))}

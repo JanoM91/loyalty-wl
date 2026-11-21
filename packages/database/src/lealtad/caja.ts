@@ -19,6 +19,7 @@ import {
 } from '@wl/domain';
 
 import { prisma, transaccion, negocioActual, esErrorUnico, camposDelError } from '../index';
+import { estadoComercialDe } from '../negocio';
 import { programaVigente } from './programa';
 
 /**
@@ -260,6 +261,10 @@ function faltantes(t: TicketCaja): string[] {
 
 export async function acreditarVisita(s: SolicitudCaja): Promise<ResultadoCaja> {
   const negocio = await negocioActual();
+  // Con la prueba vencida la caja no sella; las tarjetas siguen guardadas.
+  if (estadoComercialDe(negocio) === 'PAUSADO') {
+    return { tipo: 'RECHAZADA', motivo: 'PROGRAMA_PAUSADO' };
+  }
   const hoy = fechaLocal(new Date(), negocio.zonaHoraria);
   const programa = await programaVigente();
   const faltaron = faltantes(s.ticket);

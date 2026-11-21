@@ -6,9 +6,11 @@ import {
   interpretarContacto,
   normalizarCelular,
   normalizarCorreo,
+  TOPE_TARJETAS_PRUEBA,
 } from '@wl/domain';
 
 import { prisma, negocioActual, esErrorUnico, camposDelError } from '../index';
+import { estadoComercialDe } from '../negocio';
 import { describirPremioGanado } from './caja';
 import { programaVigente } from './programa';
 
@@ -79,6 +81,22 @@ export async function crearTarjeta(datos: DatosAlta): Promise<ResultadoAlta> {
 
   const campo = contacto.tipo === 'CORREO' ? { email: contacto.valor } : { phone: contacto.valor };
 
+  // Un club con la prueba vencida no admite tarjetas nuevas; en prueba, hasta el tope.
+  const negocio = await negocioActual();
+  const comercial = estadoComercialDe(negocio);
+  if (comercial === 'PAUSADO') {
+    return {
+      ok: false,
+      error: 'Este programa está en pausa por ahora. Pregunta en el negocio.',
+    };
+  }
+  if (comercial === 'PRUEBA' && (await prisma.loyaltyCard.count()) >= TOPE_TARJETAS_PRUEBA) {
+    return {
+      ok: false,
+      error: 'Este programa llegó a su límite de tarjetas por ahora. Pregunta en el negocio.',
+    };
+  }
+
   const existente = await prisma.loyaltyCard.findFirst({ where: campo, select: { id: true } });
   if (existente) {
     return {
@@ -99,7 +117,7 @@ export async function crearTarjeta(datos: DatosAlta): Promise<ResultadoAlta> {
 
   // El código se genera al azar; si choca con uno existente (muy improbable),
   // se intenta con otro. La restricción única de la base es la que decide.
-  const prefijo = (await negocioActual()).prefijoCodigo;
+  const prefijo = negocio.prefijoCodigo;
   for (let intento = 0; intento < 5; intento++) {
     const codigo = formarCodigoTarjeta(randomBytes(8), prefijo);
     try {

@@ -190,7 +190,8 @@ export type MotivoRechazo =
   | 'YA_ACUMULO_EN_FECHA'
   | 'FALTA_FOLIO'
   | 'TICKET_DUPLICADO'
-  | 'FUERA_DE_VENTANA';
+  | 'FUERA_DE_VENTANA'
+  | 'PROGRAMA_PAUSADO';
 
 export type Decision =
   | { readonly tipo: 'ACREDITAR' }
@@ -281,6 +282,12 @@ export function textoRechazo(motivo: MotivoRechazo, fechaCompra?: string): Texto
       return {
         titulo: 'Ticket fuera de plazo',
         detalle: `La compra${fecha ? ` del ${fecha}` : ''} ya está fuera de plazo. Envíala a revisión central.`,
+      };
+    case 'PROGRAMA_PAUSADO':
+      return {
+        titulo: 'Programa en pausa',
+        detalle:
+          'El periodo de prueba terminó. Las tarjetas de tus clientes están guardadas; al activar tu plan se vuelve a sellar.',
       };
   }
 }

@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { listarNegocios } from '@wl/database';
+import { estadoComercialDe, listarNegocios } from '@wl/database';
 
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
 import { MarcoPlataforma } from '../Marco';
-import { modalidad, reinvitar, suspender } from '../acciones';
+import { modalidad, prueba, reinvitar, suspender } from '../acciones';
 
 export const metadata: Metadata = { title: 'Negocio' };
 export const dynamic = 'force-dynamic';
@@ -32,6 +32,15 @@ export default async function NegocioPage({
   // Instalación privada: el negocio ocupa todo el dominio. Compartida: va en la ruta.
   const base = process.env.WL_NEGOCIO_UNICO ? origen : `${origen}/${negocio.slug}`;
   const privada = negocio.ajustes.plan === 'PRIVADA';
+  const comercial = estadoComercialDe(negocio);
+  const alta = negocio.ajustes.alta;
+  const vence = negocio.ajustes.pruebaVence
+    ? new Date(negocio.ajustes.pruebaVence).toLocaleString('es-MX', {
+        timeZone: 'America/Mexico_City',
+        dateStyle: 'long',
+        timeStyle: 'short',
+      })
+    : null;
 
   return (
     <MarcoPlataforma
@@ -50,6 +59,47 @@ export default async function NegocioPage({
             <code className="rounded-md bg-cream/10 px-3 py-2.5 text-[14px] break-all">
               {`${base}/admin/contrasena/${enlace}`}
             </code>
+          </section>
+        )}
+
+        {(alta || vence) && (
+          <section className="grid gap-3">
+            <h2 className="text-xl text-ink">Prueba y pago</h2>
+            <p className="text-[15px] text-ink">
+              {comercial === 'PRUEBA' && `En prueba. Vence el ${vence}.`}
+              {comercial === 'PAUSADO' &&
+                `Pausado: la prueba venció el ${vence}. La caja no sella y no se crean tarjetas.`}
+              {comercial === 'ACTIVO' && 'Pago registrado: activo sin límite.'}
+            </p>
+            {alta && (
+              <p className="text-[15px] text-muted">
+                Alta desde /{alta.origen || 'empezar'} · giro: {alta.giro} · {alta.correo} ·{' '}
+                <a
+                  href={`https://wa.me/${alta.whatsapp}`}
+                  className="text-ink underline underline-offset-4"
+                >
+                  WhatsApp +{alta.whatsapp}
+                </a>
+              </p>
+            )}
+            <div className="flex flex-wrap gap-3">
+              {comercial !== 'ACTIVO' && (
+                <form action={prueba}>
+                  <input type="hidden" name="slug" value={negocio.slug} />
+                  <input type="hidden" name="accion" value="pago" />
+                  <button type="submit" className={BOTON}>
+                    Registrar pago y activar
+                  </button>
+                </form>
+              )}
+              <form action={prueba}>
+                <input type="hidden" name="slug" value={negocio.slug} />
+                <input type="hidden" name="accion" value="extender" />
+                <button type="submit" className={BOTON}>
+                  Dar 7 días de prueba desde hoy
+                </button>
+              </form>
+            </div>
           </section>
         )}
 

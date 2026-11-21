@@ -124,3 +124,25 @@ to{transform:translateY(-16px) rotate(-1.2deg)}
 .cl .faq summary::-webkit-details-marker{display:none}
 .cl .faq summary::after{content:"+";margin-left:auto;font-size:30px;font-weight:300;line-height:1}
 .cl .faq[open] summary::after{content:"\2013"}
+/* Asistente de alta */
+.cl .fm{display:flex;flex-direction:column;gap:16px;background:var(--surface);border:1.5px solid var(--ink);border-radius:30px;padding:28px;box-shadow:10px 10px 0 var(--pri);width:100%;max-width:520px}
+.cl .fl{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;padding:0}
+.cl .fr{display:flex;flex-wrap:wrap;gap:14px}
+.cl .fs{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.cl .in{min-height:50px;width:100%;padding:0 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:17px;font-weight:400}
+.cl .in:focus{border-color:var(--ink)}
+.cl .sws{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.cl .sw{position:relative;display:block;cursor:pointer}
+.cl .sw input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.cl .sw>span:first-of-type{display:block;width:44px;height:44px;border-radius:50%;border:4px solid;transition:transform .2s}
+.cl .sw input:checked+span{outline:3px solid var(--ink);outline-offset:3px;transform:scale(1.08)}
+.cl .sw input:focus-visible+span{outline:3px solid var(--pop);outline-offset:3px}
+.cl .oc{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.cl .er{margin:0;padding:12px 14px;border-radius:14px;background:#ffe3e0;color:#7a1410;font-weight:600}
+.cl .pv{display:flex;flex-direction:column;gap:12px;border-radius:22px;padding:20px;transition:background .3s,color .3s}
+.cl .pvs{display:flex;flex-wrap:wrap;gap:8px}
+.cl .pvd{width:26px;height:26px;border-radius:50%;border:2px dashed currentColor;opacity:.9;display:block}
+.cl .btn:disabled{opacity:.6;cursor:progress;transform:none;box-shadow:none}
+.cl .qr{background:#fff;border-radius:18px;padding:14px;width:100%;max-width:240px;border:1.5px solid var(--ink)}
+.cl .qr svg{display:block;width:100%;height:auto}
+.cl .ps{display:flex;gap:18px;align-items:flex-start;padding:22px 0;border-top:1.5px solid var(--line)}
