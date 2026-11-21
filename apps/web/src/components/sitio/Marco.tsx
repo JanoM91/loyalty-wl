@@ -104,6 +104,12 @@ export function Marco({ actual, children }: { actual?: string; children: ReactNo
                 {p.nombre}
               </Link>
             ))}
+            <Link href="/terminos" className="nl">
+              Términos
+            </Link>
+            <Link href="/privacidad" className="nl">
+              Privacidad
+            </Link>
           </nav>
         </div>
       </footer>

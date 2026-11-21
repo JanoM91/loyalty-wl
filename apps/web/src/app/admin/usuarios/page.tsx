@@ -52,7 +52,7 @@ export default async function UsuariosPage() {
                     href={`/admin/usuarios/${u.id}`}
                     className="font-semibold text-ink underline-offset-4 hover:underline"
                   >
-                    {u.nombre}
+                    {u.nombre || 'Sin nombre'}
                   </a>
                   {u.id === sesion.userId && (
                     <span className="ml-1.5 text-xs text-muted">(tú)</span>

@@ -22,7 +22,7 @@ export default async function CuentaPage() {
     >
       <dl className="mb-8 grid max-w-md grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
         <dt className="text-muted">Nombre</dt>
-        <dd className="text-ink">{sesion.nombre}</dd>
+        <dd className="text-ink">{sesion.nombre || 'Sin nombre'}</dd>
         <dt className="text-muted">Correo</dt>
         <dd className="break-all text-ink">{sesion.email}</dd>
         <dt className="text-muted">Rol</dt>

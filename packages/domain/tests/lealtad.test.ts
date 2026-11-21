@@ -282,6 +282,16 @@ describe('próximo premio', () => {
     expect(textoProximoPremio(7, PROGRAMA_BASE)).toBe('Te faltan 3 estampas para tu premio mayor.');
     expect(textoProximoPremio(10, PROGRAMA_BASE)).toBe('Tarjeta completa.');
   });
+
+  it('no repite «tu» cuando el premio ya lo trae', () => {
+    const programa = {
+      ...PROGRAMA_BASE,
+      hitos: PROGRAMA_BASE.hitos.map((h) => ({ ...h, nombre: 'Tu sexto corte gratis' })),
+    };
+    expect(textoProximoPremio(1, programa)).toBe(
+      'Te faltan 4 estampas para tu sexto corte gratis.',
+    );
+  });
 });
 
 describe('tickets', () => {

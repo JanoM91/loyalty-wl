@@ -41,7 +41,8 @@ export default async function ContrasenaPage({ params }: { params: Promise<{ tok
       {estado.ok ? (
         <>
           <p className="pb-6 text-sm text-ink-soft">
-            Hola, {estado.nombre.split(' ')[0]}. Con esta contraseña entrarás al panel con{' '}
+            {estado.nombre.trim() ? `Hola, ${estado.nombre.trim().split(' ')[0]}. ` : ''}Con esta
+            contraseña entrarás al panel con{' '}
             <span className="font-medium break-all text-ink">{estado.email}</span>.
             {!estado.primeraVez && ' La anterior deja de servir en cuanto guardes esta.'}
           </p>

@@ -298,6 +298,18 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
         </p>
       ) : null}
 
+      <p className="p" style={{ fontSize: 14, lineHeight: 1.45 }}>
+        Al crear tu club aceptas los{' '}
+        <a href="/terminos" target="_blank" className="ul">
+          términos del servicio
+        </a>
+        . Usamos tu WhatsApp y tu correo para operar tu club y avisarte de tu prueba; lee el{' '}
+        <a href="/privacidad" target="_blank" className="ul">
+          aviso de privacidad
+        </a>
+        .
+      </p>
+
       <button type="submit" className="btn" disabled={enviando}>
         {enviando ? 'Creando tu club…' : 'Crear mi club gratis'}
       </button>

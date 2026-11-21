@@ -114,6 +114,8 @@ export interface AltaNegocio {
   readonly whatsapp: string;
   /** Página desde la que llegó: "belleza", "cafeterias" o "empezar". */
   readonly origen: string;
+  /** Versión de los términos y del aviso de privacidad que aceptó al crear el club. */
+  readonly legal: string;
 }
 
 export const MARCA_POR_OMISION: MarcaNegocio = {
@@ -218,7 +220,13 @@ function leerAlta(json: unknown): AltaNegocio | null {
   const correo = texto(a.correo);
   const whatsapp = texto(a.whatsapp);
   if (!correo || !whatsapp) return null;
-  return { giro: texto(a.giro) ?? 'otro', correo, whatsapp, origen: texto(a.origen) ?? '' };
+  return {
+    giro: texto(a.giro) ?? 'otro',
+    correo,
+    whatsapp,
+    origen: texto(a.origen) ?? '',
+    legal: texto(a.legal) ?? '',
+  };
 }
 
 /** En prueba, pausado por prueba vencida, o activo. No mira si está suspendido. */

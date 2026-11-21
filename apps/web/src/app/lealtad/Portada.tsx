@@ -31,13 +31,13 @@ export function Portada({
     <section className="grid gap-9 pt-4 pb-6">
       <div className="grid gap-4">
         <h1 className="text-[clamp(2.6rem,13vw,3.5rem)] text-balance">
-          {mayor ? `${mayor.nombre} en tu visita ${mayor.posicion}` : 'Tus visitas suman'}
+          {mayor ? `${mayor.nombre} al juntar ${mayor.posicion} visitas` : 'Tus visitas suman'}
         </h1>
         <p className="max-w-[34ch] text-[17px] text-muted">
           {frase ? `${frase}. ` : ''}
           Cada visita es una estampa
           {segundo && primero
-            ? `; a las ${primero.posicion} ya te llevas ${primero.nombre.toLowerCase()}.`
+            ? `; con ${primero.posicion} ya te llevas ${primero.nombre.toLowerCase().replace(/^tu\s+/, '')}.`
             : '.'}
         </p>
       </div>
