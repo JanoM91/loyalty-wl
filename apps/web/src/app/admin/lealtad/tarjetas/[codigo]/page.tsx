@@ -5,6 +5,9 @@ import { detalleTarjeta, programaVigente } from '@wl/database';
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { SubnavLealtad } from '@/components/admin/SubnavLealtad';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
+import { MarcaDelNegocio } from '@/components/admin/MarcaDelNegocio';
+import { estiloDeMarca } from '@/lib/marca';
+import { exigirNegocio } from '@/lib/negocio';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil, fechaLarga } from '@/lib/lealtad/formato';
@@ -25,6 +28,7 @@ export default async function DetalleTarjetaPage({
   params: Promise<{ codigo: string }>;
 }) {
   const sesion = await exigirRol(ROLES_PROGRAMA);
+  const negocio = await exigirNegocio();
   const { codigo } = await params;
   const t = await detalleTarjeta(decodeURIComponent(codigo));
   if (!t) notFound();
@@ -40,21 +44,23 @@ export default async function DetalleTarjetaPage({
       <SubnavLealtad actual="/admin/lealtad/tarjetas" />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-        <TarjetaSellos
-          programa={programa}
-          datos={{
-            estampas: t.estampas,
-            ciclo: t.ciclo,
-            nombre: t.nombre,
-            premios: t.premios.map((p) => ({
-              tipo: p.tipo,
-              nombre: p.nombre,
-              posicion: p.posicion,
-              ciclo: p.ciclo,
-              disponible: p.disponible,
-            })),
-          }}
-        />
+        <MarcaDelNegocio estilo={estiloDeMarca(negocio)} plantilla={negocio.marca.plantilla}>
+          <TarjetaSellos
+            programa={programa}
+            datos={{
+              estampas: t.estampas,
+              ciclo: t.ciclo,
+              nombre: t.nombre,
+              premios: t.premios.map((p) => ({
+                tipo: p.tipo,
+                nombre: p.nombre,
+                posicion: p.posicion,
+                ciclo: p.ciclo,
+                disponible: p.disponible,
+              })),
+            }}
+          />
+        </MarcaDelNegocio>
         <dl className="grid content-start gap-x-4 gap-y-2 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
           <dt className="text-muted">Contacto</dt>
           <dd className="font-mono">{t.contacto}</dd>

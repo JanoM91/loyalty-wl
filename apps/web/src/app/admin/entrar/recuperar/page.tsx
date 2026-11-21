@@ -4,7 +4,7 @@ import { FormularioRecuperar } from './FormularioRecuperar';
 import { LogoMarca } from '@/components/Marca';
 
 export const metadata: Metadata = {
-  title: 'Restablecer contraseña · Panel',
+  title: 'Restablecer contraseña',
   robots: { index: false, follow: false },
 };
 
