@@ -1,6 +1,7 @@
 import type { GrupoGiro } from '@wl/domain';
 
 import { Asistente } from './Asistente';
+import { MedirAlCargar } from './Medicion';
 import { Cierre, Cinta, Marco, Pasos, Seccion } from './Marco';
 
 /**
@@ -24,6 +25,7 @@ export function PaginaAlta({
 }) {
   return (
     <Marco actual={ruta}>
+      <MedirAlCargar evento="ViewContent" datos={{ content_name: ruta.slice(1) }} />
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div className="orbs par" aria-hidden="true">
           <span className="orb a" style={{ width: 520, height: 520, left: -180, top: -200 }} />

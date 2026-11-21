@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { Apartado, Correo, Documento, TITULAR } from '@/components/sitio/Legal';
 import { Marco } from '@/components/sitio/Marco';
+import { MEDICION_ACTIVA } from '@/lib/medicion';
 import { exigirSitioDelServicio, metadatosDelSitio } from '@/lib/sitio';
 
 export const dynamic = 'force-dynamic';
@@ -68,7 +69,9 @@ export default async function Privacidad() {
             </li>
             <li>
               <b>De uso:</b> la página por la que llegaste, los registros de acceso a tu panel
-              (fecha, dirección IP y navegador) y las operaciones de caja.
+              (fecha, dirección IP y navegador), las operaciones de caja y una huella cifrada de la
+              conexión desde la que creas tu club, que no permite saber tu dirección IP y solo sirve
+              para frenar altas abusivas.
             </li>
           </ul>
           <p>
@@ -102,6 +105,12 @@ export default async function Privacidad() {
               Mencionar el nombre de tu negocio como cliente de club-lealtad, por ejemplo en la
               sección de negocios del sitio, solo si nos das permiso por escrito.
             </li>
+            {MEDICION_ACTIVA && (
+              <li>
+                Medir, con el pixel de Meta, qué anuncios te trajeron al sitio y si creaste tu club,
+                para decidir dónde anunciarnos.
+              </li>
+            )}
           </ul>
           <p>
             Para rechazarlas, escribe a <Correo /> con el asunto «No a finalidades adicionales». Lo
@@ -129,6 +138,14 @@ export default async function Privacidad() {
             fiscales con el Servicio de Administración Tributaria al facturar, y con autoridades
             cuando una ley o una orden lo exija.
           </p>
+          {MEDICION_ACTIVA && (
+            <p>
+              En las páginas del sitio (nunca en las tarjetas ni en los paneles de los clubes), Meta
+              Platforms recibe por medio de su pixel datos de navegación, como tu dirección IP, tu
+              navegador y las páginas que visitas, para medir nuestros anuncios. Meta los trata
+              también conforme a su propia política de privacidad.
+            </p>
+          )}
         </Apartado>
 
         <Apartado titulo="6. Cuánto tiempo los conservamos">
@@ -164,10 +181,20 @@ export default async function Privacidad() {
         </Apartado>
 
         <Apartado titulo="8. Cookies">
-          <p>
-            Usamos solo las cookies necesarias para mantener abierta tu sesión y recordar el club en
-            el que trabajas. No usamos cookies de publicidad ni de medición de terceros.
-          </p>
+          {MEDICION_ACTIVA ? (
+            <p>
+              Usamos las cookies necesarias para mantener abierta tu sesión y recordar el club en el
+              que trabajas. Además, en las páginas del sitio usamos el pixel de Meta, que guarda
+              cookies para medir nuestros anuncios. Puedes rechazarlas bloqueando las cookies de
+              terceros en tu navegador o desde la configuración de anuncios de tu cuenta de Meta.
+              Nunca se usa en las tarjetas ni en los paneles de los clubes.
+            </p>
+          ) : (
+            <p>
+              Usamos solo las cookies necesarias para mantener abierta tu sesión y recordar el club
+              en el que trabajas. No usamos cookies de publicidad ni de medición de terceros.
+            </p>
+          )}
         </Apartado>
 
         <Apartado titulo="9. Cambios a este aviso">

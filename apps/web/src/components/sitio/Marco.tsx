@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 
+import { PixelMeta } from './Medicion';
 import { minimo } from './medidas';
 import './sitio.css';
 
@@ -48,6 +49,7 @@ function Logo({ enlace }: { enlace: boolean }) {
 export function Marco({ actual, children }: { actual?: string; children: ReactNode }) {
   return (
     <div className="cl">
+      <PixelMeta />
       <div className="bar" aria-hidden="true" />
       <header>
         <div

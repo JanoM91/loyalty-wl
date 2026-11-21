@@ -126,6 +126,8 @@ export interface AltaNegocio {
   readonly origen: string;
   /** Versión de los términos y del aviso de privacidad que aceptó al crear el club. */
   readonly legal: string;
+  /** Huella de la red desde la que se creó (no la IP): frena altas en ráfaga. */
+  readonly red?: string;
 }
 
 export const MARCA_POR_OMISION: MarcaNegocio = {
@@ -241,6 +243,7 @@ function leerAlta(json: unknown): AltaNegocio | null {
     whatsapp,
     origen: texto(a.origen) ?? '',
     legal: texto(a.legal) ?? '',
+    ...(texto(a.red) ? { red: texto(a.red)! } : {}),
   };
 }
 
