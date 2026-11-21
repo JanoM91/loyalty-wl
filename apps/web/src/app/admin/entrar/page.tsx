@@ -7,7 +7,7 @@ import { LogoMarca } from '@/components/Marca';
 import { ruta } from '@/lib/negocio';
 
 export const metadata: Metadata = {
-  title: 'Entrar · Panel',
+  title: 'Entrar',
   robots: { index: false, follow: false },
 };
 
