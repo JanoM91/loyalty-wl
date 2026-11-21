@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { Burbuja, IconoSitio, iconoPara } from './Iconos';
 import { minimo } from './medidas';
 
 /** Tarjeta de ejemplo del inicio: se sella con el botón hasta ganar el premio. */
@@ -88,23 +89,34 @@ export function SelectorGiros() {
             className={i === elegido ? 'tab on' : 'tab'}
             aria-pressed={i === elegido}
             onClick={() => setElegido(i)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
+            <IconoSitio nombre={iconoPara(g.nombre)} tam={20} />
             {g.nombre}
           </button>
         ))}
       </div>
       <div className="panel grid rise" style={minimo(240, { gap: 28 })} aria-live="polite">
-        <div className="col kv">
-          <span className="sm2">Premio</span>
-          <b>{giro.premio}</b>
+        <div className="row kv" style={{ gap: 14, flexWrap: 'nowrap' }}>
+          <Burbuja nombre="regalo" tono="pri" tam={48} />
+          <div className="col">
+            <span className="sm2">Premio</span>
+            <b>{giro.premio}</b>
+          </div>
         </div>
-        <div className="col kv">
-          <span className="sm2">Se gana con</span>
-          <b>{giro.regla}</b>
+        <div className="row kv" style={{ gap: 14, flexWrap: 'nowrap' }}>
+          <Burbuja nombre="sello" tam={48} />
+          <div className="col">
+            <span className="sm2">Se gana con</span>
+            <b>{giro.regla}</b>
+          </div>
         </div>
-        <div className="col kv">
-          <span className="sm2">Idea de juego</span>
-          <b>{giro.juego}</b>
+        <div className="row kv" style={{ gap: 14, flexWrap: 'nowrap' }}>
+          <Burbuja nombre="control" tono="pop" tam={48} />
+          <div className="col">
+            <span className="sm2">Idea de juego</span>
+            <b>{giro.juego}</b>
+          </div>
         </div>
       </div>
       <span className="sm2">Ejemplos. Tú defines premio y reglas.</span>

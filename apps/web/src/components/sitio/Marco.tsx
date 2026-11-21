@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 
+import { Burbuja, IconoSitio, iconoPara, type NombreIconoSitio } from './Iconos';
 import { PixelMeta } from './Medicion';
 import { minimo } from './medidas';
 import './sitio.css';
@@ -137,9 +138,9 @@ export function Cinta() {
       {[0, 1, 2].map((copia) => (
         <div key={copia} className="mq-t" aria-hidden={copia > 0 ? true : undefined}>
           {GIROS.map((g) => (
-            <span key={g} style={{ display: 'contents' }}>
+            <span key={g} className="mq-g">
+              <IconoSitio nombre={iconoPara(g)} tam={30} className="mq-i" />
               <span>{g}</span>
-              <span className="mq-d" />
             </span>
           ))}
         </div>
@@ -153,12 +154,15 @@ export function Hero({
   titulo,
   texto,
   oscuro = false,
+  iconos,
   children,
 }: {
   etiqueta: string;
   titulo: string;
   texto: string;
   oscuro?: boolean;
+  /** Figura a la derecha: el primero va grande y los demás flotan alrededor. */
+  iconos?: readonly NombreIconoSitio[];
   children?: ReactNode;
 }) {
   return (
@@ -175,15 +179,42 @@ export function Hero({
           <span className="orb c s3" style={{ width: 90, height: 90, left: '6%', bottom: 30 }} />
         </div>
       )}
-      <div className="wrap col" style={{ gap: 24, paddingTop: 88, paddingBottom: 96 }}>
-        <span className="chip">{etiqueta}</span>
-        <h1 className="d h1" style={{ maxWidth: '11em' }}>
-          {titulo}
-        </h1>
-        <p className="lead">{texto}</p>
-        {children}
+      <div className="wrap row" style={{ gap: 40, paddingTop: 88, paddingBottom: 96 }}>
+        <div className="col" style={{ gap: 24, flex: '1 1 560px', minWidth: 0 }}>
+          <span className="chip">{etiqueta}</span>
+          <h1 className="d h1" style={{ maxWidth: '11em' }}>
+            {titulo}
+          </h1>
+          <p className="lead">{texto}</p>
+          {children}
+        </div>
+        {iconos && iconos.length > 0 ? <Figura iconos={iconos} /> : null}
       </div>
     </section>
+  );
+}
+
+/** Composición de íconos para la portada de una página: uno grande y tres que flotan. */
+export function Figura({ iconos }: { iconos: readonly NombreIconoSitio[] }) {
+  const [principal, ...resto] = iconos;
+  const lugares: CSSProperties[] = [
+    { left: '4%', top: '8%' },
+    { right: '2%', top: '30%' },
+    { left: '16%', bottom: '4%' },
+  ];
+  const tonos = ['pop', 'blanco', 'tinte'] as const;
+  return (
+    <div className="fig" aria-hidden="true">
+      <span className="fig-anillo" />
+      <span className="fig-centro">
+        <Burbuja nombre={principal ?? 'estrella'} tono="pri" tam={148} />
+      </span>
+      {resto.slice(0, 3).map((n, i) => (
+        <span key={n} className={`fig-sat flot f${i}`} style={lugares[i]}>
+          <Burbuja nombre={n} tono={tonos[i]} tam={68} />
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -213,9 +244,21 @@ export function Seccion({
 }
 
 /** Tarjeta que revela su reverso al pasar el cursor o al recibir el foco. */
-export function Revela({ titulo, pie, detras }: { titulo: string; pie: string; detras: string }) {
+export function Revela({
+  titulo,
+  pie,
+  detras,
+  icono,
+}: {
+  titulo: string;
+  pie: string;
+  detras: string;
+  /** Si no se da, se elige por las palabras del título. */
+  icono?: NombreIconoSitio;
+}) {
   return (
     <div className="rv rise" tabIndex={0}>
+      <Burbuja nombre={icono ?? iconoPara(titulo, pie)} />
       <h3 className="d h3">{titulo}</h3>
       <span className="sm2">{pie}</span>
       <div className="back">
@@ -230,16 +273,20 @@ export function Pasos({
   items,
   min = 280,
 }: {
-  items: readonly (readonly [string, string])[];
+  /** Título, texto y, si se quiere, el ícono (si no, se elige por las palabras). */
+  items: readonly (readonly [string, string] | readonly [string, string, NombreIconoSitio])[];
   min?: number;
 }) {
   return (
     <ol className="grid" style={minimo(min, { margin: 0, padding: 0, listStyle: 'none', gap: 8 })}>
-      {items.map(([titulo, texto], i) => (
+      {items.map(([titulo, texto, icono], i) => (
         <li key={titulo} className="col step rise">
-          <span className="num" aria-hidden="true">
-            {i + 1}
-          </span>
+          <div className="row" style={{ justifyContent: 'space-between', gap: 12 }}>
+            <span className="num" aria-hidden="true">
+              {i + 1}
+            </span>
+            <Burbuja nombre={icono ?? iconoPara(titulo, texto)} tam={52} />
+          </div>
           <h3 className="d h3">{titulo}</h3>
           <p className="p">{texto}</p>
         </li>
@@ -275,7 +322,8 @@ export function Cierre({ titulo }: { titulo: string }) {
         <h2 className="d h2 rise" style={{ flex: '1 1 480px', minWidth: 0 }}>
           {titulo}
         </h2>
-        <a href={enlaceWhatsApp()} className="btn inv">
+        <a href={enlaceWhatsApp()} className="btn inv" style={{ gap: 10 }}>
+          <IconoSitio nombre="whatsapp" tam={22} />
           Escríbenos por WhatsApp
         </a>
       </div>

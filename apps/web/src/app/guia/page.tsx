@@ -44,6 +44,7 @@ export default async function Guia() {
   return (
     <Marco actual="/guia">
       <Hero
+        iconos={['papel', 'qr', 'escanear', 'regalo']}
         etiqueta="Guía para dueños"
         titulo="¿Bastan los sellos para fidelizar?"
         texto="No. Son el motivo para volver. Lo demás es hacerlo fácil y usar lo que aprendes."
