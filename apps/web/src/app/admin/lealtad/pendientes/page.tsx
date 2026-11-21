@@ -7,7 +7,7 @@ import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil, fechaLarga, hora, pesos } from '@/lib/lealtad/formato';
 import { Revisar } from './Revisar';
 
-export const metadata: Metadata = { title: 'Pendientes de lealtad' };
+export const metadata: Metadata = { title: 'Por revisar' };
 export const dynamic = 'force-dynamic';
 
 /**

@@ -47,6 +47,8 @@ export async function sucursalDeCaja(
   }));
 
   if (sesion.rol === 'SUCURSAL') return { sucursal: opciones[0] ?? null, opciones };
+  // Con una sola sucursal no hay nada que elegir: la caja abre directo.
+  if (opciones.length === 1) return { sucursal: opciones[0]!, opciones };
   return { sucursal: opciones.find((o) => o.slug === slugPedido) ?? null, opciones };
 }
 

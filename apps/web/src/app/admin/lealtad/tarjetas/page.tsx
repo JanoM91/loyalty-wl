@@ -6,14 +6,14 @@ import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil, fechaLarga } from '@/lib/lealtad/formato';
 
-export const metadata: Metadata = { title: 'Tarjetas de lealtad' };
+export const metadata: Metadata = { title: 'Clientes' };
 export const dynamic = 'force-dynamic';
 
 const FILTROS: Record<FiltroTarjetas, string> = {
-  todas: 'Todas',
-  'con-premio': 'Con premio sin canjear',
-  'sin-verificar': 'Sin correo verificado',
-  'inactivas-21': 'Sin visitas en 21 días',
+  todas: 'Todos',
+  'con-premio': 'Con premio',
+  'sin-verificar': 'Sin verificar',
+  'inactivas-21': 'Sin venir en 21 días',
 };
 
 export default async function TarjetasPage({
@@ -35,41 +35,109 @@ export default async function TarjetasPage({
       sesion={sesion}
       actual="/admin/lealtad"
       titulo="Clientes"
-      descripcion="Los contactos se muestran ocultos en parte: para atender a alguien basta reconocerlo."
+      descripcion="Toca a un cliente para ver su tarjeta. Los contactos se muestran ocultos en parte."
     >
-      <form className="mb-4 flex flex-wrap items-end gap-3" role="search">
-        <label className="grid min-w-[220px] flex-1 gap-1 text-sm font-semibold text-ink">
-          Buscar
-          <input
-            name="q"
-            defaultValue={q ?? ''}
-            placeholder="Nombre, código o últimos 4 dígitos del celular"
-            className="min-h-[44px] rounded-sm border-[1.5px] border-rule bg-white px-3 font-normal"
-          />
+      <form className="mb-3 flex gap-2" role="search">
+        {filtro !== 'todas' && <input type="hidden" name="filtro" value={filtro} />}
+        <label className="sr-only" htmlFor="buscar-cliente">
+          Buscar cliente
         </label>
-        <label className="grid gap-1 text-sm font-semibold text-ink">
-          Mostrar
-          <select
-            name="filtro"
-            defaultValue={filtro}
-            className="min-h-[44px] rounded-sm border-[1.5px] border-rule bg-white px-3 font-normal"
-          >
-            {Object.entries(FILTROS).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </label>
+        <input
+          id="buscar-cliente"
+          name="q"
+          type="search"
+          defaultValue={q ?? ''}
+          placeholder="Nombre, código o celular"
+          className="min-h-[44px] min-w-0 flex-1 rounded-sm border-[1.5px] border-rule bg-white px-3"
+        />
         <button
           type="submit"
-          className="min-h-[44px] rounded-sm bg-ink px-5 text-sm font-semibold text-cream"
+          className="min-h-[44px] shrink-0 rounded-sm bg-ink px-4 text-sm font-semibold text-cream"
         >
-          Aplicar
+          Buscar
         </button>
       </form>
+      <nav aria-label="Mostrar" className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
+        {Object.entries(FILTROS).map(([k, v]) => {
+          const params = new URLSearchParams();
+          if (q) params.set('q', q);
+          if (k !== 'todas') params.set('filtro', k);
+          const destino = params.size ? `?${params}` : '?';
+          const activo = filtro === k;
+          return (
+            <a
+              key={k}
+              href={destino}
+              aria-current={activo ? 'true' : undefined}
+              className={`inline-flex min-h-[40px] shrink-0 items-center rounded-full border-[1.5px] px-3.5 text-sm font-semibold ${activo ? 'border-ink bg-ink text-cream' : 'border-rule bg-white text-ink hover:border-ink'}`}
+            >
+              {v}
+            </a>
+          );
+        })}
+      </nav>
 
-      <div className="overflow-x-auto rounded-lg border border-rule bg-cream">
+      {tarjetas.length === 0 ? (
+        <div className="rounded-lg border border-rule bg-white px-4 py-8 text-center">
+          <p className="font-semibold text-ink">
+            {q || filtro !== 'todas'
+              ? 'Nadie coincide con esa búsqueda.'
+              : 'Todavía no hay clientes.'}
+          </p>
+          <p className="mt-1 text-sm text-[#3C5A51]">
+            {q || filtro !== 'todas'
+              ? 'Prueba con otro nombre o con los últimos 4 dígitos del celular.'
+              : 'Aparecen aquí en cuanto alguien escanea tu cartel QR o lo das de alta en la caja.'}
+          </p>
+          {!q && filtro === 'todas' && (
+            <a
+              href="/admin/lealtad/caja?accion=nuevo"
+              className="mt-4 inline-flex min-h-[44px] items-center rounded-sm bg-ink px-5 text-sm font-semibold text-cream"
+            >
+              Dar de alta a un cliente
+            </a>
+          )}
+        </div>
+      ) : (
+        <ul className="grid gap-2 md:hidden">
+          {tarjetas.map((t) => (
+            <li key={t.codigo}>
+              <a
+                href={`/admin/lealtad/tarjetas/${t.codigo}`}
+                className="flex min-h-[64px] items-center gap-3 rounded-lg border border-rule bg-white px-4 py-3 active:bg-crumb"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold text-ink">
+                    {t.nombre ?? 'Sin nombre'}
+                  </span>
+                  <span className="block truncate text-xs text-[#3C5A51]">
+                    {t.ultimaVisita
+                      ? `Última visita ${fechaCivil(t.ultimaVisita)}`
+                      : 'Sin visitas aún'}
+                    {t.verificada ? '' : ' · sin verificar'}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="block font-mono text-sm font-semibold tabular-nums text-ink">
+                    {t.estampas}/{programa.posiciones}
+                  </span>
+                  {t.premiosDisponibles > 0 ? (
+                    <span className="mt-0.5 inline-block rounded-full bg-disponible/10 px-2 py-0.5 text-[11px] font-semibold text-disponible">
+                      {t.premiosDisponibles === 1 ? '1 premio' : `${t.premiosDisponibles} premios`}
+                    </span>
+                  ) : (
+                    <span className="block text-[11px] text-[#3C5A51]">sellos</span>
+                  )}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div
+        className={`hidden overflow-x-auto rounded-lg border border-rule bg-cream ${tarjetas.length ? 'md:block' : ''}`}
+      >
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-rule text-left text-[11px] text-muted">
@@ -132,9 +200,11 @@ export default async function TarjetasPage({
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-muted">
-        Se muestran hasta 200 tarjetas, las más recientes primero.
-      </p>
+      {tarjetas.length > 0 && (
+        <p className="mt-3 text-xs text-[#3C5A51]">
+          Se muestran hasta 200 clientes, los más recientes primero.
+        </p>
+      )}
     </MarcoPanel>
   );
 }

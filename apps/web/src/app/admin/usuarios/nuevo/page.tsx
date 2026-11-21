@@ -6,7 +6,7 @@ import { exigirRol } from '@/lib/admin/sesion';
 import { opcionesRol, opcionesSucursal } from '../datos';
 import { AltaUsuario } from '../FormularioUsuario';
 
-export const metadata: Metadata = { title: 'Nuevo usuario' };
+export const metadata: Metadata = { title: 'Invitar a alguien' };
 export const dynamic = 'force-dynamic';
 
 export default async function NuevoUsuarioPage() {
@@ -19,12 +19,7 @@ export default async function NuevoUsuarioPage() {
       actual="/admin/usuarios"
       miga={{ texto: 'Equipo', ruta: '/admin/usuarios' }}
       titulo="Invitar a alguien"
-      descripcion="Una cuenta por persona: así la bitácora dice quién hizo cada cosa. Para la tableta de caja de una sucursal, una cuenta con rol Sucursal."
-      acciones={
-        <a href="/admin/usuarios" className="text-sm text-ink underline underline-offset-4">
-          Volver a Usuarios
-        </a>
-      }
+      descripcion="Una cuenta por persona, así sabes quién sumó cada sello. A quien solo atiende la caja, dale el rol Sucursal."
     >
       <AltaUsuario roles={opcionesRol()} sucursales={sucursales} />
     </MarcoPanel>

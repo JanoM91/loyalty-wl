@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useTransition, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { describirPremio, type ProgramaLealtad } from '@wl/domain';
 import type { VistaCaja } from '@wl/database';
@@ -52,6 +52,10 @@ interface Props {
   readonly sinTicket?: boolean;
   /** Abre directo el escáner (desde «Sumar sello» del inicio o la paleta). */
   readonly empezarCon?: 'visita' | 'premio';
+  /** Abre directo esta tarjeta, sin escanear. */
+  readonly codigoInicial?: string;
+  /** Abre directo el alta de un cliente nuevo (desde «Clientes» vacío). */
+  readonly empezarConAlta?: boolean;
   /** Colores y plantilla del negocio, para mostrar la tarjeta como la ve el cliente. */
   readonly marcaNegocio: { readonly estilo: CSSProperties; readonly plantilla: string };
   readonly sucursal: {
@@ -94,12 +98,14 @@ export function Caja({
   sinTicket = false,
   marcaNegocio,
   empezarCon,
+  codigoInicial,
+  empezarConAlta = false,
 }: Props) {
   const marca = useMarca();
   const router = useRouter();
-  const [paso, setPaso] = useState<Paso>(empezarCon ? 'escanear' : 'inicio');
+  const [paso, setPaso] = useState<Paso>(empezarCon || codigoInicial ? 'escanear' : 'inicio');
   const [modo, setModo] = useState<Modo>(empezarCon ?? 'visita');
-  const [nuevoCliente, setNuevoCliente] = useState(false);
+  const [nuevoCliente, setNuevoCliente] = useState(empezarConAlta);
   const [tarjeta, setTarjeta] = useState<VistaCaja | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
@@ -157,6 +163,14 @@ export function Caja({
     },
     [sucursal.slug],
   );
+
+  // Abre directo la tarjeta pedida, una sola vez (el primer sello del dueño).
+  const abierta = useRef(false);
+  useEffect(() => {
+    if (!codigoInicial || abierta.current) return;
+    abierta.current = true;
+    buscar(codigoInicial);
+  }, [codigoInicial, buscar]);
 
   async function tomarFoto(archivo: File | undefined) {
     if (!archivo) return;

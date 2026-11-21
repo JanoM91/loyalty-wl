@@ -6,7 +6,7 @@ import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil } from '@/lib/lealtad/formato';
 
-export const metadata: Metadata = { title: 'Analítica de lealtad' };
+export const metadata: Metadata = { title: 'Números' };
 export const dynamic = 'force-dynamic';
 
 const pct = (a: number, b: number) => (b === 0 ? '—' : `${Math.round((a / b) * 100)} %`);

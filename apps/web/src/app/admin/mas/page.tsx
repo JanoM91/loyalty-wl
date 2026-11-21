@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ROLES_DIRECCION, prisma } from '@wl/database';
 
 import { Icono } from '@/components/admin/Icono';
+import { InstalarPanel } from '@/components/admin/InstalarPanel';
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { salir } from '@/app/admin/entrar/acciones';
 import { TITULOS_GRUPO, seccionesDelPanel, type GrupoSeccion } from '@/lib/admin/panel';
@@ -36,6 +37,7 @@ export default async function MasPage() {
   return (
     <MarcoPanel sesion={sesion} titulo="Más">
       <div className="flex max-w-2xl flex-col gap-3">
+        <InstalarPanel />
         {grupos.map((g) => {
           const del = secciones.filter((s) => s.grupo === g);
           if (del.length === 0 && g !== 'cuenta') return null;

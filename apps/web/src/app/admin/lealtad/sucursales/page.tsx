@@ -8,7 +8,7 @@ import { fechaCivil } from '@/lib/lealtad/formato';
 import { qrSvg, urlAfiliacion } from '@/lib/lealtad/qr';
 import { alternarParticipacion } from './acciones';
 
-export const metadata: Metadata = { title: 'Sucursales del programa' };
+export const metadata: Metadata = { title: 'Sucursales' };
 export const dynamic = 'force-dynamic';
 
 /**
@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function SucursalesLealtadPage() {
   const sesion = await exigirRol(ROLES_PROGRAMA);
+  const administra = sesion.rol === 'ADMIN' || sesion.rol === 'DUENO';
   const [sucursales, cuentas] = await Promise.all([
     prisma.branch.findMany({
       where: { isActive: true },
@@ -40,7 +41,7 @@ export default async function SucursalesLealtadPage() {
       sesion={sesion}
       actual="/admin/lealtad"
       titulo="Sucursales y carteles QR"
-      descripcion="Enciende cada sucursal el día que su personal ya practicó la caja. Apagarla no borra nada: solo deja de acreditar y de entregar premios."
+      descripcion="Cada sucursal tiene su QR. Si la apagas no se borra nada: solo deja de sumar sellos y de entregar premios."
     >
       <ul className="grid gap-4 md:grid-cols-3">
         {sucursales.map((s, i) => {
@@ -76,10 +77,16 @@ export default async function SucursalesLealtadPage() {
                 </form>
               </div>
 
-              {conCuenta === 0 && (
-                <p className="rounded-md bg-agotado/10 px-3 py-2 text-xs text-agotado">
-                  No tiene cuenta de caja. Créala con{' '}
-                  <code className="font-mono">pnpm admin:usuario</code> y rol SUCURSAL.
+              {conCuenta === 0 && administra && (
+                <p className="rounded-md bg-white px-3 py-2 text-xs text-ink-soft">
+                  ¿Alguien más atiende esta caja?{' '}
+                  <a
+                    href="/admin/usuarios/nuevo"
+                    className="font-semibold text-ink underline underline-offset-4"
+                  >
+                    Invítalo en Equipo
+                  </a>
+                  .
                 </p>
               )}
 
@@ -99,10 +106,9 @@ export default async function SucursalesLealtadPage() {
               </figure>
               <a
                 href={`/admin/lealtad/sucursales/cartel/${s.slug}`}
-                target="_blank"
-                className="text-sm text-crust-dark underline underline-offset-4"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-[14px] bg-ink px-4 text-sm font-semibold text-cream"
               >
-                Abrir cartel para imprimir
+                Imprimir o compartir el cartel
               </a>
             </li>
           );

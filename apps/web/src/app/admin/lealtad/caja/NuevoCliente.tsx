@@ -335,8 +335,7 @@ export function NuevoCliente({
             <dd className="font-mono">{t.contacto}</dd>
             <dt className="text-muted">Tarjeta</dt>
             <dd>
-              <span className="font-mono">{t.codigo}</span> · {t.estampas} de {t.posiciones}{' '}
-              estampas
+              <span className="font-mono">{t.codigo}</span> · {t.estampas} de {t.posiciones} sellos
             </dd>
           </dl>
           {coincide === false && (

@@ -8,7 +8,7 @@ import { exigirNegocio } from '@/lib/negocio';
 import { FormularioMarca } from './FormularioMarca';
 import { Logotipos } from './Logotipos';
 
-export const metadata: Metadata = { title: 'Marca' };
+export const metadata: Metadata = { title: 'Marca y datos' };
 export const dynamic = 'force-dynamic';
 
 /** El negocio viste su programa: nombre, diseño, colores y datos de contacto. */

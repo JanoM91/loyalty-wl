@@ -7,7 +7,7 @@ import { fechaLarga, hora } from '@/lib/lealtad/formato';
 import { opcionesRol } from './datos';
 import { ChipAcceso } from './EstadoAcceso';
 
-export const metadata: Metadata = { title: 'Usuarios' };
+export const metadata: Metadata = { title: 'Equipo' };
 export const dynamic = 'force-dynamic';
 
 /** Cuentas del panel. Solo administración las ve y las cambia. */
@@ -25,9 +25,9 @@ export default async function UsuariosPage() {
       acciones={
         <a
           href="/admin/usuarios/nuevo"
-          className="inline-flex min-h-[44px] items-center rounded-sm bg-ink px-5 text-sm font-semibold text-cream"
+          className="inline-flex min-h-[44px] items-center rounded-[14px] bg-ink px-5 text-sm font-semibold text-cream"
         >
-          Nuevo usuario
+          Invitar a alguien
         </a>
       }
     >

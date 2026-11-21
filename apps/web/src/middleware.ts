@@ -123,6 +123,8 @@ export function middleware(request: NextRequest) {
     const publica =
       interna === '/admin/entrar' ||
       interna === '/admin/entrar/recuperar' ||
+      // Android pide el manifest de la app sin cookies.
+      interna === '/admin/manifest.webmanifest' ||
       interna.startsWith('/admin/contrasena/');
     if (!publica) {
       if (!request.cookies.get(COOKIE_PANEL)?.value) {

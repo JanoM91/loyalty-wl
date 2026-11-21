@@ -53,7 +53,7 @@ export default async function AdminInicioPage() {
   if (!ROLES_DIRECCION.includes(sesion.rol)) redirect(await ruta('/admin/ayuda'));
   const administra = sesion.rol === 'ADMIN' || sesion.rol === 'DUENO';
 
-  const [negocio, base, r, sucursales, movimientos] = await Promise.all([
+  const [negocio, base, r, sucursales, movimientos, primeraTarjeta] = await Promise.all([
     exigirNegocio(),
     rutaBase(),
     resumenLealtad(7),
@@ -63,6 +63,8 @@ export default async function AdminInicioPage() {
       select: { slug: true, loyaltyEnabled: true },
     }),
     bitacoraLealtad(6),
+    // En un club nuevo, la primera tarjeta es la del dueño (paso 1 de «Arranca»).
+    prisma.loyaltyCard.findFirst({ orderBy: { createdAt: 'asc' }, select: { publicCode: true } }),
   ]);
   const primera = sucursales.find((s) => s.loyaltyEnabled) ?? sucursales[0] ?? null;
   const unete = primera ? await urlAfiliacion(primera.slug) : `${base}/lealtad`;
@@ -111,9 +113,13 @@ export default async function AdminInicioPage() {
         },
         {
           titulo: 'Súmate tu primer sello',
-          texto: 'En la caja, escanea tu tarjeta.',
-          boton: 'Abrir la caja',
-          href: `${base}/admin/lealtad/caja?accion=sumar`,
+          texto: primeraTarjeta
+            ? `La caja abre con tu tarjeta (${primeraTarjeta.publicCode}): solo toca «Sumar sello».`
+            : 'En la caja, escanea tu tarjeta.',
+          boton: primeraTarjeta ? 'Sumar mi primer sello' : 'Abrir la caja',
+          href: primeraTarjeta
+            ? `${base}/admin/lealtad/caja?accion=sumar&codigo=${encodeURIComponent(primeraTarjeta.publicCode)}`
+            : `${base}/admin/lealtad/caja?accion=sumar`,
           hecho: r.visitas > 0,
         },
         {

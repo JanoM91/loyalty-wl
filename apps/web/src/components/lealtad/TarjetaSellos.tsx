@@ -82,7 +82,7 @@ export function TarjetaSellos({
         <span className="pb-1 text-[15px] leading-tight text-cream/70">
           de {programa.posiciones}
           <br />
-          estampas
+          sellos
         </span>
       </p>
 

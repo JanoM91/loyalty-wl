@@ -142,8 +142,8 @@ const SECCIONES: readonly SeccionPanel[] = [
   },
   {
     id: 'lugares',
-    texto: 'Direcciones y horarios',
-    descripcion: 'Dónde están tus sucursales',
+    texto: 'Direcciones y contacto',
+    descripcion: 'Dirección y WhatsApp de cada sucursal',
     ruta: '/admin/sucursales',
     icono: 'tienda',
     grupo: 'negocio',

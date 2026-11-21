@@ -1,15 +1,28 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 import { ESTILO_PANEL } from '@/lib/admin/panel';
-import { exigirNegocio } from '@/lib/negocio';
+import { exigirNegocio, rutaBase } from '@/lib/negocio';
 
-export const metadata: Metadata = {
-  title: { default: 'Panel', template: '%s · Panel' },
-  // El panel nunca debe aparecer en un buscador. También está bloqueado en
-  // robots.ts, pero esa es una petición y esto es una instrucción directa.
-  robots: { index: false, follow: false, nocache: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const base = await rutaBase();
+  return {
+    title: { default: 'Panel', template: '%s · Panel' },
+    // El panel nunca debe aparecer en un buscador. También está bloqueado en
+    // robots.ts, pero esa es una petición y esto es una instrucción directa.
+    robots: { index: false, follow: false, nocache: true },
+    // Se puede instalar en el celular: «Agregar a pantalla de inicio».
+    manifest: `${base}/admin/manifest.webmanifest`,
+    applicationName: 'Mi panel',
+    appleWebApp: { capable: true, title: 'Mi panel', statusBarStyle: 'default' },
+    icons: {
+      icon: [{ url: '/static/panel/icon-192.png', sizes: '192x192', type: 'image/png' }],
+      apple: [{ url: '/static/panel/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
+  };
+}
+
+export const viewport: Viewport = { themeColor: '#F1FBF6' };
 
 /**
  * Contenedor del panel.

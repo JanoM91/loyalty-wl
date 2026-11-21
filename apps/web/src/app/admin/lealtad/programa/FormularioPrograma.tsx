@@ -38,7 +38,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
           <Campo
             id="posiciones"
             etiqueta="Sellos por tarjeta"
-            ayuda="Al llenarse empieza una tarjeta nueva. Las imágenes de Wallet están hechas para 10."
+            ayuda="Al llenarse, tu cliente empieza una tarjeta nueva. Lo usual: de 5 a 10."
           >
             <input
               id="posiciones"
@@ -47,22 +47,6 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
               min={1}
               max={30}
               defaultValue={programa.posiciones}
-              required
-              className={claseEntrada}
-            />
-          </Campo>
-          <Campo
-            id="ventana"
-            etiqueta="Contingencia (días)"
-            ayuda="Tickets de hasta estos días atrás quedan pendientes de revisión; más viejos se rechazan."
-          >
-            <input
-              id="ventana"
-              name="ventana"
-              type="number"
-              min={0}
-              max={30}
-              defaultValue={programa.ventanaContingenciaDias}
               required
               className={claseEntrada}
             />
@@ -157,134 +141,164 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
         )}
       </section>
 
-      <section className="grid gap-4 rounded-lg border border-rule bg-cream p-4">
-        <h2 className="font-sans text-base font-semibold text-ink">Cómo se gana</h2>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <label
-            className={`flex cursor-pointer items-start gap-3 rounded-md border-[1.5px] bg-white p-3 ${modalidad === 'VISITA' ? 'border-ink' : 'border-rule'}`}
-          >
-            <input
-              type="radio"
-              name="modalidad"
-              value="VISITA"
-              checked={modalidad === 'VISITA'}
-              onChange={() => setModalidad('VISITA')}
-              className="mt-0.5 h-5 w-5 accent-ink"
-            />
-            <span className="text-sm">
-              <b className="block font-semibold text-ink">Un sello por visita</b>
-              Sin importar el importe. Una visita por cliente, por día y por sucursal.
-            </span>
-          </label>
-          <label
-            className={`flex cursor-pointer items-start gap-3 rounded-md border-[1.5px] bg-white p-3 ${modalidad === 'IMPORTE' ? 'border-ink' : 'border-rule'}`}
-          >
-            <input
-              type="radio"
-              name="modalidad"
-              value="IMPORTE"
-              checked={modalidad === 'IMPORTE'}
-              onChange={() => setModalidad('IMPORTE')}
-              className="mt-0.5 h-5 w-5 accent-ink"
-            />
-            <span className="text-sm">
-              <b className="block font-semibold text-ink">Por importe del ticket</b>
-              Según los tramos de abajo. Sigue siendo una visita por día y sucursal; la caja tendría
-              que capturar el total.
-            </span>
-          </label>
-        </div>
-
-        <div className={modalidad === 'IMPORTE' ? '' : 'opacity-60'}>
-          <p className="mb-2 text-xs text-muted">
-            Tramos en pesos (el «hasta» no incluye el importe; vacío = sin tope).
-            {modalidad === 'VISITA'
-              ? ' Guardados pero sin usar mientras la modalidad sea por visita.'
-              : ''}
-          </p>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-rule text-left text-[11px] text-muted">
-                <th className="py-1.5 font-semibold">Desde</th>
-                <th className="py-1.5 font-semibold">Hasta</th>
-                <th className="py-1.5 font-semibold">Sellos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tramos.map((t, i) => (
-                <tr key={i} className="border-b border-rule last:border-0">
-                  <td className="py-1.5 pr-2">
-                    <input
-                      name={`tramo-${i}-desde`}
-                      inputMode="decimal"
-                      aria-label={`Tramo ${i + 1}: desde`}
-                      value={pesos(t.desdeCentavos)}
-                      onChange={(e) =>
-                        setTramos(
-                          tramos.map((x, j) =>
-                            j === i
-                              ? {
-                                  ...x,
-                                  desdeCentavos: Math.round(Number(e.target.value) * 100) || 0,
-                                }
-                              : x,
-                          ),
-                        )
-                      }
-                      className={`${claseEntrada} mt-0 font-mono`}
-                    />
-                  </td>
-                  <td className="py-1.5 pr-2">
-                    <input
-                      name={`tramo-${i}-hasta`}
-                      inputMode="decimal"
-                      aria-label={`Tramo ${i + 1}: hasta`}
-                      defaultValue={pesos(t.hastaCentavos)}
-                      placeholder="sin tope"
-                      className={`${claseEntrada} mt-0 font-mono`}
-                    />
-                  </td>
-                  <td className="py-1.5">
-                    <input
-                      name={`tramo-${i}-estampas`}
-                      type="number"
-                      min={0}
-                      max={30}
-                      aria-label={`Tramo ${i + 1}: sellos`}
-                      defaultValue={t.estampas}
-                      className={`${claseEntrada} mt-0 font-mono`}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {tramos.length < MAX_TRAMOS && (
-            <button
-              type="button"
-              onClick={() =>
-                setTramos([
-                  ...tramos,
-                  {
-                    desdeCentavos: tramos[tramos.length - 1]?.hastaCentavos ?? 0,
-                    hastaCentavos: null,
-                    estampas: 1,
-                  },
-                ])
-              }
-              className="mt-2 text-sm font-medium text-crust-dark underline underline-offset-4"
+      {/* Lo que casi nadie cambia queda plegado. Los campos se envían igual. */}
+      <details
+        className="group rounded-lg border border-rule bg-cream p-4"
+        open={programa.modalidad === 'IMPORTE'}
+      >
+        <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 font-semibold text-ink">
+          Opciones avanzadas
+          <span className="text-sm font-normal text-muted group-open:hidden">
+            Sellos por importe y visitas atrasadas
+          </span>
+        </summary>
+        <div className="mt-4 grid gap-4">
+          <div className="max-w-xs">
+            <Campo
+              id="ventana"
+              etiqueta="Visitas atrasadas (días)"
+              ayuda="Si la caja registra una compra de días anteriores, queda en «Por revisar» hasta estos días; más vieja se rechaza."
             >
-              + Agregar tramo
-            </button>
-          )}
+              <input
+                id="ventana"
+                name="ventana"
+                type="number"
+                min={0}
+                max={30}
+                defaultValue={programa.ventanaContingenciaDias}
+                required
+                className={claseEntrada}
+              />
+            </Campo>
+          </div>
+          <h2 className="font-sans text-base font-semibold text-ink">Cómo se gana</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-md border-[1.5px] bg-white p-3 ${modalidad === 'VISITA' ? 'border-ink' : 'border-rule'}`}
+            >
+              <input
+                type="radio"
+                name="modalidad"
+                value="VISITA"
+                checked={modalidad === 'VISITA'}
+                onChange={() => setModalidad('VISITA')}
+                className="mt-0.5 h-5 w-5 accent-ink"
+              />
+              <span className="text-sm">
+                <b className="block font-semibold text-ink">Un sello por visita</b>
+                Sin importar el importe. Una visita por cliente, por día y por sucursal.
+              </span>
+            </label>
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-md border-[1.5px] bg-white p-3 ${modalidad === 'IMPORTE' ? 'border-ink' : 'border-rule'}`}
+            >
+              <input
+                type="radio"
+                name="modalidad"
+                value="IMPORTE"
+                checked={modalidad === 'IMPORTE'}
+                onChange={() => setModalidad('IMPORTE')}
+                className="mt-0.5 h-5 w-5 accent-ink"
+              />
+              <span className="text-sm">
+                <b className="block font-semibold text-ink">Por importe del ticket</b>
+                Según los tramos de abajo. Sigue siendo una visita por día y sucursal; la caja
+                tendría que capturar el total.
+              </span>
+            </label>
+          </div>
+
+          <div className={modalidad === 'IMPORTE' ? '' : 'opacity-60'}>
+            <p className="mb-2 text-xs text-muted">
+              Tramos en pesos (el «hasta» no incluye el importe; vacío = sin tope).
+              {modalidad === 'VISITA'
+                ? ' Guardados pero sin usar mientras la modalidad sea por visita.'
+                : ''}
+            </p>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-rule text-left text-[11px] text-muted">
+                  <th className="py-1.5 font-semibold">Desde</th>
+                  <th className="py-1.5 font-semibold">Hasta</th>
+                  <th className="py-1.5 font-semibold">Sellos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tramos.map((t, i) => (
+                  <tr key={i} className="border-b border-rule last:border-0">
+                    <td className="py-1.5 pr-2">
+                      <input
+                        name={`tramo-${i}-desde`}
+                        inputMode="decimal"
+                        aria-label={`Tramo ${i + 1}: desde`}
+                        value={pesos(t.desdeCentavos)}
+                        onChange={(e) =>
+                          setTramos(
+                            tramos.map((x, j) =>
+                              j === i
+                                ? {
+                                    ...x,
+                                    desdeCentavos: Math.round(Number(e.target.value) * 100) || 0,
+                                  }
+                                : x,
+                            ),
+                          )
+                        }
+                        className={`${claseEntrada} mt-0 font-mono`}
+                      />
+                    </td>
+                    <td className="py-1.5 pr-2">
+                      <input
+                        name={`tramo-${i}-hasta`}
+                        inputMode="decimal"
+                        aria-label={`Tramo ${i + 1}: hasta`}
+                        defaultValue={pesos(t.hastaCentavos)}
+                        placeholder="sin tope"
+                        className={`${claseEntrada} mt-0 font-mono`}
+                      />
+                    </td>
+                    <td className="py-1.5">
+                      <input
+                        name={`tramo-${i}-estampas`}
+                        type="number"
+                        min={0}
+                        max={30}
+                        aria-label={`Tramo ${i + 1}: sellos`}
+                        defaultValue={t.estampas}
+                        className={`${claseEntrada} mt-0 font-mono`}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {tramos.length < MAX_TRAMOS && (
+              <button
+                type="button"
+                onClick={() =>
+                  setTramos([
+                    ...tramos,
+                    {
+                      desdeCentavos: tramos[tramos.length - 1]?.hastaCentavos ?? 0,
+                      hastaCentavos: null,
+                      estampas: 1,
+                    },
+                  ])
+                }
+                className="mt-2 text-sm font-medium text-crust-dark underline underline-offset-4"
+              >
+                + Agregar tramo
+              </button>
+            )}
+          </div>
         </div>
-      </section>
+      </details>
 
       <section className="grid gap-4 rounded-lg border border-rule bg-cream p-4">
         <Campo
           id="nota"
           etiqueta="Nota del cambio"
-          ayuda="Queda en el historial de versiones. Por ejemplo: «Cambia el premio de la décima por decisión de dirección»."
+          ayuda="Opcional. Queda en el historial; por ejemplo: «Subimos el premio para diciembre»."
         >
           <input id="nota" name="nota" maxLength={300} className={claseEntrada} />
         </Campo>
@@ -300,8 +314,8 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
         )}
         {estado.ok && estado.version && (
           <Alerta tono="ok">
-            Programa publicado como versión {estado.version}. Las tarjetas y los pases de Wallet ya
-            lo muestran.
+            Listo: guardado como versión {estado.version}. Las tarjetas de tus clientes ya lo
+            muestran.
           </Alerta>
         )}
 
@@ -312,7 +326,7 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
           del programa.
         </p>
         <div>
-          <BotonEnviar texto="Publicar versión nueva" enviando="Publicando…" />
+          <BotonEnviar texto="Guardar cambios" enviando="Guardando…" />
         </div>
       </section>
     </form>

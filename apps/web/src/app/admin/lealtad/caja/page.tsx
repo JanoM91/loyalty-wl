@@ -10,7 +10,7 @@ import { Caja } from './Caja';
 import { exigirNegocio } from '@/lib/negocio';
 import { estiloDeMarca } from '@/lib/marca';
 
-export const metadata: Metadata = { title: 'Caja de lealtad' };
+export const metadata: Metadata = { title: 'Caja' };
 export const dynamic = 'force-dynamic';
 
 /**
@@ -23,11 +23,18 @@ export const dynamic = 'force-dynamic';
 export default async function CajaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sucursal?: string; accion?: string }>;
+  searchParams: Promise<{ sucursal?: string; accion?: string; codigo?: string }>;
 }) {
   const sesion = await exigirRol(ROLES_CAJA);
   const negocio = await exigirNegocio();
-  const { sucursal: pedida, accion } = await searchParams;
+  const { sucursal: pedida, accion, codigo } = await searchParams;
+  // Un código de tarjeta para abrir la caja directo en ella (el primer sello
+  // del dueño, que tiene la tarjeta y la caja en el mismo celular).
+  const codigoInicial = codigo && /^[A-Za-z0-9-]{4,20}$/.test(codigo) ? codigo : undefined;
+  // Al elegir sucursal no se pierde lo que se pidió.
+  const pedido = new URLSearchParams();
+  if (accion) pedido.set('accion', accion);
+  if (codigoInicial) pedido.set('codigo', codigoInicial);
   const { sucursal, opciones } = await sucursalDeCaja(sesion, pedida);
 
   if (!sucursal) {
@@ -47,7 +54,7 @@ export default async function CajaPage({
           {opciones.map((o) => (
             <li key={o.slug}>
               <a
-                href={`/admin/lealtad/caja?sucursal=${o.slug}`}
+                href={`/admin/lealtad/caja?sucursal=${o.slug}${pedido.size ? `&${pedido}` : ''}`}
                 className="grid gap-1 rounded-lg border border-rule bg-cream p-4 hover:border-ink"
               >
                 <b className="font-display text-lg text-ink">{o.nombre}</b>
@@ -95,6 +102,8 @@ export default async function CajaPage({
         folioObligatorio={negocio.ajustes.comprobanteConQr === 'OBLIGATORIO'}
         sinTicket={negocio.ajustes.comprobanteConQr === 'NO_PEDIR'}
         empezarCon={accion === 'sumar' ? 'visita' : accion === 'premio' ? 'premio' : undefined}
+        codigoInicial={codigoInicial}
+        empezarConAlta={accion === 'nuevo'}
         marcaNegocio={{ estilo: estiloDeMarca(negocio), plantilla: negocio.marca.plantilla }}
         fotosActivas={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
         pendientes={pendientes}
