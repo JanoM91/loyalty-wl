@@ -125,7 +125,9 @@ export function middleware(request: NextRequest) {
       interna === '/admin/entrar/recuperar' ||
       // Android pide el manifest de la app sin cookies.
       interna === '/admin/manifest.webmanifest' ||
-      interna.startsWith('/admin/contrasena/');
+      interna.startsWith('/admin/contrasena/') ||
+      // Confirmar el correo desde el enlace del correo, sin sesión.
+      interna.startsWith('/admin/confirmar/');
     if (!publica) {
       if (!request.cookies.get(COOKIE_PANEL)?.value) {
         const respuesta = NextResponse.redirect(new URL(`${base}/admin/entrar`, origen));

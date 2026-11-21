@@ -28,6 +28,87 @@ export const CORREO_CONFIGURADO = Boolean(
   process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL,
 );
 
+/** API de Resend. Se puede apuntar a un simulador local para probar. */
+const API = (process.env.RESEND_API_URL ?? 'https://api.resend.com').replace(/\/$/, '');
+
+/** Remitente y «responder a» del negocio en curso (o de la plataforma). */
+async function remitenteDelNegocio(): Promise<{ from: string; replyTo?: string } | null> {
+  const direccion = process.env.RESEND_FROM_EMAIL;
+  if (!direccion) return null;
+  const negocio = await negocioDeLaPeticion();
+  const nombre = (negocio?.nombre ?? process.env.RESEND_FROM_NAME ?? 'Programa de lealtad').replace(
+    /[<>"\r\n]/g,
+    '',
+  );
+  const responderA = negocio?.marca.contacto.correo ?? undefined;
+  return { from: `${nombre} <${direccion}>`, ...(responderA ? { replyTo: responderA } : {}) };
+}
+
+export interface CorreoDeLote extends Correo {
+  /** Encabezados extra, como `List-Unsubscribe`. */
+  readonly encabezados?: Readonly<Record<string, string>>;
+}
+
+/**
+ * Manda varios correos con la API de lotes de Resend (100 por llamada), con
+ * el remitente del negocio en curso. Devuelve cuántos salieron y cuántos no.
+ * Un lote rechazado (por ejemplo, por el límite diario del plan) cuenta
+ * entero como fallido y se siguen intentando los demás.
+ */
+export async function enviarLote(
+  correos: readonly CorreoDeLote[],
+): Promise<{ enviados: number; fallidos: number; error: string | null }> {
+  const clave = process.env.RESEND_API_KEY;
+  const remitente = await remitenteDelNegocio();
+  if (!clave || !remitente) {
+    return {
+      enviados: 0,
+      fallidos: correos.length,
+      error: 'El envío de correos todavía no está activo.',
+    };
+  }
+  let enviados = 0;
+  let fallidos = 0;
+  let error: string | null = null;
+  for (let i = 0; i < correos.length; i += 100) {
+    const parte = correos.slice(i, i + 100);
+    const cuerpo = await Promise.all(
+      parte.map(async (c) => ({
+        from: remitente.from,
+        to: [c.para],
+        subject: c.asunto,
+        text: c.texto,
+        html: await vestirCorreo(c.html),
+        ...(remitente.replyTo ? { reply_to: remitente.replyTo } : {}),
+        ...(c.encabezados ? { headers: c.encabezados } : {}),
+      })),
+    );
+    try {
+      const r = await fetch(`${API}/emails/batch`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${clave}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(cuerpo),
+      });
+      if (r.ok) {
+        enviados += parte.length;
+      } else {
+        fallidos += parte.length;
+        const detalle = await r.text();
+        console.error('Resend rechazó un lote', r.status, detalle);
+        error =
+          r.status === 429
+            ? 'Se alcanzó el límite de envíos de la cuenta de correo. Los que faltan no salieron.'
+            : 'Algunos correos no salieron. Inténtalo más tarde.';
+      }
+    } catch (e) {
+      fallidos += parte.length;
+      console.error('Error al enviar un lote de correos', e);
+      error = 'Algunos correos no salieron. Inténtalo más tarde.';
+    }
+  }
+  return { enviados, fallidos, error };
+}
+
 export async function enviarCorreo(c: Correo): Promise<ResultadoCorreo> {
   const clave = process.env.RESEND_API_KEY;
   if (!clave) {
@@ -39,29 +120,22 @@ export async function enviarCorreo(c: Correo): Promise<ResultadoCorreo> {
 
   // Un solo remitente de plataforma, con el nombre del negocio delante: es el
   // negocio quien le escribe a su cliente. Sin dirección configurada no se envía.
-  const direccion = process.env.RESEND_FROM_EMAIL;
-  if (!direccion) {
+  const remitente = await remitenteDelNegocio();
+  if (!remitente) {
     return { ok: false, configurado: false, error: 'El envío de correos todavía no está activo.' };
   }
-  const negocio = await negocioDeLaPeticion();
-  const nombre = (negocio?.nombre ?? process.env.RESEND_FROM_NAME ?? 'Programa de lealtad').replace(
-    /[<>"\r\n]/g,
-    '',
-  );
-  const remitente = `${nombre} <${direccion}>`;
-  const responderA = negocio?.marca.contacto.correo ?? undefined;
 
   try {
-    const r = await fetch('https://api.resend.com/emails', {
+    const r = await fetch(`${API}/emails`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${clave}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: remitente,
+        from: remitente.from,
         to: [c.para],
         subject: c.asunto,
         text: c.texto,
         html: await vestirCorreo(c.html),
-        ...(responderA ? { reply_to: responderA } : {}),
+        ...(remitente.replyTo ? { reply_to: remitente.replyTo } : {}),
       }),
     });
     if (!r.ok) {
@@ -129,6 +203,8 @@ export function plantillaCorreo(
   boton?: { texto: string; url: string },
   /** Por qué le llega este correo. Por omisión, el de la tarjeta de lealtad. */
   pie?: string,
+  /** Enlace para darse de baja, debajo del pie (mensajes del negocio). */
+  baja?: { texto: string; url: string },
 ): string {
   const esc = escapar;
   return `<!doctype html><html lang="es"><body style="margin:0;background:#f3f1ec;font-family:Helvetica,Arial,sans-serif;color:#14100c">
@@ -140,5 +216,6 @@ export function plantillaCorreo(
 ${parrafos.map((p) => `<p style="font-size:15px;line-height:1.55;margin:0 0 12px">${esc(p)}</p>`).join('')}
 ${boton ? `<p style="margin:20px 0"><a href="${esc(boton.url)}" style="background:${HUECO_FONDO};color:${HUECO_SOBRE};text-decoration:none;padding:12px 20px;display:inline-block;font-weight:bold">${esc(boton.texto)}</a></p>` : ''}
 <p style="font-size:12px;color:#6b665c;margin:20px 0 0">${pie ? esc(pie) : HUECO_PIE}</p>
+${baja ? `<p style="font-size:12px;margin:8px 0 0"><a href="${esc(baja.url)}" style="color:#6b665c">${esc(baja.texto)}</a></p>` : ''}
 </td></tr></table></td></tr></table></body></html>`;
 }

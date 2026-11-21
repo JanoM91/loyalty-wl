@@ -3,6 +3,7 @@ import { ETIQUETA_ROL, LONGITUD_MINIMA_CONTRASENA, leerUsuario } from '@wl/datab
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { exigirSesion } from '@/lib/admin/sesion';
+import { ConfirmarCorreo } from './ConfirmarCorreo';
 import { FormularioCuenta } from './FormularioCuenta';
 
 export const metadata: Metadata = { title: 'Mi cuenta' };
@@ -18,7 +19,7 @@ export default async function CuentaPage() {
       sesion={sesion}
       actual="/admin/cuenta"
       titulo="Mi cuenta"
-      descripcion="Tu nombre, correo y rol los cambia administración. La contraseña la cambias tú."
+      descripcion="Tu nombre, correo y rol los cambia el dueño desde Equipo. La contraseña la cambias tú."
     >
       <dl className="mb-8 grid max-w-md grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
         <dt className="text-muted">Nombre</dt>
@@ -31,6 +32,8 @@ export default async function CuentaPage() {
           {yo?.sucursal ? ` · ${yo.sucursal.nombre}` : ''}
         </dd>
       </dl>
+
+      {yo && !yo.correoVerificado && <ConfirmarCorreo email={sesion.email} />}
 
       <h2 className="mb-3 font-display text-lg text-ink">Cambiar contraseña</h2>
       <FormularioCuenta email={sesion.email} minimo={LONGITUD_MINIMA_CONTRASENA} />

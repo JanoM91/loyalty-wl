@@ -16,6 +16,8 @@ export async function mandarBienvenida(datos: {
   readonly direccion: string;
   /** Fin de la prueba gratis (ISO). */
   readonly pruebaVence: string;
+  /** Enlace para confirmar el correo del dueño; sin él, el botón lleva al panel. */
+  readonly confirmar?: string | null;
 }): Promise<ResultadoCorreo> {
   const panel = `${datos.direccion}/admin`;
   const vence = fechaLarga(new Date(datos.pruebaVence));
@@ -24,9 +26,14 @@ export async function mandarBienvenida(datos: {
   const parrafos = [
     `Hola: ${datos.club} ya tiene su programa de lealtad. Tu prueba gratis dura hasta el ${vence}, con todo incluido.`,
     `Tu panel está en ${panel}. Entras con este correo y la contraseña que elegiste. Agrégalo a la pantalla de inicio de tu celular para tenerlo a la mano.`,
-    'Arranca en 3 pasos: 1) saca tu propia tarjeta; 2) súmate tu primer sello en la caja; 3) imprime o comparte tu cartel QR y ponlo donde cobras.',
+    'Arranca en unos pasos: pon tu logotipo, saca tu propia tarjeta, súmate tu primer sello en la caja e imprime o comparte tu cartel QR para ponerlo donde cobras.',
     `Tus clientes escanean el QR al pagar, reciben su tarjeta en el celular y tú les sumas el sello desde la caja.`,
     `¿Dudas? Escríbenos por WhatsApp: ${ayuda}`,
+    ...(datos.confirmar
+      ? [
+          'Confirma tu correo con el botón de abajo: así, si un día olvidas tu contraseña, te llega aquí el enlace para elegir otra.',
+        ]
+      : []),
   ];
   return enviarCorreo({
     para: datos.para,
@@ -35,7 +42,9 @@ export async function mandarBienvenida(datos: {
     html: plantillaCorreo(
       'Tu club ya está listo',
       parrafos,
-      { texto: 'Entrar a mi panel', url: panel },
+      datos.confirmar
+        ? { texto: 'Confirmar mi correo', url: datos.confirmar }
+        : { texto: 'Entrar a mi panel', url: panel },
       `club-lealtad. Recibes este correo porque creaste el club ${datos.club} en club-lealtad.com.`,
     ),
   });
