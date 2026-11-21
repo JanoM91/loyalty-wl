@@ -505,6 +505,20 @@
   cursor: pointer;
 }
 
+/* Lejos (nivel mapa) las letras crecen para leerse a escala pequeña. */
+.cn-nodo.lejos .cn-tit b {
+  font-size: 26px;
+}
+.cn-nodo.lejos .cn-tit span {
+  font-size: 18px;
+}
+.cn-nodo.lejos .cn-ini {
+  width: 44px;
+  height: 44px;
+  font-size: 19px;
+  border-radius: 14px;
+}
+
 @media (max-width: 719px) {
   .cn-arriba {
     left: 12px;

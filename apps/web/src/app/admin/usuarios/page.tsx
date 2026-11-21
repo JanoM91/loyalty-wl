@@ -20,7 +20,7 @@ export default async function UsuariosPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/usuarios"
-      titulo="Usuarios"
+      titulo="Equipo"
       descripcion="Quién entra al panel y qué puede hacer. Cada persona elige su propia contraseña con un enlace de un solo uso."
       acciones={
         <a

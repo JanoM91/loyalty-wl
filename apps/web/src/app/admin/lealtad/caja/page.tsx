@@ -23,11 +23,11 @@ export const dynamic = 'force-dynamic';
 export default async function CajaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sucursal?: string }>;
+  searchParams: Promise<{ sucursal?: string; accion?: string }>;
 }) {
   const sesion = await exigirRol(ROLES_CAJA);
   const negocio = await exigirNegocio();
-  const { sucursal: pedida } = await searchParams;
+  const { sucursal: pedida, accion } = await searchParams;
   const { sucursal, opciones } = await sucursalDeCaja(sesion, pedida);
 
   if (!sucursal) {
@@ -35,7 +35,8 @@ export default async function CajaPage({
       <MarcoPanel
         sesion={sesion}
         actual="/admin/lealtad/caja"
-        titulo="Caja de lealtad"
+        titulo="Caja"
+        enfoque
         descripcion={
           sesion.rol === 'SUCURSAL'
             ? 'Tu cuenta no tiene una sucursal asignada. Pide a administración que la asigne.'
@@ -74,7 +75,8 @@ export default async function CajaPage({
     <MarcoPanel
       sesion={sesion}
       actual="/admin/lealtad/caja"
-      titulo="Caja de lealtad"
+      titulo="Caja"
+      enfoque
       descripcion={sucursal.nombre}
       acciones={
         sesion.rol !== 'SUCURSAL' && opciones.length > 1 ? (
@@ -92,6 +94,7 @@ export default async function CajaPage({
         hoy={fechaLocal(new Date(), negocio.zonaHoraria)}
         folioObligatorio={negocio.ajustes.comprobanteConQr === 'OBLIGATORIO'}
         sinTicket={negocio.ajustes.comprobanteConQr === 'NO_PEDIR'}
+        empezarCon={accion === 'sumar' ? 'visita' : accion === 'premio' ? 'premio' : undefined}
         marcaNegocio={{ estilo: estiloDeMarca(negocio), plantilla: negocio.marca.plantilla }}
         fotosActivas={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
         pendientes={pendientes}

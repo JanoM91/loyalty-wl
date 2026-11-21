@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { analiticaLealtad, type AnaliticaLealtad } from '@wl/database';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
-import { SubnavLealtad } from '@/components/admin/SubnavLealtad';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil } from '@/lib/lealtad/formato';
@@ -35,11 +34,9 @@ export default async function AnaliticaPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/lealtad"
-      titulo="Analítica de lealtad"
+      titulo="Números"
       descripcion={`Datos al ${fecha(r.hoy)} (hora del negocio). Solo compras identificadas con tarjeta; no son las ventas totales.`}
     >
-      <SubnavLealtad actual="/admin/lealtad/analitica" pendientes={r.pendientesRevision} />
-
       <p className="mb-5 max-w-3xl text-sm text-ink-soft">
         <b className="font-semibold text-ink">
           {num(r.visitas7d)} visitas de {num(r.clientes7d)} clientes en los últimos 7 días.

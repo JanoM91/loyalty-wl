@@ -149,6 +149,7 @@ export default async function AdminInicioPage() {
     estado,
     arranque,
     programa: {
+      editable: programa.modalidad === 'VISITA' && programa.hitos.length === 1,
       posiciones: programa.posiciones,
       hitos: [...programa.hitos]
         .sort((a, b) => a.posicion - b.posicion)

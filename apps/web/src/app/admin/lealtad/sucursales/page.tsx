@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { prisma } from '@wl/database';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
-import { SubnavLealtad } from '@/components/admin/SubnavLealtad';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil } from '@/lib/lealtad/formato';
@@ -20,13 +19,12 @@ export const dynamic = 'force-dynamic';
  */
 export default async function SucursalesLealtadPage() {
   const sesion = await exigirRol(ROLES_PROGRAMA);
-  const [sucursales, pendientes, cuentas] = await Promise.all([
+  const [sucursales, cuentas] = await Promise.all([
     prisma.branch.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
       select: { id: true, slug: true, name: true, loyaltyEnabled: true, loyaltySince: true },
     }),
-    prisma.loyaltyAccrual.count({ where: { status: 'PENDIENTE' } }),
     prisma.userAccount.groupBy({
       by: ['branchId'],
       where: { role: 'SUCURSAL', isActive: true },
@@ -41,11 +39,9 @@ export default async function SucursalesLealtadPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/lealtad"
-      titulo="Programa de lealtad"
+      titulo="Sucursales y carteles QR"
       descripcion="Enciende cada sucursal el día que su personal ya practicó la caja. Apagarla no borra nada: solo deja de acreditar y de entregar premios."
     >
-      <SubnavLealtad actual="/admin/lealtad/sucursales" pendientes={pendientes} />
-
       <ul className="grid gap-4 md:grid-cols-3">
         {sucursales.map((s, i) => {
           const conCuenta = cuentas.find((c) => c.branchId === s.id)?._count._all ?? 0;
