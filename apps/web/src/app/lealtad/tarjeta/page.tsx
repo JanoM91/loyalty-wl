@@ -8,8 +8,9 @@ import { Icono } from '@/components/lealtad/Iconos';
 import { InvitacionInstalar } from '@/components/lealtad/InvitacionInstalar';
 import { NavTarjeta } from '@/components/lealtad/NavTarjeta';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
+import { arcadeVisible } from '@/lib/lealtad/arcade';
 import { exigirTarjeta } from '@/lib/lealtad/sesion';
-import { programaVigente } from '@wl/database';
+import { cuponesArcadeDeTarjeta, programaVigente } from '@wl/database';
 
 export const metadata: Metadata = { title: 'Mi tarjeta' };
 export const dynamic = 'force-dynamic';
@@ -25,9 +26,16 @@ export default async function TarjetaPage({
 }: {
   searchParams: Promise<{ nueva?: string; verificada?: string; guardar?: string }>;
 }) {
-  const [t, programa] = await Promise.all([exigirTarjeta(), programaVigente()]);
+  const [t, programa, arcade] = await Promise.all([
+    exigirTarjeta(),
+    programaVigente(),
+    arcadeVisible(),
+  ]);
   const { nueva, verificada, guardar } = await searchParams;
   const listos = t.premios.filter((p) => p.disponible);
+  const promociones = arcade
+    ? (await cuponesArcadeDeTarjeta(t.id)).filter((c) => c.estado === 'DISPONIBLE').length
+    : 0;
 
   return (
     <>
@@ -108,6 +116,27 @@ export default async function TarjetaPage({
         <BotonAppleWallet />
         <BotonGoogleWallet />
       </section>
+
+      {arcade && (
+        <a
+          href="/lealtad/juegos"
+          className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-rule bg-cream p-3.5 text-ink"
+        >
+          <span
+            className="grid h-11 w-11 place-items-center rounded-full bg-accent/20"
+            aria-hidden="true"
+          >
+            <Icono nombre="control" width={24} height={24} />
+          </span>
+          <span className="text-sm leading-snug text-ink-soft">
+            <b className="block font-display text-lg leading-tight text-ink">Juega y gana</b>
+            {promociones > 0
+              ? `Tienes ${promociones} ${promociones === 1 ? 'promoción lista' : 'promociones listas'} para caja.`
+              : 'Completa retos y desbloquea promociones.'}
+          </span>
+          <Icono nombre="derecha" aria-hidden="true" />
+        </a>
+      )}
 
       <InvitacionInstalar forzar={Boolean(guardar)} />
 
