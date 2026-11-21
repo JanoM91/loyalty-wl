@@ -59,7 +59,8 @@ export default async function Listo({
               <div className="col" style={{ gap: 10, minWidth: 0 }}>
                 <h2 className="d h3">Elige tu contraseña</h2>
                 <p className="p">
-                  Con ella entras a tu panel y a tu caja. Este botón sirve una sola vez.
+                  Con ella entras a tu panel y a tu caja.
+                  {token ? ' Este botón sirve una sola vez.' : ''}
                 </p>
                 {token ? (
                   <a
