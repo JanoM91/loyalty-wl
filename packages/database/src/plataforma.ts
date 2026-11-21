@@ -244,3 +244,57 @@ export async function cambiarPlan(id: string, plan: PlanNegocio): Promise<void> 
       : {};
   await bd.tenant.update({ where: { id }, data: { settings: { ...ajustes, plan } } });
 }
+
+// ---------------------------------------------------------------------------
+// Asistente de alta (autoregistro) y periodo de prueba
+// ---------------------------------------------------------------------------
+
+/** ¿Ya hay un club creado desde el asistente con ese correo o ese WhatsApp? */
+export async function contactoConClub(correo: string, whatsapp: string): Promise<boolean> {
+  const fila = await clienteDuenio().tenant.findFirst({
+    where: {
+      OR: [
+        { settings: { path: ['alta', 'correo'], equals: correo } },
+        { settings: { path: ['alta', 'whatsapp'], equals: whatsapp } },
+      ],
+    },
+    select: { id: true },
+  });
+  return fila !== null;
+}
+
+/** Clubes creados en las últimas `horas`, para frenar altas en ráfaga. */
+export function altasRecientes(horas = 24): Promise<number> {
+  return clienteDuenio().tenant.count({
+    where: { createdAt: { gte: new Date(Date.now() - horas * 60 * 60 * 1000) } },
+  });
+}
+
+/** Primera dirección libre a partir de `base`: "barberia-leon", "barberia-leon-2"… */
+export async function direccionLibre(base: string): Promise<string | null> {
+  const bd = clienteDuenio();
+  for (let i = 1; i <= 20; i += 1) {
+    const slug = i === 1 ? base : `${base.slice(0, 56)}-${i}`;
+    if (!esSlugDeNegocio(slug)) continue;
+    const ocupado = await bd.tenant.findUnique({ where: { slug }, select: { id: true } });
+    if (!ocupado) return slug;
+  }
+  return null;
+}
+
+/**
+ * Cambia la fecha de fin de prueba. `null` la quita: el club queda activo sin
+ * límite (es lo que se hace al registrar su pago).
+ */
+export async function fijarFinDePrueba(id: string, vence: string | null): Promise<void> {
+  const bd = clienteDuenio();
+  const fila = await bd.tenant.findUniqueOrThrow({ where: { id }, select: { settings: true } });
+  const ajustes =
+    typeof fila.settings === 'object' && fila.settings !== null && !Array.isArray(fila.settings)
+      ? fila.settings
+      : {};
+  await bd.tenant.update({
+    where: { id },
+    data: { settings: { ...ajustes, pruebaVence: vence } },
+  });
+}

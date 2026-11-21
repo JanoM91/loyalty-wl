@@ -11,3 +11,5 @@ export * from './loyalty/reenvio';
 export * from './marca/color';
 export * from './marca/combinaciones';
 export * from './marca/direccion';
+export * from './alta/giros';
+export * from './alta/prueba';

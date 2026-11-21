@@ -2,7 +2,9 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 import {
   ZONA_HORARIA_POR_OMISION,
+  estadoComercial,
   esPrefijoCodigo,
+  type EstadoComercial,
   esZonaHorariaValida,
   type ColoresMarca,
 } from '@wl/domain';
@@ -96,6 +98,22 @@ export interface AjustesNegocio {
   readonly margenMigracion: number;
   /** Días que se conservan las fotos de ticket y de tarjeta física. */
   readonly diasConservacionFotos: number;
+  /**
+   * Fin del periodo de prueba (fecha ISO). Null: el club no está en prueba,
+   * porque ya pagó o porque lo dio de alta Exkalibur. Ver `estadoComercial`.
+   */
+  readonly pruebaVence: string | null;
+  /** Lo que dejó el dueño en el asistente de alta. Null si lo creó Exkalibur. */
+  readonly alta: AltaNegocio | null;
+}
+
+export interface AltaNegocio {
+  readonly giro: string;
+  readonly correo: string;
+  /** E.164 sin signos: "522281234567". */
+  readonly whatsapp: string;
+  /** Página desde la que llegó: "belleza", "cafeterias" o "empezar". */
+  readonly origen: string;
 }
 
 export const MARCA_POR_OMISION: MarcaNegocio = {
@@ -123,6 +141,8 @@ export const AJUSTES_POR_OMISION: AjustesNegocio = {
   umbralEvidenciaMigracion: 5,
   margenMigracion: 2,
   diasConservacionFotos: 90,
+  pruebaVence: null,
+  alta: null,
 };
 
 type Desconocido = Record<string, unknown>;
@@ -185,7 +205,25 @@ export function leerAjustes(json: unknown): AjustesNegocio {
     umbralEvidenciaMigracion: entero(a.umbralEvidenciaMigracion, d.umbralEvidenciaMigracion, 1, 30),
     margenMigracion: entero(a.margenMigracion, d.margenMigracion, 1, 10),
     diasConservacionFotos: entero(a.diasConservacionFotos, d.diasConservacionFotos, 1, 3650),
+    pruebaVence:
+      typeof a.pruebaVence === 'string' && !Number.isNaN(Date.parse(a.pruebaVence))
+        ? a.pruebaVence
+        : null,
+    alta: leerAlta(a.alta),
   };
+}
+
+function leerAlta(json: unknown): AltaNegocio | null {
+  const a = objeto(json);
+  const correo = texto(a.correo);
+  const whatsapp = texto(a.whatsapp);
+  if (!correo || !whatsapp) return null;
+  return { giro: texto(a.giro) ?? 'otro', correo, whatsapp, origen: texto(a.origen) ?? '' };
+}
+
+/** En prueba, pausado por prueba vencida, o activo. No mira si está suspendido. */
+export function estadoComercialDe(negocio: Negocio, ahora: Date = new Date()): EstadoComercial {
+  return estadoComercial(negocio.ajustes.pruebaVence, ahora);
 }
 
 // ---------------------------------------------------------------------------

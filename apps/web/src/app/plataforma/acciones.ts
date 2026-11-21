@@ -9,11 +9,12 @@ import {
   cambiarPlan,
   crearNegocio,
   entrarPlataforma,
+  fijarFinDePrueba,
   invitarDuenio,
   negocioPorSlug,
   salirPlataforma,
 } from '@wl/database';
-import { COMBINACIONES, esPrefijoCodigo, esSlugDeNegocio } from '@wl/domain';
+import { COMBINACIONES, esPrefijoCodigo, esSlugDeNegocio, vencimientoDePrueba } from '@wl/domain';
 
 import { exigirPlataforma, guardarSesionPlataforma } from '@/lib/plataforma/sesion';
 
@@ -180,4 +181,21 @@ export async function reinvitar(form: FormData): Promise<void> {
       ? `/plataforma/${negocio.slug}?enlace=${encodeURIComponent(r.token)}`
       : `/plataforma/${negocio.slug}`,
   );
+}
+
+/**
+ * Periodo de prueba de un club creado desde el asistente. «pago»: se registró
+ * su pago y queda activo sin límite. «extender»: siete días más desde hoy.
+ */
+export async function prueba(form: FormData): Promise<void> {
+  await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (negocio) {
+    await fijarFinDePrueba(
+      negocio.id,
+      form.get('accion') === 'extender' ? vencimientoDePrueba() : null,
+    );
+  }
+  revalidatePath('/plataforma');
+  redirect(`/plataforma/${negocio?.slug ?? ''}`);
 }

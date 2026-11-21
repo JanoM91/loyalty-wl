@@ -32,7 +32,9 @@ const GIROS = [
 
 export default async function Negocios() {
   await exigirSitioDelServicio();
-  const negocios = await negociosActivos();
+  // Los clubes creados desde el asistente no se publican aquí: nadie lo pidió
+  // ni lo autorizó. Solo aparecen los que dio de alta Exkalibur.
+  const negocios = (await negociosActivos()).filter((n) => n.ajustes.alta === null);
   return (
     <Marco actual="/negocios">
       <Hero

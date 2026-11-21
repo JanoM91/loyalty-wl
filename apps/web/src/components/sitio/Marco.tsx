@@ -46,7 +46,6 @@ function Logo({ enlace }: { enlace: boolean }) {
 }
 
 export function Marco({ actual, children }: { actual?: string; children: ReactNode }) {
-  const whatsapp = enlaceWhatsApp();
   return (
     <div className="cl">
       <div className="bar" aria-hidden="true" />
@@ -72,9 +71,9 @@ export function Marco({ actual, children }: { actual?: string; children: ReactNo
                 {p.nombre}
               </Link>
             ))}
-            <a href={whatsapp} className="btn sm">
-              Agenda una demo
-            </a>
+            <Link href="/empezar" className="btn sm">
+              Prueba gratis
+            </Link>
           </nav>
         </div>
       </header>

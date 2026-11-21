@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import { SelectorGiros, TarjetaDemo } from './Interactivos';
-import { Cierre, Cinta, Marco, Pasos, Revela, Seccion, enlaceWhatsApp, minimo } from './Marco';
+import { Cierre, Cinta, Marco, Pasos, Revela, Seccion, minimo } from './Marco';
 
 /** Inicio de club-lealtad.com: presenta el servicio a dueños de negocio. */
 export function Inicio() {
@@ -18,11 +18,13 @@ export function Inicio() {
           <div className="col" style={{ flex: '1 1 520px', minWidth: 0, gap: 26 }}>
             <span className="chip">Lealtad digital, fácil</span>
             <h1 className="d h1">Tus clientes vuelven. Tú sabes quiénes son.</h1>
-            <p className="lead">Tarjeta de sellos en su celular. Sin app. Sin papel.</p>
+            <p className="lead">
+              Tarjeta de sellos en su celular. Sin app. Sin papel. 7 días gratis.
+            </p>
             <div className="row" style={{ gap: '12px 26px' }}>
-              <a href={enlaceWhatsApp()} className="btn">
-                Agenda una demo
-              </a>
+              <Link href="/empezar" className="btn">
+                Crea tu club gratis
+              </Link>
               <Link href="/como-funciona" className="lk">
                 Ver cómo funciona
               </Link>
@@ -169,7 +171,9 @@ export function Inicio() {
             </details>
             <details className="faq">
               <summary>¿Cuánto cuesta?</summary>
-              <p>Depende del plan y de tus sucursales. Te cotizamos en la demo.</p>
+              <p>
+                Lite cuesta $269 al mes o $2,699 al año, con IVA. Los primeros 7 días son gratis.
+              </p>
             </details>
           </div>
         </div>

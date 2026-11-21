@@ -72,4 +72,48 @@ describe.skipIf(!CON_BD)('panel de plataforma', () => {
     await db.cambiarEstadoNegocio(negocio.id, true);
     expect((await db.negocioPorSlug('prueba-plataforma'))?.activo).toBe(true);
   });
+  it('un club en prueba opera, vencido se pausa y con el pago vuelve', async () => {
+    const correo = `alta-${randomBytes(4).toString('hex')}@ejemplo.mx`;
+    const whatsapp = `52228${Math.floor(1000000 + Math.random() * 8999999)}`;
+    const club = await negocioDePrueba({
+      slug: 'prueba-asistente',
+      nombre: 'Club de prueba',
+      prefijoCodigo: 'CP',
+      ajustes: {
+        pruebaVence: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        alta: { giro: 'barberia', correo, whatsapp, origen: 'belleza' },
+      },
+      sucursales: [{ slug: 'principal', nombre: 'Principal', participa: true }],
+    });
+    try {
+      expect(db.estadoComercialDe(club)).toBe('PRUEBA');
+      expect(await db.contactoConClub(correo, '520000000000')).toBe(true);
+      expect(await db.contactoConClub('otro@ejemplo.mx', whatsapp)).toBe(true);
+      expect(await db.contactoConClub('otro@ejemplo.mx', '520000000000')).toBe(false);
+      // La dirección ocupada no se repite: se propone la siguiente.
+      expect(await db.direccionLibre('prueba-asistente')).toBe('prueba-asistente-2');
+
+      const alta = (contacto: string, negocio: db.Negocio) =>
+        en(negocio, () =>
+          db.crearTarjeta({ contacto, aceptaTerminos: true, aceptaPromociones: false }),
+        );
+      expect((await alta('2281112233', club)).ok).toBe(true);
+
+      // Prueba vencida: no se crean tarjetas.
+      await db.fijarFinDePrueba(club.id, new Date(Date.now() - 1000).toISOString());
+      const pausado = (await db.negocioPorSlug('prueba-asistente'))!;
+      expect(db.estadoComercialDe(pausado)).toBe('PAUSADO');
+      expect((await alta('2281112244', pausado)).ok).toBe(false);
+      // El alta del dueño se conserva al cambiar la fecha.
+      expect(pausado.ajustes.alta?.correo).toBe(correo);
+
+      // Pago registrado: activo sin límite.
+      await db.fijarFinDePrueba(club.id, null);
+      const activo = (await db.negocioPorSlug('prueba-asistente'))!;
+      expect(db.estadoComercialDe(activo)).toBe('ACTIVO');
+      expect((await alta('2281112244', activo)).ok).toBe(true);
+    } finally {
+      await db.borrarNegocio(club.id);
+    }
+  });
 });

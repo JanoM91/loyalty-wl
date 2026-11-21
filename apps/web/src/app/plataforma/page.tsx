@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { listarNegocios } from '@wl/database';
+import { estadoComercialDe, listarNegocios } from '@wl/database';
 
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
@@ -55,6 +55,16 @@ export default async function NegociosPage() {
                   <span className="rounded-full border border-rule px-2.5 py-1 text-ink">
                     {negocio.ajustes.plan === 'PRIVADA' ? 'Privada' : 'Lite'}
                   </span>
+                  {estadoComercialDe(negocio) === 'PRUEBA' && (
+                    <span className="rounded-full border border-rule px-2.5 py-1 text-ink">
+                      En prueba
+                    </span>
+                  )}
+                  {estadoComercialDe(negocio) === 'PAUSADO' && (
+                    <span className="rounded-full bg-agotado/15 px-2.5 py-1 font-semibold text-agotado">
+                      Prueba vencida
+                    </span>
+                  )}
                   {!negocio.activo && (
                     <span className="rounded-full bg-agotado/15 px-2.5 py-1 font-semibold text-agotado">
                       Suspendido
