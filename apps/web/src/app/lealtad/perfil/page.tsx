@@ -9,6 +9,7 @@ import { EnlacePersonal } from './EnlacePersonal';
 import { salir } from '../acciones';
 import { Aviso } from '@/components/lealtad/Aviso';
 import { AvisoContrasena } from '@/components/lealtad/AvisoContrasena';
+import { walletActivo } from '@/lib/wallet/activo';
 import {
   FormularioCelular,
   FormularioContrasena,
@@ -121,8 +122,9 @@ export default async function PerfilPage({
         <section id="enlace" className="grid gap-3 border-t border-rule pt-5">
           <h2 className="text-lg text-ink">Tu enlace personal</h2>
           <p className="text-sm text-ink-soft">
-            Abre tu tarjeta siempre, en cualquier celular y sin contraseña. También está en el
-            reverso de tu tarjeta en Wallet. Es personal: no lo compartas.
+            Abre tu tarjeta siempre, en cualquier celular y sin contraseña.
+            {walletActivo() ? ' También está en el reverso de tu tarjeta en Wallet.' : ''} Es
+            personal: no lo compartas.
           </p>
           <EnlacePersonal url={enlace} />
         </section>

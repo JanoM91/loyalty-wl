@@ -47,31 +47,31 @@ const EJEMPLOS = [
     nombre: 'Cafetería',
     premio: 'Café gratis',
     regla: '8 visitas',
-    juego: 'Reto: 3 visitas en 30 días',
+    juego: '800 puntos: pan dulce de cortesía',
   },
   {
     nombre: 'Barbería',
     premio: 'Corte gratis',
     regla: '6 visitas',
-    juego: 'Trae a un amigo: sello para los dos',
+    juego: '5 días jugando: 10 % en el corte',
   },
   {
     nombre: 'Taquería',
     premio: 'Orden de tacos',
     regla: '8 visitas',
-    juego: 'Martes de sello doble',
+    juego: '40 partidas al mes: 2x1 en tacos',
   },
   {
     nombre: 'Spa',
     premio: 'Masaje de 30 min',
     regla: '5 visitas',
-    juego: 'Nivel Oro: prioridad para agendar',
+    juego: '5 días jugando: 10 % en tu masaje',
   },
   {
     nombre: 'Panadería',
     premio: 'Pan y café',
     regla: '8 visitas',
-    juego: 'Insignia: prueba 3 panes nuevos',
+    juego: '800 puntos: café de cortesía',
   },
 ] as const;
 
@@ -114,7 +114,7 @@ export function SelectorGiros() {
         <div className="row kv" style={{ gap: 14, flexWrap: 'nowrap' }}>
           <Burbuja nombre="control" tono="pop" tam={48} />
           <div className="col">
-            <span className="sm2">Idea de juego</span>
+            <span className="sm2">Con Juega y gana</span>
             <b>{giro.juego}</b>
           </div>
         </div>

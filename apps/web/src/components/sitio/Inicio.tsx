@@ -34,13 +34,18 @@ const DUDAS: readonly [NombreIconoSitio, string, string][] = [
   [
     'celular',
     '¿Mis clientes descargan una app?',
-    'No. La tarjeta abre en el navegador y se guarda en su Wallet.',
+    'No. La tarjeta abre en el navegador y se guarda en su pantalla de inicio.',
   ],
   ['escanear', '¿Cambio mi caja o punto de venta?', 'No. Se escanea desde un celular o tablet.'],
   [
     'ubicacion',
     '¿Sirve con varias sucursales?',
     'Sí. Una cuenta de caja por sucursal y la misma tarjeta en todas.',
+  ],
+  [
+    'sobre',
+    '¿Les puedo mandar promociones?',
+    'Sí, por correo y solo a quienes aceptaron recibirlas. Uno al día como máximo, y se dan de baja con un toque.',
   ],
 ];
 
@@ -79,7 +84,7 @@ export async function Inicio() {
                 [
                   ['celular', 'Sin app'],
                   ['escanear', 'Se sella en segundos'],
-                  ['cartera', 'Apple y Google Wallet'],
+                  ['regalo', 'Premios que tú eliges'],
                 ] as const
               ).map(([icono, texto]) => (
                 <li key={texto} className="row" style={{ gap: 8, fontWeight: 600 }}>
@@ -108,7 +113,7 @@ export async function Inicio() {
         <h2 className="d h2 rise" style={{ maxWidth: '12em' }}>
           El cartón se pierde. Esto no.
         </h2>
-        <div className="grid" style={minimo(300)}>
+        <div className="grid" style={minimo(240)}>
           <Revela
             icono="personas"
             titulo="No sabes quién vuelve"
@@ -127,6 +132,12 @@ export async function Inicio() {
             pie="Antes"
             detras="Premias la costumbre de volver, no regalas tu margen."
           />
+          <Revela
+            icono="sobre"
+            titulo="No les puedes escribir"
+            pie="Antes"
+            detras="Con su permiso, les mandas tu promoción por correo desde tu panel."
+          />
         </div>
       </Seccion>
 
@@ -143,9 +154,9 @@ export async function Inicio() {
         <Pasos
           min={300}
           items={[
-            ['Saca su tarjeta', 'Con su celular, desde tu QR. Va directo a su Wallet.', 'celular'],
+            ['Saca su tarjeta', 'Con su celular, desde tu QR. Sin descargar nada.', 'celular'],
             ['Escaneas su QR', 'Tu caja sella la visita en segundos.', 'escanear'],
-            ['El premio avisa', 'Su teléfono le recuerda que ya ganó.', 'campana'],
+            ['Gana su premio', 'Ve «Premio listo» en su tarjeta y lo cobra en caja.', 'regalo'],
           ]}
         />
       </Seccion>
@@ -169,33 +180,37 @@ export async function Inicio() {
         <div className="col" style={{ gap: 18 }}>
           <span className="chip">Servicio adicional</span>
           <h2 className="d h2 rise" style={{ maxWidth: '12em' }}>
-            Gamificación: volver se siente como ganar
+            Juega y gana: un motivo para abrir tu tarjeta cada día
           </h2>
         </div>
         <div className="grid" style={minimo(240)}>
           <Revela
+            icono="control"
+            titulo="6 juegos"
+            pie="Con tus productos"
+            detras="Atrapa, Memorama, Asoma, ¿Dónde quedó?, Junta y Sopa de letras."
+          />
+          <Revela
+            icono="diana"
             titulo="Retos"
-            pie="Frecuencia"
-            detras="3 visitas en 30 días y el siguiente sello vale doble."
+            pie="Por semana o por mes"
+            detras="5 días jugando, 800 puntos en una partida o 40 partidas al mes."
           />
           <Revela
-            titulo="Rachas"
-            pie="Constancia"
-            detras="Una visita cada semana. Nadie quiere romper su racha."
+            icono="regalo"
+            titulo="Promociones"
+            pie="Se cobran en caja"
+            detras="Con código personal y fecha. Una vez por reto."
           />
           <Revela
-            titulo="Niveles"
-            pie="Permanencia"
-            detras="Bronce, Plata y Oro, con un beneficio por nivel."
-          />
-          <Revela
-            titulo="Insignias"
-            pie="Variedad"
-            detras="Probó tres panes nuevos. Visitó las dos sucursales."
+            icono="medalla"
+            titulo="Ranking"
+            pie="Lista de la semana"
+            detras="Los que más juegan, con su nombre y la inicial del apellido."
           />
         </div>
-        <Link href="/gamificacion" className="lk" style={{ alignSelf: 'flex-start' }}>
-          Ver las mecánicas
+        <Link href="/gamificacion#prueba" className="btn" style={{ alignSelf: 'flex-start' }}>
+          Juega una partida
         </Link>
       </Seccion>
 

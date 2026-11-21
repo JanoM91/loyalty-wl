@@ -110,7 +110,7 @@ export default async function Guia() {
           ))}
         </div>
         <Link href="/gamificacion" className="btn" style={{ alignSelf: 'flex-start' }}>
-          Después de los sellos: gamificación
+          Después de los sellos: Juega y gana
         </Link>
       </Seccion>
       <section style={{ paddingTop: 56, paddingBottom: 56 }}>

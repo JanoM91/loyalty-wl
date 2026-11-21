@@ -17,7 +17,7 @@ import './sitio.css';
 export const PAGINAS = [
   { ruta: '/como-funciona', nombre: 'Cómo funciona' },
   { ruta: '/negocios', nombre: 'Negocios' },
-  { ruta: '/gamificacion', nombre: 'Gamificación' },
+  { ruta: '/gamificacion', nombre: 'Juega y gana' },
   { ruta: '/planes', nombre: 'Planes' },
   { ruta: '/guia', nombre: 'Guía' },
 ] as const;

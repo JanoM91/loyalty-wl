@@ -474,7 +474,8 @@ export function NuevoCliente({
                   {copiado ? 'Enlace copiado' : 'Copiar enlace'}
                 </button>
                 <p className="text-xs text-muted">
-                  Es su enlace personal: no vence. Que agregue la tarjeta a Wallet al abrirla.
+                  Es su enlace personal: no vence. Que guarde la tarjeta en su pantalla de inicio al
+                  abrirla.
                 </p>
               </div>
             </details>

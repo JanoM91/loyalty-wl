@@ -1,3 +1,4 @@
+import type { NombreIconoSitio } from '@/components/sitio/Iconos';
 import {
   Cierre,
   Cinta,
@@ -25,7 +26,7 @@ function Rol({
 }: {
   etiqueta: string;
   titulo: string;
-  pasos: readonly (readonly [string, string])[];
+  pasos: readonly (readonly [string, string] | readonly [string, string, NombreIconoSitio])[];
   oscura?: boolean;
 }) {
   return (
@@ -36,7 +37,7 @@ function Rol({
           {titulo}
         </h2>
       </div>
-      <Pasos min={250} items={pasos} />
+      <Pasos min={pasos.length > 4 ? 200 : 250} items={pasos} />
     </Seccion>
   );
 }
@@ -68,9 +69,10 @@ export default async function ComoFunciona() {
         titulo="Una tarjeta que no se olvida"
         pasos={[
           ['Se registra', 'Con su celular, desde tu QR.'],
-          ['La guarda', 'En Apple Wallet o Google Wallet.'],
-          ['Enseña su QR', 'El mismo en Wallet y en la web.'],
-          ['Recibe avisos', '«Llevas 4 de 8». «Premio listo».'],
+          ['La guarda', 'En su pantalla de inicio, sin app.'],
+          ['Enseña su QR', 'Desde su tarjeta, en caja.'],
+          ['Ve su avance', '«Llevas 4 de 8». «Premio listo».'],
+          ['Juega y gana', 'Si tu club lo tiene: juegos, retos y promociones.', 'control'],
         ]}
       />
       <Rol
