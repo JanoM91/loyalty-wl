@@ -9,6 +9,7 @@ import { Marco } from '@/components/sitio/Marco';
 import { MedirAlCargar } from '@/components/sitio/Medicion';
 import { fechaLarga } from '@/lib/lealtad/formato';
 import { origenDeLaPeticion } from '@/lib/negocio';
+import { precios } from '@/lib/precios';
 import { exigirSitioDelServicio } from '@/lib/sitio';
 
 export const dynamic = 'force-dynamic';
@@ -51,7 +52,7 @@ export default async function Listo({
           content_name: negocio.ajustes.alta.origen || 'empezar',
           currency: 'MXN',
           value: 0,
-          predicted_ltv: 2699,
+          predicted_ltv: (await precios()).lite.anio ?? 0,
         }}
         unaVez={`alta-${negocio.slug}`}
       />

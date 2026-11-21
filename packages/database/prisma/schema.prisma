@@ -68,6 +68,9 @@ model Tenant {
   loyaltyPrograms LoyaltyProgram[]
   walletDevices WalletDevice[]
   walletRegistrations WalletRegistration[]
+  arcadeConfig ArcadeConfig?
+  arcadePlays ArcadePlay[]
+  arcadeCoupons ArcadeCoupon[]
 
   @@map("tenant")
 }
@@ -150,6 +153,7 @@ model Branch {
   loyaltyCards      LoyaltyCard[]
   loyaltyAccruals   LoyaltyAccrual[]
   loyaltyRedemptions LoyaltyReward[] @relation("RedeemedAt")
+  arcadeRedemptions ArcadeCoupon[] @relation("ArcadeRedeemedAt")
   loyaltyAccessRequests LoyaltyAccessRequest[]
 
 
@@ -197,6 +201,8 @@ model UserAccount {
   loyaltyAccruals    LoyaltyAccrual[] @relation("CreatedBy")
   loyaltyReviews     LoyaltyAccrual[] @relation("ReviewedBy")
   loyaltyRedemptions LoyaltyReward[]  @relation("RedeemedBy")
+  arcadeRedemptions  ArcadeCoupon[]   @relation("ArcadeRedeemedBy")
+  arcadeConfigs      ArcadeConfig[]   @relation("ArcadeConfigBy")
   loyaltyPrograms    LoyaltyProgram[] @relation("ProgramCreatedBy")
   loyaltyEnrollments LoyaltyCard[]    @relation("EnrolledBy")
   loyaltyAccessRequests LoyaltyAccessRequest[] @relation("AccessRequestResolvedBy")
@@ -423,6 +429,8 @@ model LoyaltyCard {
   walletRegistrations WalletRegistration[]
   loginAttempts       LoyaltyLoginAttempt[]
   accessRequests      LoyaltyAccessRequest[]
+  arcadePlays         ArcadePlay[]
+  arcadeCoupons       ArcadeCoupon[]
 
   @@index([enrolledBranchId])
   @@index([createdAt])
@@ -765,4 +773,83 @@ model PlatformSetting {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("platform_setting")
+}
+
+// -----------------------------------------------------------------------------
+// Arcade del club (servicio adicional): juegos de habilidad que desbloquean
+// promociones. Qué puede usar cada club lo dice `settings.arcade` (plataforma);
+// lo que elige el dueño vive en `arcade_config`.
+// -----------------------------------------------------------------------------
+
+enum ArcadeCouponStatus {
+  DISPONIBLE
+  CANJEADO
+}
+
+/// Lo que el dueño configuró de su Arcade. Se recorta a los permisos del club
+/// al leerlo (ver `configEfectiva` en @wl/domain).
+model ArcadeConfig {
+  /// Negocio dueño de la fila (una por negocio). Lo pone la base a partir de `app.tenant_id`.
+  tenantId    String       @id @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  config      Json         @default("{}")
+  updatedById String?      @map("updated_by_id") @db.Uuid
+  updatedBy   UserAccount? @relation("ArcadeConfigBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("arcade_config")
+}
+
+/// Una partida. Se abre al empezar (con semilla) y se cierra con el puntaje;
+/// la duración la mide el servidor.
+model ArcadePlay {
+  id         String      @id @default(uuid()) @db.Uuid
+  tenantId   String      @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cardId     String      @map("card_id") @db.Uuid
+  card       LoyaltyCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  game       String      @db.VarChar(20)
+  /// Día civil del negocio en que se jugó: decide el tope diario y los retos.
+  day        DateTime    @db.Date
+  seed       Int
+  startedAt  DateTime    @default(now()) @map("started_at") @db.Timestamptz
+  endedAt    DateTime?   @map("ended_at") @db.Timestamptz
+  score      Int?
+  level      Int?
+  /// El puntaje no es creíble para el tiempo jugado: no cuenta para retos ni listas.
+  suspicious Boolean     @default(false)
+
+  @@index([tenantId])
+  @@index([cardId, day])
+  @@index([tenantId, day])
+  @@map("arcade_play")
+}
+
+/// Promoción ganada en un reto. Se cobra en caja con el código.
+model ArcadeCoupon {
+  id               String             @id @default(uuid()) @db.Uuid
+  tenantId         String             @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cardId           String             @map("card_id") @db.Uuid
+  card             LoyaltyCard        @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  challengeId      String             @map("challenge_id") @db.VarChar(40)
+  /// Periodo en que se ganó ("S2026-11-16", "M2026-11"): un cupón por reto y periodo.
+  period           String             @db.VarChar(12)
+  code             String             @db.VarChar(16)
+  /// La promoción tal como se prometió al ganarla.
+  title            String             @db.VarChar(120)
+  status           ArcadeCouponStatus @default(DISPONIBLE)
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt        DateTime           @map("expires_at") @db.Timestamptz
+  redeemedAt       DateTime?          @map("redeemed_at") @db.Timestamptz
+  redeemedBranchId String?            @map("redeemed_branch_id") @db.Uuid
+  redeemedBranch   Branch?            @relation("ArcadeRedeemedAt", fields: [redeemedBranchId], references: [id], onDelete: SetNull)
+  redeemedById     String?            @map("redeemed_by_id") @db.Uuid
+  redeemedBy       UserAccount?       @relation("ArcadeRedeemedBy", fields: [redeemedById], references: [id], onDelete: SetNull)
+
+  @@unique([cardId, challengeId, period])
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([status, expiresAt])
+  @@map("arcade_coupon")
 }

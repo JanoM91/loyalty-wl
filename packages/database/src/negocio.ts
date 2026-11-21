@@ -6,7 +6,9 @@ import {
   esPrefijoCodigo,
   type EstadoComercial,
   esZonaHorariaValida,
+  leerPermisosArcade,
   type ColoresMarca,
+  type PermisosArcade,
 } from '@wl/domain';
 
 import { base } from './cliente';
@@ -115,6 +117,12 @@ export interface AjustesNegocio {
   readonly pagadoHasta: string | null;
   /** Lo que dejó el dueño en el asistente de alta. Null si lo creó Exkalibur. */
   readonly alta: AltaNegocio | null;
+  /**
+   * Arcade del club (servicio adicional): qué puede usar el club y hasta
+   * cuándo está pagado. Null: nunca se le ha activado. Solo lo cambia la
+   * plataforma.
+   */
+  readonly arcade: PermisosArcade | null;
 }
 
 export interface AltaNegocio {
@@ -158,6 +166,7 @@ export const AJUSTES_POR_OMISION: AjustesNegocio = {
   pruebaVence: null,
   pagadoHasta: null,
   alta: null,
+  arcade: null,
 };
 
 type Desconocido = Record<string, unknown>;
@@ -229,6 +238,7 @@ export function leerAjustes(json: unknown): AjustesNegocio {
     pruebaVence: fechaIso(a.pruebaVence),
     pagadoHasta: fechaIso(a.pagadoHasta),
     alta,
+    arcade: leerPermisosArcade(a.arcade),
   };
 }
 

@@ -5,7 +5,7 @@ import {
   estadoComercialDe,
   listarNegocios,
 } from '@wl/database';
-import { diasEnPausa } from '@wl/domain';
+import { arcadeVigente, diasEnPausa } from '@wl/domain';
 
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
@@ -129,6 +129,11 @@ export default async function NegociosPage({
                     <span className="rounded-full bg-agotado/15 px-2.5 py-1 font-semibold text-agotado">
                       En pausa ·{' '}
                       {diasEnPausa(negocio.ajustes.pruebaVence, negocio.ajustes.pagadoHasta)} d
+                    </span>
+                  )}
+                  {arcadeVigente(negocio.ajustes.arcade) && (
+                    <span className="rounded-full border border-rule px-2.5 py-1 text-ink">
+                      Arcade
                     </span>
                   )}
                   {!negocio.activo && (

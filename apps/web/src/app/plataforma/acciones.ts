@@ -15,10 +15,24 @@ import {
   fijarFinDePrueba,
   invitarDuenio,
   negocioPorSlug,
+  fijarPermisosArcade,
+  guardarPlantillaArcade,
+  guardarPreciosDelServicio,
+  plantillaArcade,
   registrarPago,
+  registrarPagoArcade,
   salirPlataforma,
 } from '@wl/database';
-import { COMBINACIONES, esPrefijoCodigo, esSlugDeNegocio, vencimientoDePrueba } from '@wl/domain';
+import {
+  COMBINACIONES,
+  IDS_JUEGO,
+  MODOS_LISTA,
+  esPrefijoCodigo,
+  esSlugDeNegocio,
+  leerPermisosArcade,
+  vencimientoDePrueba,
+  type PermisosArcade,
+} from '@wl/domain';
 
 import { exigirPlataforma, guardarSesionPlataforma } from '@/lib/plataforma/sesion';
 
@@ -239,4 +253,85 @@ export async function borrar(form: FormData): Promise<void> {
   revalidatePath('/plataforma');
   revalidatePath('/negocios');
   redirect(`/plataforma?borrado=${encodeURIComponent(negocio.slug)}`);
+}
+
+// ---------------------------------------------------------------------------
+// Precios y Arcade
+// ---------------------------------------------------------------------------
+
+/** Pesos enteros, o null si el campo quedó vacío («sin precio publicado»). */
+function pesosDelCampo(form: FormData, campo: string): number | null {
+  const t = String(form.get(campo) ?? '').replace(/[$,\s]/g, '');
+  if (t === '') return null;
+  const n = Number(t);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
+}
+
+export async function guardarPrecios(form: FormData): Promise<void> {
+  const sesion = await exigirPlataforma();
+  await guardarPreciosDelServicio(
+    {
+      lite: { mes: pesosDelCampo(form, 'lite-mes'), anio: pesosDelCampo(form, 'lite-anio') },
+      arcade: { mes: pesosDelCampo(form, 'arcade-mes'), anio: pesosDelCampo(form, 'arcade-anio') },
+    },
+    sesion.email,
+  );
+  console.warn(`[precios] actualizados por ${sesion.email}`);
+  revalidatePath('/', 'layout');
+  redirect('/plataforma/ajustes?guardado=precios');
+}
+
+/** Permisos del Arcade tal como vienen del formulario (ver FormPermisos). */
+function permisosDelFormulario(form: FormData, base: PermisosArcade): PermisosArcade {
+  const numero = (campo: string) => Number(form.get(campo));
+  return (
+    leerPermisosArcade({
+      ...base,
+      juegos: IDS_JUEGO.filter((j) => form.get(`juego-${j}`) === 'on'),
+      maxJuegosActivos: numero('maxJuegosActivos'),
+      maxPartidasDia: numero('maxPartidasDia'),
+      maxRetos: numero('maxRetos'),
+      listas: MODOS_LISTA.filter((m) => form.get(`lista-${m}`) === 'on'),
+      edicionRetos: String(form.get('edicionRetos') ?? 'todo'),
+    }) ?? base
+  );
+}
+
+export async function guardarPlantilla(form: FormData): Promise<void> {
+  const sesion = await exigirPlataforma();
+  await guardarPlantillaArcade(permisosDelFormulario(form, await plantillaArcade()), sesion.email);
+  redirect('/plataforma/ajustes?guardado=plantilla');
+}
+
+export async function arcadePermisos(form: FormData): Promise<void> {
+  await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (!negocio) redirect('/plataforma');
+  const actual = negocio.ajustes.arcade ?? (await plantillaArcade());
+  await fijarPermisosArcade(negocio.id, permisosDelFormulario(form, actual));
+  revalidatePath('/plataforma');
+  redirect(`/plataforma/${negocio.slug}#arcade`);
+}
+
+/** Registra el pago del Arcade (un mes o un año) y lo activa. */
+export async function arcadePago(form: FormData): Promise<void> {
+  const sesion = await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (!negocio) redirect('/plataforma');
+  const periodo = form.get('periodo') === 'ANIO' ? 'ANIO' : 'MES';
+  const hasta = await registrarPagoArcade(negocio, periodo);
+  console.warn(`[arcade] ${negocio.slug}: ${periodo} hasta ${hasta} (registró ${sesion.email})`);
+  revalidatePath('/plataforma');
+  redirect(`/plataforma/${negocio.slug}#arcade`);
+}
+
+/** Enciende o apaga el Arcade sin tocar el periodo pagado. */
+export async function arcadeActivo(form: FormData): Promise<void> {
+  await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (!negocio) redirect('/plataforma');
+  const actual = negocio.ajustes.arcade ?? (await plantillaArcade());
+  await fijarPermisosArcade(negocio.id, { ...actual, activo: form.get('activo') === '1' });
+  revalidatePath('/plataforma');
+  redirect(`/plataforma/${negocio.slug}#arcade`);
 }

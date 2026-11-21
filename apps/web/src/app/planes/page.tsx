@@ -7,6 +7,9 @@ import {
   enlaceWhatsApp,
   minimo,
 } from '@/components/sitio/Marco';
+import { pesos, type PrecioPeriodo } from '@wl/domain';
+
+import { precios } from '@/lib/precios';
 import { exigirSitioDelServicio, metadatosDelSitio } from '@/lib/sitio';
 
 export const dynamic = 'force-dynamic';
@@ -16,34 +19,35 @@ export const metadata = metadatosDelSitio(
   'Lite: tu club dentro de club-lealtad.com. Privada: tu propio dominio, diseño a la medida y acompañamiento.',
 );
 
-const PLANES = [
-  {
-    nombre: 'Lite',
-    precio: '$269 al mes',
-    nota: 'o $2,699 al año. IVA incluido. 7 días gratis.',
-    oscuro: false,
-    incluye: [
-      'club-lealtad.com/tu-negocio',
-      'Tu logo, colores y premios',
-      '20 combinaciones de color',
-      'Apple Wallet y Google Wallet',
-      'Campañas y reportes los llevamos nosotros',
-    ],
-  },
-  {
-    nombre: 'Privada',
-    precio: 'Cotización en la demo',
-    nota: 'Según tu marca y tus sucursales.',
-    oscuro: true,
-    incluye: [
-      'Tu propio dominio y página de inicio',
-      'Diseño a la medida',
-      'Instalación solo para ti',
-      'Apple Wallet y Google Wallet',
-      'Campañas, reportes completos y acompañamiento',
-    ],
-  },
-] as const;
+const planes = (lite: PrecioPeriodo) =>
+  [
+    {
+      nombre: 'Lite',
+      precio: lite.mes !== null ? `${pesos(lite.mes)} al mes` : 'Pregúntanos',
+      nota: `${lite.anio !== null ? `o ${pesos(lite.anio)} al año. ` : ''}IVA incluido. 7 días gratis.`,
+      oscuro: false,
+      incluye: [
+        'club-lealtad.com/tu-negocio',
+        'Tu logo, colores y premios',
+        '20 combinaciones de color',
+        'Apple Wallet y Google Wallet',
+        'Campañas y reportes los llevamos nosotros',
+      ],
+    },
+    {
+      nombre: 'Privada',
+      precio: 'Cotización en la demo',
+      nota: 'Según tu marca y tus sucursales.',
+      oscuro: true,
+      incluye: [
+        'Tu propio dominio y página de inicio',
+        'Diseño a la medida',
+        'Instalación solo para ti',
+        'Apple Wallet y Google Wallet',
+        'Campañas, reportes completos y acompañamiento',
+      ],
+    },
+  ] as const;
 
 const COMPARA = [
   ['Dirección', 'club-lealtad.com/tu-negocio', 'Tu dominio'],
@@ -57,6 +61,7 @@ const COMPARA = [
 export default async function Planes() {
   await exigirSitioDelServicio();
   const whatsapp = enlaceWhatsApp();
+  const PLANES = planes((await precios()).lite);
   return (
     <Marco actual="/planes">
       <Hero

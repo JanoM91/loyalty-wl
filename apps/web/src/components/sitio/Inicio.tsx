@@ -1,10 +1,13 @@
 import Link from 'next/link';
 
+import { precios, textoPrecio } from '@/lib/precios';
+
 import { SelectorGiros, TarjetaDemo } from './Interactivos';
 import { Cierre, Cinta, Marco, Pasos, Revela, Seccion, minimo } from './Marco';
 
 /** Inicio de club-lealtad.com: presenta el servicio a dueños de negocio. */
-export function Inicio() {
+export async function Inicio() {
+  const lite = textoPrecio((await precios()).lite);
   return (
     <Marco>
       <section style={{ position: 'relative', overflow: 'hidden' }}>
@@ -172,7 +175,8 @@ export function Inicio() {
             <details className="faq">
               <summary>¿Cuánto cuesta?</summary>
               <p>
-                Lite cuesta $269 al mes o $2,699 al año, con IVA. Los primeros 7 días son gratis.
+                {lite ? `Lite cuesta ${lite}, con IVA.` : 'Pregúntanos por WhatsApp.'} Los primeros
+                7 días son gratis.
               </p>
             </details>
           </div>

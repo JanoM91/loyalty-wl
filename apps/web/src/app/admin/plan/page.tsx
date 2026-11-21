@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { estadoComercialDe } from '@wl/database';
-import { diasRestantesDePrueba, fechaDeBorrado } from '@wl/domain';
+import { ahorroAnual, diasRestantesDePrueba, fechaDeBorrado, pesos } from '@wl/domain';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 import { exigirRol } from '@/lib/admin/sesion';
 import { exigirNegocio, ruta, sitioDeLaPeticion } from '@/lib/negocio';
+import { precios } from '@/lib/precios';
 
 export const metadata: Metadata = { title: 'Mi plan' };
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,12 @@ const fecha = (d: Date) =>
  */
 export default async function PlanPage() {
   const sesion = await exigirRol(['ADMIN', 'DUENO']);
-  const [negocio, sitio] = await Promise.all([exigirNegocio(), sitioDeLaPeticion()]);
+  const [negocio, sitio, { lite }] = await Promise.all([
+    exigirNegocio(),
+    sitioDeLaPeticion(),
+    precios(),
+  ]);
+  const ahorro = ahorroAnual(lite);
   // Solo los clubes del asistente pagan el plan Lite; los demás tienen su propio trato.
   if (!negocio.ajustes.alta) redirect(await ruta('/admin'));
   const { pruebaVence, pagadoHasta } = negocio.ajustes;
@@ -60,7 +66,9 @@ export default async function PlanPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <section className={TARJETA}>
             <span className="text-[14px] font-semibold text-[#3C5A51]">Mensual</span>
-            <p className="mt-1 font-display text-[34px] leading-none font-extrabold">$269</p>
+            <p className="mt-1 font-display text-[34px] leading-none font-extrabold">
+              {lite.mes !== null ? pesos(lite.mes) : 'Pregúntanos'}
+            </p>
             <p className="mt-1 text-[14px] text-[#3C5A51]">al mes, IVA incluido</p>
             <a
               href={mensaje('mensual')}
@@ -70,8 +78,12 @@ export default async function PlanPage() {
             </a>
           </section>
           <section className={`${TARJETA} border-ink`}>
-            <span className="text-[14px] font-semibold text-[#3C5A51]">Anual · ahorras $529</span>
-            <p className="mt-1 font-display text-[34px] leading-none font-extrabold">$2,699</p>
+            <span className="text-[14px] font-semibold text-[#3C5A51]">
+              Anual{ahorro ? ` · ahorras ${pesos(ahorro)}` : ''}
+            </span>
+            <p className="mt-1 font-display text-[34px] leading-none font-extrabold">
+              {lite.anio !== null ? pesos(lite.anio) : 'Pregúntanos'}
+            </p>
             <p className="mt-1 text-[14px] text-[#3C5A51]">al año, IVA incluido</p>
             <a
               href={mensaje('anual')}

@@ -7,7 +7,7 @@ import {
   prisma,
   resumenLealtad,
 } from '@wl/database';
-import { diasRestantesDePrueba, fechaDeBorrado } from '@wl/domain';
+import { diasRestantesDePrueba, fechaDeBorrado, pesos } from '@wl/domain';
 
 import { Icono, type NombreIcono } from '@/components/admin/Icono';
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
@@ -15,6 +15,7 @@ import { exigirSesion } from '@/lib/admin/sesion';
 import { fechaLarga, hora } from '@/lib/lealtad/formato';
 import { urlAfiliacion } from '@/lib/lealtad/qr';
 import { exigirNegocio, rutaBase, ruta } from '@/lib/negocio';
+import { precios } from '@/lib/precios';
 
 export const metadata: Metadata = { title: 'Inicio' };
 export const dynamic = 'force-dynamic';
@@ -76,6 +77,7 @@ export default async function AdminInicioPage() {
   // Estado comercial: prueba, pausa o pago.
   const { pruebaVence, pagadoHasta, alta } = negocio.ajustes;
   const comercial = estadoComercialDe(negocio);
+  const liteMes = (await precios()).lite.mes;
   let estado: { texto: string; boton: string } | null = null;
   if (comercial === 'PRUEBA') {
     const dias = diasRestantesDePrueba(pruebaVence);
@@ -180,8 +182,8 @@ export default async function AdminInicioPage() {
                 className="inline-flex min-h-[40px] flex-none items-center rounded-[11px] bg-[#00C389] px-3 font-bold text-ink"
               >
                 {estado.boton}
-                {comercial === 'PRUEBA' && (
-                  <span className="hidden sm:inline">&nbsp;· $269/mes</span>
+                {comercial === 'PRUEBA' && liteMes !== null && (
+                  <span className="hidden sm:inline">&nbsp;· {pesos(liteMes)}/mes</span>
                 )}
               </a>
             )}
