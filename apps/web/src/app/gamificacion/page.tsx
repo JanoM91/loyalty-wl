@@ -43,6 +43,7 @@ export default async function Gamificacion() {
   return (
     <Marco actual="/gamificacion">
       <Hero
+        iconos={['control', 'diana', 'fuego', 'medalla']}
         oscuro
         etiqueta="Servicio adicional · Lite y Privada"
         titulo="Volver se siente como ganar"

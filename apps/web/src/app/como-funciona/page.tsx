@@ -46,6 +46,7 @@ export default async function ComoFunciona() {
   return (
     <Marco actual="/como-funciona">
       <Hero
+        iconos={['escanear', 'celular', 'regalo', 'campana']}
         etiqueta="Cómo funciona"
         titulo="De la visita al premio, sin papel"
         texto="Tres personas, tres pantallas. Así se ve para cada una."

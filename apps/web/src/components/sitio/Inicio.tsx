@@ -1,9 +1,48 @@
 import Link from 'next/link';
 
+import type { CSSProperties } from 'react';
+
 import { precios, textoPrecio } from '@/lib/precios';
 
+import { Burbuja, IconoSitio, type NombreIconoSitio } from './Iconos';
 import { SelectorGiros, TarjetaDemo } from './Interactivos';
 import { Cierre, Cinta, Marco, Pasos, Revela, Seccion, minimo } from './Marco';
+
+/** Globo que flota junto a la tarjeta de ejemplo: lo que vive el cliente. */
+function Globo({
+  icono,
+  texto,
+  tono,
+  lugar,
+  clase = '',
+}: {
+  icono: NombreIconoSitio;
+  texto: string;
+  tono: 'pri' | 'pop' | 'tinte';
+  lugar: CSSProperties;
+  clase?: string;
+}) {
+  return (
+    <span className={`pill flot ${clase}`} style={lugar} aria-hidden="true">
+      <Burbuja nombre={icono} tono={tono} tam={30} />
+      {texto}
+    </span>
+  );
+}
+
+const DUDAS: readonly [NombreIconoSitio, string, string][] = [
+  [
+    'celular',
+    '¿Mis clientes descargan una app?',
+    'No. La tarjeta abre en el navegador y se guarda en su Wallet.',
+  ],
+  ['escanear', '¿Cambio mi caja o punto de venta?', 'No. Se escanea desde un celular o tablet.'],
+  [
+    'ubicacion',
+    '¿Sirve con varias sucursales?',
+    'Sí. Una cuenta de caja por sucursal y la misma tarjeta en todas.',
+  ],
+];
 
 /** Inicio de club-lealtad.com: presenta el servicio a dueños de negocio. */
 export async function Inicio() {
@@ -32,8 +71,35 @@ export async function Inicio() {
                 Ver cómo funciona
               </Link>
             </div>
+            <ul
+              className="row"
+              style={{ gap: '10px 22px', margin: 0, padding: 0, listStyle: 'none' }}
+            >
+              {(
+                [
+                  ['celular', 'Sin app'],
+                  ['escanear', 'Se sella en segundos'],
+                  ['cartera', 'Apple y Google Wallet'],
+                ] as const
+              ).map(([icono, texto]) => (
+                <li key={texto} className="row" style={{ gap: 8, fontWeight: 600 }}>
+                  <IconoSitio nombre={icono} tam={22} style={{ color: 'var(--pri)' }} />
+                  {texto}
+                </li>
+              ))}
+            </ul>
           </div>
-          <TarjetaDemo />
+          <div className="hero-fig">
+            <TarjetaDemo />
+            <Globo icono="sello" texto="+1 sello" tono="pri" lugar={{ right: '-3%', top: '36%' }} />
+            <Globo
+              icono="regalo"
+              texto="¡Premio listo!"
+              tono="pop"
+              lugar={{ left: '-3%', top: '62%' }}
+              clase="f1"
+            />
+          </div>
         </div>
       </section>
       <Cinta />
@@ -44,16 +110,19 @@ export async function Inicio() {
         </h2>
         <div className="grid" style={minimo(300)}>
           <Revela
+            icono="personas"
             titulo="No sabes quién vuelve"
             pie="Antes"
             detras="Cada tarjeta tiene nombre y celular. Ves quién viene y quién dejó de venir."
           />
           <Revela
+            icono="escudo"
             titulo="Sellos de mentira"
             pie="Antes"
             detras="Cada sello se escanea en caja y queda registrado con el folio del ticket."
           />
           <Revela
+            icono="dinero"
             titulo="Descuentos que duelen"
             pie="Antes"
             detras="Premias la costumbre de volver, no regalas tu margen."
@@ -74,9 +143,9 @@ export async function Inicio() {
         <Pasos
           min={300}
           items={[
-            ['Saca su tarjeta', 'Con su celular, desde tu QR. Va directo a su Wallet.'],
-            ['Escaneas su QR', 'Tu caja sella la visita en segundos.'],
-            ['El premio avisa', 'Su teléfono le recuerda que ya ganó.'],
+            ['Saca su tarjeta', 'Con su celular, desde tu QR. Va directo a su Wallet.', 'celular'],
+            ['Escaneas su QR', 'Tu caja sella la visita en segundos.', 'escanear'],
+            ['El premio avisa', 'Su teléfono le recuerda que ya ganó.', 'campana'],
           ]}
         />
       </Seccion>
@@ -134,6 +203,7 @@ export async function Inicio() {
         <h2 className="d h2 rise">Dos planes</h2>
         <div className="grid" style={minimo(380, { gap: 24 })}>
           <Link href="/planes" className="col plan rise" style={{ textDecoration: 'none' }}>
+            <Burbuja nombre="rayo" tono="pri" tam={64} />
             <span className="d" style={{ fontSize: 54, fontWeight: 800 }}>
               Lite
             </span>
@@ -145,6 +215,7 @@ export async function Inicio() {
             </span>
           </Link>
           <Link href="/planes" className="col plan x rise" style={{ textDecoration: 'none' }}>
+            <Burbuja nombre="corona" tono="pop" tam={64} />
             <span className="d" style={{ fontSize: 54, fontWeight: 800 }}>
               Privada
             </span>
@@ -160,20 +231,20 @@ export async function Inicio() {
         <div className="wrap col" style={{ maxWidth: 860, gap: 28 }}>
           <h2 className="d h2 rise">Dudas rápidas</h2>
           <div className="col" style={{ borderBottom: '1.5px solid var(--ink)' }}>
+            {DUDAS.map(([icono, pregunta, respuesta]) => (
+              <details key={pregunta} className="faq">
+                <summary>
+                  <IconoSitio nombre={icono} tam={26} />
+                  {pregunta}
+                </summary>
+                <p>{respuesta}</p>
+              </details>
+            ))}
             <details className="faq">
-              <summary>¿Mis clientes descargan una app?</summary>
-              <p>No. La tarjeta abre en el navegador y se guarda en su Wallet.</p>
-            </details>
-            <details className="faq">
-              <summary>¿Cambio mi caja o punto de venta?</summary>
-              <p>No. Se escanea desde un celular o tablet.</p>
-            </details>
-            <details className="faq">
-              <summary>¿Sirve con varias sucursales?</summary>
-              <p>Sí. Una cuenta de caja por sucursal y la misma tarjeta en todas.</p>
-            </details>
-            <details className="faq">
-              <summary>¿Cuánto cuesta?</summary>
+              <summary>
+                <IconoSitio nombre="dinero" tam={26} />
+                ¿Cuánto cuesta?
+              </summary>
               <p>
                 {lite ? `Lite cuesta ${lite}, con IVA.` : 'Pregúntanos por WhatsApp.'} Los primeros
                 7 días son gratis.

@@ -65,6 +65,7 @@ export default async function Planes() {
   return (
     <Marco actual="/planes">
       <Hero
+        iconos={['dinero', 'rayo', 'corona', 'check']}
         etiqueta="Planes"
         titulo="Lite para arrancar. Privada para hacerlo tuyo."
         texto="El mismo programa. Cambia cuánto se personaliza."

@@ -38,6 +38,7 @@ export default async function Negocios() {
   return (
     <Marco actual="/negocios">
       <Hero
+        iconos={['tienda', 'taza', 'tijeras', 'pan']}
         etiqueta="Negocios"
         titulo="Un club para cada giro"
         texto="Si tus clientes pueden volver, puedes premiarlos."

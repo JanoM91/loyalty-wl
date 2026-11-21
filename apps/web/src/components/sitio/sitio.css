@@ -156,3 +156,33 @@ to{transform:translateY(-16px) rotate(-1.2deg)}
 /* Asistente en tres pasos */
 .cl .ap{display:flex;align-items:center;gap:12px}.cl .apb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.cl .apb span{height:6px;border-radius:99px;background:var(--line);transition:background .3s}.cl .apb span.on{background:var(--ink)}.cl .atr{width:44px;height:44px;flex:none;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);display:grid;place-items:center;cursor:pointer}.cl .paso{display:flex;flex-direction:column;gap:16px;animation:cl-paso .35s cubic-bezier(.2,.7,.2,1) both}.cl .paso[hidden]{display:none}.cl .paso h2:focus{outline:none}@keyframes cl-paso{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}.cl .gch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cl .ch{min-height:50px;padding:0 10px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s,transform .2s}.cl .ch:hover{transform:translateY(-1px)}.cl .ch[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}.cl .stp{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1.5px solid var(--line);border-radius:14px;padding:8px 8px 8px 14px}.cl .stp button{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:22px;cursor:pointer}.cl .stp button:disabled{opacity:.4;cursor:not-allowed}.cl .stn{font-family:'Bricolage Grotesque Variable','Bricolage Grotesque',system-ui,sans-serif;font-weight:800;font-size:26px;min-width:34px;text-align:center}.cl .vk{position:relative;display:block}.cl .vk .in{padding-right:104px}.cl .vk button{position:absolute;right:4px;top:3px;min-height:44px;padding:0 14px;border:0;border-radius:11px;background:var(--tint);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .cl .sello-cae{animation:cl-sello .7s .35s cubic-bezier(.2,.7,.2,1) both}@keyframes cl-sello{0%{opacity:0;transform:scale(2.4) rotate(-16deg)}60%{opacity:1;transform:scale(.9) rotate(3deg)}100%{opacity:1;transform:none}}
+/* Íconos y figuras */
+.cl .ico{display:grid;place-items:center;flex:none;border-radius:30%;background:var(--tint);color:var(--ink);transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.cl .ico.pri{background:var(--pri);color:var(--on-pri)}
+.cl .ico.pop{background:var(--pop);color:var(--on-pop)}
+.cl .ico.blanco{background:var(--surface);color:var(--ink);border:1.5px solid var(--ink)}
+.cl .dk .ico.tinte{background:var(--dark-line);color:var(--pri)}
+.cl .rv>.ico{margin-bottom:auto}
+.cl .rv:hover>.ico,.cl .rv:focus>.ico,.cl .step:hover .ico{transform:rotate(-10deg) scale(1.08)}
+.cl .mq-g{display:inline-flex;align-items:center;gap:12px;flex:none}
+.cl .mq-i{color:var(--pri);flex:none}
+.cl .fig{position:relative;flex:0 1 380px;min-width:260px;height:340px;margin:0 auto}
+.cl .fig-anillo{position:absolute;inset:8% 10%;border-radius:50%;border:3px dashed var(--pri);opacity:.55;animation:cl-gira 40s linear infinite}
+.cl .fig-centro{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-6deg)}
+.cl .fig-centro .ico{box-shadow:8px 8px 0 var(--ink)}
+.cl .dk .fig-centro .ico{box-shadow:8px 8px 0 var(--pri)}
+.cl .fig-sat{position:absolute}
+.cl .fig-sat .ico{box-shadow:4px 4px 0 var(--ink)}
+.cl .dk .fig-sat .ico{box-shadow:none}
+.cl .flot{animation:cl-flota 4.5s ease-in-out infinite alternate}
+.cl .flot.f1{animation-duration:5.5s;animation-delay:-1.5s}
+.cl .flot.f2{animation-duration:6.5s;animation-delay:-3s}
+.cl .pill{position:absolute;z-index:3;display:inline-flex;align-items:center;gap:8px;padding:9px 14px 9px 10px;border-radius:999px;background:var(--surface);color:var(--ink);border:1.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink);font-weight:700;font-size:15px;white-space:nowrap}
+.cl .pill .ico{width:30px;height:30px;border-radius:50%}
+.cl .hero-fig{position:relative;flex:1 1 360px;min-width:0;display:flex;justify-content:center}
+.cl .faq summary{gap:14px}
+.cl .faq summary>svg{flex:none;color:var(--pri)}
+@keyframes cl-flota{to{transform:translateY(-12px) rotate(3deg)}}
+@keyframes cl-gira{to{transform:rotate(360deg)}}
+@media(max-width:640px){.cl .fig{height:220px;min-width:0;flex-basis:100%}.cl .fig .fig-centro .ico{width:104px!important;height:104px!important}.cl .fig .fig-sat .ico{width:54px!important;height:54px!important}.cl .pill{font-size:13px;padding:7px 12px 7px 8px}.cl .orbs.par .orb.b{display:none}}
+@media(prefers-reduced-motion:reduce){.cl .flot,.cl .fig-anillo{animation:none!important}}
