@@ -27,10 +27,10 @@ export const metadata: Metadata = {
 export default async function Listo({
   searchParams,
 }: {
-  searchParams: Promise<{ n?: string; 'sin-sesion'?: string }>;
+  searchParams: Promise<{ n?: string; 'sin-sesion'?: string; logo?: string }>;
 }) {
   await exigirSitioDelServicio();
-  const { n, 'sin-sesion': sinSesion } = await searchParams;
+  const { n, 'sin-sesion': sinSesion, logo } = await searchParams;
   const negocio = n ? await negocioPorSlug(n) : null;
   // Solo clubes creados desde el asistente: no se asoma a ningún otro negocio.
   if (!negocio || !negocio.ajustes.alta) notFound();
@@ -69,7 +69,16 @@ export default async function Listo({
             aria-hidden="true"
           >
             <div className="row" style={{ justifyContent: 'space-between', gap: 12 }}>
-              <span className="d h3">{negocio.nombre}</span>
+              <span className="d h3" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {negocio.marca.iconoUrl ? (
+                  <img
+                    src={negocio.marca.iconoUrl}
+                    alt=""
+                    style={{ width: 40, height: 40, borderRadius: 999, flex: 'none' }}
+                  />
+                ) : null}
+                {negocio.nombre}
+              </span>
               <span className="sm2">Así se ve</span>
             </div>
             <div className="row" style={{ alignItems: 'baseline', gap: 10 }}>
@@ -95,6 +104,11 @@ export default async function Listo({
               ? 'Entra con tu correo y la contraseña que elegiste. Adentro te esperan 3 pasos cortos para estrenarlo con tu primer cliente: tú.'
               : 'Ya entraste a tu panel. Te faltan 3 pasos cortos para estrenarlo con tu primer cliente: tú.'}
           </p>
+          {logo === '0' ? (
+            <p className="p" style={{ fontSize: 16 }}>
+              No pudimos guardar tu logotipo. Súbelo desde tu panel, en Marca y datos.
+            </p>
+          ) : null}
 
           <a
             href={sinSesion ? `/${negocio.slug}/admin/entrar` : `/${negocio.slug}/admin`}

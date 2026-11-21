@@ -21,8 +21,31 @@ import { Paleta } from './Paleta';
 const FONDO_PUNTEADO =
   'bg-[radial-gradient(#C9E7DA_1.2px,transparent_1.2px)] [background-size:24px_24px]';
 
-/** Inicial del negocio en sus colores: su sello dentro del panel. */
-function Inicial({ nombre, fondo, acento }: { nombre: string; fondo: string; acento: string }) {
+/**
+ * El sello del negocio dentro del panel: su Sello (hecho de su logotipo o
+ * subido aparte) o, si no tiene, su inicial en sus colores.
+ */
+function Inicial({
+  nombre,
+  fondo,
+  acento,
+  sello,
+}: {
+  nombre: string;
+  fondo: string;
+  acento: string;
+  sello: string | null;
+}) {
+  if (sello)
+    return (
+      <span
+        aria-hidden="true"
+        className="grid size-[42px] flex-none place-items-center overflow-hidden rounded-[13px]"
+        style={{ background: fondo }}
+      >
+        <img src={sello} alt="" className="size-[34px] object-contain" />
+      </span>
+    );
   return (
     <span
       aria-hidden="true"
@@ -177,7 +200,12 @@ export async function MarcoPanel({
 
       <aside className="sticky top-0 hidden h-screen w-[264px] flex-none flex-col gap-5 overflow-y-auto border-r-[1.5px] border-[#CDE8DC] bg-white px-3.5 py-5 lg:flex">
         <div className="flex items-center gap-3 px-1.5">
-          <Inicial nombre={negocio.nombre} fondo={fondo} acento={acento} />
+          <Inicial
+            nombre={negocio.nombre}
+            fondo={fondo}
+            acento={acento}
+            sello={negocio.marca.iconoUrl}
+          />
           <div className="flex min-w-0 flex-col">
             <b className="truncate font-display text-[17px]">{negocio.nombre}</b>
             <span className="text-[13px] text-[#3C5A51]">Panel de tu club</span>
@@ -220,7 +248,12 @@ export async function MarcoPanel({
       <div className="min-w-0 flex-1">
         <header className="mx-auto flex max-w-6xl items-center gap-3 px-5 pt-4 pb-1 lg:px-10 lg:pt-6">
           <div className="flex min-w-0 flex-1 items-center gap-3 lg:hidden">
-            <Inicial nombre={negocio.nombre} fondo={fondo} acento={acento} />
+            <Inicial
+              nombre={negocio.nombre}
+              fondo={fondo}
+              acento={acento}
+              sello={negocio.marca.iconoUrl}
+            />
             <b className="truncate font-display text-[18px]">{negocio.nombre}</b>
           </div>
           <div className="hidden flex-1 lg:block" />

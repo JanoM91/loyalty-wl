@@ -1,9 +1,19 @@
 'use client';
 
-import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from 'react';
 import { COMBINACIONES, girosOrdenados, type CombinacionMarca, type GrupoGiro } from '@wl/domain';
 
 import { crearClub, type EstadoAlta } from '@/app/empezar/acciones';
+import { ImagenIlegible, prepararLogo, type LogoPreparado } from '@/lib/logo-en-navegador';
 import { medir } from '@/lib/medicion';
 
 const INICIAL: EstadoAlta = { error: null, paso: null };
@@ -13,64 +23,11 @@ const MINIMO_CLAVE = 10;
 
 const TITULOS = ['Tu negocio', 'Tu premio', 'Tu acceso'] as const;
 
-function aRgb(hex: string): [number, number, number] {
-  const n = Number.parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
+/** El logotipo ya preparado en el celular, con sus vistas previas. */
+type LogoListo = LogoPreparado & { readonly vista: string; readonly vistaSello: string };
 
-/** Color dominante de una imagen: promedio de sus píxeles con más color. */
-async function colorDeLaFoto(archivo: File): Promise<[number, number, number] | null> {
-  const url = URL.createObjectURL(archivo);
-  try {
-    const imagen = new Image();
-    imagen.src = url;
-    await imagen.decode();
-    const lado = 48;
-    const lienzo = document.createElement('canvas');
-    lienzo.width = lado;
-    lienzo.height = lado;
-    const ctx = lienzo.getContext('2d');
-    if (!ctx) return null;
-    ctx.drawImage(imagen, 0, 0, lado, lado);
-    const px = ctx.getImageData(0, 0, lado, lado).data;
-    let r = 0;
-    let g = 0;
-    let b = 0;
-    let peso = 0;
-    for (let i = 0; i < px.length; i += 4) {
-      const [pr, pg, pb, pa] = [px[i]!, px[i + 1]!, px[i + 2]!, px[i + 3]!];
-      if (pa < 128) continue;
-      const max = Math.max(pr, pg, pb);
-      const min = Math.min(pr, pg, pb);
-      // Los píxeles casi blancos, casi negros o grises pesan muy poco.
-      const w = (max - min) / 255 + 0.02;
-      r += pr * w;
-      g += pg * w;
-      b += pb * w;
-      peso += w;
-    }
-    return peso > 0 ? [r / peso, g / peso, b / peso] : null;
-  } catch {
-    return null;
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
-/** La combinación cuyo color de tarjeta se parece más al color dado. */
-function combinacionCercana(color: [number, number, number]): CombinacionMarca {
-  let mejor = COMBINACIONES[0]!;
-  let distancia = Infinity;
-  for (const c of COMBINACIONES) {
-    const [r, g, b] = aRgb(c.colores.fondo);
-    const d = (r - color[0]) ** 2 + (g - color[1]) ** 2 + (b - color[2]) ** 2;
-    if (d < distancia) {
-      distancia = d;
-      mejor = c;
-    }
-  }
-  return mejor;
-}
+/** Nombre de archivo según el formato que salió al preparar la imagen. */
+const nombreDeLogo = (b: Blob) => (b.type === 'image/png' ? 'logo.png' : 'logo.jpg');
 
 /**
  * Asistente de alta en tres pasos cortos: tu negocio, tu premio y tu acceso.
@@ -94,7 +51,8 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
   const [sellos, setSellos] = useState(giro.sellos);
   const [tocado, setTocado] = useState(false);
   const [combinacionId, setCombinacionId] = useState(giro.combinaciones[0]!);
-  const [deFoto, setDeFoto] = useState<string | null>(null);
+  const [logo, setLogo] = useState<LogoListo | null>(null);
+  const [leyendoLogo, setLeyendoLogo] = useState(false);
   const [avisoFoto, setAvisoFoto] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [correo, setCorreo] = useState('');
@@ -106,12 +64,19 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
     .filter((c): c is CombinacionMarca => Boolean(c));
   const elegida =
     COMBINACIONES.find((c) => c.id === combinacionId) ?? opciones[0] ?? COMBINACIONES[0]!;
+  // «Los de tu logo» manda sobre las combinaciones mientras esté elegido.
+  const colores = combinacionId === 'logo' && logo?.colores ? logo.colores : elegida.colores;
 
-  // La combinación tomada de la foto, si no está ya entre las seis del giro.
-  const extra =
-    deFoto && !opciones.some((c) => c.id === deFoto)
-      ? (COMBINACIONES.find((c) => c.id === deFoto) ?? null)
-      : null;
+  // Las vistas previas del logo se sueltan al cambiarlo o al salir.
+  useEffect(
+    () => () => {
+      if (logo) {
+        URL.revokeObjectURL(logo.vista);
+        URL.revokeObjectURL(logo.vistaSello);
+      }
+    },
+    [logo],
+  );
 
   // Si el servidor rechaza un dato, se regresa al paso donde se escribe.
   useEffect(() => {
@@ -136,20 +101,43 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
       setPremio(nuevo.premio);
       setSellos(nuevo.sellos);
     }
-    if (!deFoto) setCombinacionId(nuevo.combinaciones[0]!);
+    if (combinacionId !== 'logo') setCombinacionId(nuevo.combinaciones[0]!);
   }
 
-  async function leerFoto(archivo: File | undefined) {
+  async function leerLogo(e: ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    e.target.value = '';
     if (!archivo) return;
-    const color = await colorDeLaFoto(archivo);
-    if (!color) {
-      setAvisoFoto('No pudimos leer esa imagen. Elige un color de la lista.');
-      return;
+    setLeyendoLogo(true);
+    setAvisoFoto('');
+    try {
+      const p = await prepararLogo(archivo);
+      setLogo({
+        ...p,
+        vista: URL.createObjectURL(p.logo),
+        vistaSello: URL.createObjectURL(p.sello),
+      });
+      if (p.colores) {
+        setCombinacionId('logo');
+        setAvisoFoto('Listo: tu tarjeta lleva los colores de tu logotipo. Puedes elegir otros.');
+      } else {
+        setAvisoFoto('Guardamos tu logotipo. Elige el color de tu tarjeta en la lista.');
+      }
+    } catch (err) {
+      setAvisoFoto(
+        err instanceof ImagenIlegible
+          ? err.message
+          : 'No pudimos leer esa imagen. Prueba con una captura de pantalla, un PNG o un JPG.',
+      );
+    } finally {
+      setLeyendoLogo(false);
     }
-    const c = combinacionCercana(color);
-    setDeFoto(c.id);
-    setCombinacionId(c.id);
-    setAvisoFoto(`Tomamos «${c.nombre}» de tu foto.`);
+  }
+
+  function quitarLogo() {
+    setLogo(null);
+    setAvisoFoto('');
+    if (combinacionId === 'logo') setCombinacionId(giro.combinaciones[0]!);
   }
 
   function revisar(n: 1 | 2 | 3): string {
@@ -180,6 +168,15 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
       setPaso((paso + 1) as 2 | 3);
     } else {
       medir('Lead', { content_name: origen });
+      // Con logotipo, el envío lleva también la imagen ya preparada y su Sello.
+      if (logo) {
+        e.preventDefault();
+        const datos = new FormData(e.currentTarget);
+        datos.set('logo', logo.logo, nombreDeLogo(logo.logo));
+        datos.set('sello', logo.sello, 'sello.png');
+        if (logo.colores) datos.set('colores', JSON.stringify(logo.colores));
+        startTransition(() => enviar(datos));
+      }
     }
   }
 
@@ -227,11 +224,20 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
 
       <div
         className="pv"
-        style={{ background: elegida.colores.fondo, color: elegida.colores.sobreFondo }}
+        style={{ background: colores.fondo, color: colores.sobreFondo }}
         aria-hidden="true"
       >
         <div className="row" style={{ justifyContent: 'space-between', gap: 12 }}>
-          <span className="d h3">{nombre.trim() || 'Tu negocio'}</span>
+          <span className="d h3" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {logo ? (
+              <img
+                src={logo.vistaSello}
+                alt=""
+                style={{ width: 40, height: 40, borderRadius: 999, flex: 'none' }}
+              />
+            ) : null}
+            {nombre.trim() || 'Tu negocio'}
+          </span>
           <span className="sm2">Así se verá</span>
         </div>
         {paso > 1 ? (
@@ -249,7 +255,7 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
                   className="pvd"
                   style={
                     i === 0
-                      ? { background: elegida.colores.acento, borderColor: elegida.colores.acento }
+                      ? { background: colores.acento, borderColor: colores.acento }
                       : undefined
                   }
                 />
@@ -356,12 +362,87 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
             </button>
           </div>
         </div>
+        <div className="fs">
+          <span className="fl" id="alta-logo" style={{ marginBottom: 8 }}>
+            Tu logotipo <span style={{ fontWeight: 500 }}>(opcional)</span>
+          </span>
+          <div className="row" style={{ gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+            {logo ? (
+              <img
+                src={logo.vista}
+                alt="Tu logotipo"
+                style={{
+                  height: 64,
+                  maxWidth: 150,
+                  objectFit: 'contain',
+                  background: '#fff',
+                  borderRadius: 12,
+                  padding: 6,
+                  border: '1.5px solid rgba(0,0,0,.12)',
+                }}
+              />
+            ) : null}
+            <label
+              className="tab"
+              htmlFor="alta-foto"
+              aria-describedby="alta-logo-ayuda"
+              style={{ display: 'inline-flex', alignItems: 'center' }}
+            >
+              {leyendoLogo ? 'Preparando…' : logo ? 'Cambiar' : 'Subir mi logotipo'}
+            </label>
+            {logo ? (
+              <button
+                type="button"
+                className="ul"
+                onClick={quitarLogo}
+                style={{
+                  background: 'none',
+                  border: 0,
+                  padding: '0 4px',
+                  minHeight: 44,
+                  font: 'inherit',
+                  cursor: 'pointer',
+                }}
+              >
+                Quitar
+              </button>
+            ) : null}
+          </div>
+          <input
+            id="alta-foto"
+            type="file"
+            accept="image/*"
+            className="oc"
+            aria-labelledby="alta-logo"
+            onChange={(e) => void leerLogo(e)}
+          />
+          <span id="alta-logo-ayuda" className="sm2" aria-live="polite">
+            {avisoFoto ||
+              'Una foto o captura sirve. Se queda en tu tarjeta, tu panel y tu cartel, y con sus colores armamos tu tarjeta.'}
+          </span>
+        </div>
         <fieldset className="fs">
           <legend className="fl" style={{ marginBottom: 8 }}>
             Color de tu tarjeta
           </legend>
           <div className="sws">
-            {[...opciones, ...(extra ? [extra] : [])].map((c) => (
+            {logo?.colores ? (
+              <label className="sw" title="Los de tu logo">
+                <input
+                  type="radio"
+                  name="combinacion"
+                  value="logo"
+                  checked={combinacionId === 'logo'}
+                  onChange={() => setCombinacionId('logo')}
+                />
+                <span
+                  style={{ background: logo.colores.fondo, borderColor: logo.colores.acento }}
+                  aria-hidden="true"
+                />
+                <span className="oc">Los de tu logo</span>
+              </label>
+            ) : null}
+            {opciones.map((c) => (
               <label key={c.id} className="sw" title={c.nombre}>
                 <input
                   type="radio"
@@ -378,22 +459,10 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
               </label>
             ))}
           </div>
-          <label
-            className="tab"
-            htmlFor="alta-foto"
-            style={{ display: 'inline-flex', alignItems: 'center', alignSelf: 'flex-start' }}
-          >
-            Tomar el color de mi logotipo
-          </label>
-          <input
-            id="alta-foto"
-            type="file"
-            accept="image/*"
-            className="oc"
-            onChange={(e) => void leerFoto(e.target.files?.[0])}
-          />
-          <span className="sm2" aria-live="polite">
-            {avisoFoto || 'La foto no se sube: solo leemos su color en tu celular.'}
+          <span className="sm2">
+            {combinacionId === 'logo'
+              ? 'Los de tu logo'
+              : (opciones.find((c) => c.id === combinacionId)?.nombre ?? '')}
           </span>
         </fieldset>
       </section>
