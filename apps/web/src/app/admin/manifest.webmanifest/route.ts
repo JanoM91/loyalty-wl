@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
 
 export const dynamic = 'force-dynamic';
@@ -12,12 +13,14 @@ export const dynamic = 'force-dynamic';
  * dirección de su panel. La app instalada no comparte cookies con el
  * navegador en iOS, así que la primera vez pide entrar con la contraseña.
  *
- * El panel usa la identidad de club-lealtad, no la del negocio: así no se
- * confunde con la tarjeta del cliente, que lleva el ícono del negocio.
+ * El ícono lleva siempre la marca del negocio (decisión de Jano, 21 nov
+ * 2026). El nombre bajo el ícono, «Mi panel», lo distingue de la tarjeta.
  */
 export async function GET() {
   const negocio = await exigirNegocio();
   const base = await rutaBase();
+  const iconos = iconosDeApp(negocio, base);
+  const c = negocio.marca.colores;
   const manifest = {
     name: `${negocio.nombre} · Panel de club-lealtad`,
     short_name: 'Mi panel',
@@ -27,18 +30,13 @@ export async function GET() {
     scope: `${base}/admin`,
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#06231C',
+    background_color: c.fondo,
     theme_color: '#F1FBF6',
     lang: 'es-MX',
     icons: [
-      { src: '/static/panel/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: '/static/panel/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      {
-        src: '/static/panel/icon-maskable-512.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
+      { src: iconos.chico, sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: iconos.grande, sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: iconos.grande, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
   return NextResponse.json(manifest, {

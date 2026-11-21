@@ -14,7 +14,7 @@ type Plataforma = 'ios' | 'android' | 'otra';
  * como app instalada. En Android con Chrome usa el aviso de instalación del
  * navegador; en iPhone explica los dos toques de Safari, que no tiene botón.
  */
-export function InstalarPanel() {
+export function InstalarPanel({ icono }: { icono: string }) {
   const [visible, setVisible] = useState(false);
   const [plataforma, setPlataforma] = useState<Plataforma>('otra');
   const [evento, setEvento] = useState<EventoInstalar | null>(null);
@@ -58,12 +58,13 @@ export function InstalarPanel() {
       aria-labelledby="instalar-panel"
       className="flex items-start gap-3 rounded-[22px] border-[1.5px] border-[#CDE8DC] bg-white p-4 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]"
     >
-      <span
-        aria-hidden="true"
-        className="grid size-[46px] flex-none place-items-center rounded-[14px] bg-[#06231C]"
-      >
-        <span className="size-[18px] rounded-full bg-[#00C389]" />
-      </span>
+      <img
+        src={icono}
+        alt=""
+        width={46}
+        height={46}
+        className="size-[46px] flex-none rounded-[12px]"
+      />
       <div className="min-w-0 flex-1">
         <h2 id="instalar-panel" className="text-[15px] font-bold text-ink">
           {instalada ? 'Listo: ya está en tu pantalla de inicio' : 'Ten tu panel como app'}

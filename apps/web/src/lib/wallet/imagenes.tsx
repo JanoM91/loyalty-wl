@@ -260,6 +260,42 @@ export function icono(marca: MarcaImagen, lado: number): Promise<Buffer> {
 }
 
 /**
+ * Ícono de la tarjeta o del panel en la pantalla de inicio del celular: el
+ * isotipo del negocio con aire alrededor (el sistema recorta las esquinas y
+ * Android lo recorta en círculo) o, si no subió, su inicial. Siempre con la
+ * marca del negocio (decisión de Jano, 21 nov 2026).
+ */
+export function iconoDeApp(marca: MarcaImagen, lado: number): Promise<Buffer> {
+  const clave = `app:${huellaDeDiseno(marca, { posiciones: 0, hitos: [] })}:${lado}`;
+  return recordar(clave, async () => {
+    if (marca.iconoUrl) {
+      const interior = Math.round(lado * 0.66);
+      try {
+        return await png(
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: lado,
+              height: lado,
+              backgroundColor: marca.fondo,
+            }}
+          >
+            <ImagenCentrada url={marca.iconoUrl} ancho={interior} alto={interior} fondo={null} />
+          </div>,
+          lado,
+          lado,
+        );
+      } catch (e) {
+        console.warn('[app] no se pudo dibujar el isotipo; va la inicial', e);
+      }
+    }
+    return png(<Monograma lado={lado} marca={marca} />, lado, lado);
+  });
+}
+
+/**
  * Logotipo de la cabecera del pase de Apple (hasta 160×50 pt). Con logotipo
  * subido va ese, a lo ancho; si no, la inicial en un cuadro y el nombre lo
  * escribe Wallet al lado (`logoText`).

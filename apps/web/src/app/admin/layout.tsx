@@ -2,10 +2,12 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 import { ESTILO_PANEL } from '@/lib/admin/panel';
+import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const base = await rutaBase();
+  const [base, negocio] = await Promise.all([rutaBase(), exigirNegocio()]);
+  const iconos = iconosDeApp(negocio, base);
   return {
     title: { default: 'Panel', template: '%s · Panel' },
     // El panel nunca debe aparecer en un buscador. También está bloqueado en
@@ -15,9 +17,10 @@ export async function generateMetadata(): Promise<Metadata> {
     manifest: `${base}/admin/manifest.webmanifest`,
     applicationName: 'Mi panel',
     appleWebApp: { capable: true, title: 'Mi panel', statusBarStyle: 'default' },
+    // Ícono con la marca del negocio, como su tarjeta.
     icons: {
-      icon: [{ url: '/static/panel/icon-192.png', sizes: '192x192', type: 'image/png' }],
-      apple: [{ url: '/static/panel/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+      icon: [{ url: iconos.chico, sizes: '192x192', type: 'image/png' }],
+      apple: [{ url: iconos.apple, sizes: '180x180', type: 'image/png' }],
     },
   };
 }
