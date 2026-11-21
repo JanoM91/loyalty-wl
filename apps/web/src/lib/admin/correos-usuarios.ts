@@ -16,8 +16,8 @@ import { exigirNegocio, origenDeLaPeticion } from '@/lib/negocio';
  * elegir contraseña: no gasta nada hasta que la persona la guarda.
  */
 
-async function pie(): Promise<string> {
-  const { nombre } = await exigirNegocio();
+async function pie(club?: string): Promise<string> {
+  const nombre = club ?? (await exigirNegocio()).nombre;
   return `${nombre}. Recibes este correo porque tienes una cuenta en el panel de ${nombre}. Si no lo esperabas, ignóralo: sin abrir el enlace no cambia nada.`;
 }
 
@@ -84,11 +84,18 @@ export async function mandarRecuperacion(datos: {
   readonly email: string;
   readonly nombre: string;
   readonly token: string;
+  /**
+   * Club y su dirección completa («https://club-lealtad.com/cafe»), cuando se
+   * pide desde el sitio del servicio y no desde la dirección del club.
+   */
+  readonly club?: { readonly nombre: string; readonly origen: string };
 }): Promise<ResultadoCorreo> {
-  const url = await urlEnlaceContrasena(datos.token);
-  const { nombre: negocio } = await exigirNegocio();
-  const PIE = await pie();
-  const hola = `Hola, ${primerNombre(datos.nombre)}:`;
+  const url = datos.club
+    ? `${datos.club.origen}/admin/contrasena/${datos.token}`
+    : await urlEnlaceContrasena(datos.token);
+  const negocio = datos.club?.nombre ?? (await exigirNegocio()).nombre;
+  const PIE = await pie(datos.club?.nombre);
+  const hola = datos.nombre.trim() ? `Hola, ${primerNombre(datos.nombre)}:` : 'Hola:';
   const intro = `Pediste restablecer tu contraseña del panel de ${negocio}. Toca el botón para elegir una nueva.`;
   const vence = `El enlace vence en ${MINUTOS_ENLACE_RECUPERACION} minutos y sirve una sola vez. Si no lo pediste tú, ignora este correo: tu contraseña no cambia.`;
   return enviarCorreo({

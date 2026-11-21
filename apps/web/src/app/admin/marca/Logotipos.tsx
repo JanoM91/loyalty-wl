@@ -151,7 +151,7 @@ function ImagenAvanzada({
 }
 
 /**
- * El logotipo del club, arriba de todo en «Marca y datos». Se elige una imagen
+ * El logotipo del club, arriba de todo en «Tu marca». Se elige una imagen
  * (también una foto del celular), se prepara en el navegador y se sube sola;
  * de ella sale el Sello y, si el dueño quiere, los colores de su tarjeta.
  */

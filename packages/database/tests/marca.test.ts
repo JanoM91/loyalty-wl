@@ -64,6 +64,60 @@ describe.skipIf(!CON_BD)('el negocio edita su marca', () => {
     expect(bitacora).toBe(1);
   });
 
+  it('«Tu marca» sin datos del negocio conserva el contacto; «Datos del negocio» solo cambia esos', async () => {
+    const { nombre, plantilla, frase, colores } = cambios();
+    const r = await en(a, () =>
+      db.guardarMarca(
+        { nombre, plantilla, frase, colores: { ...colores, fondo: '#123456' } },
+        actor,
+      ),
+    );
+    expect(r.ok).toBe(true);
+    let leido = await db.negocioPorSlug('prueba-marca-a');
+    expect(leido?.marca.colores.fondo).toBe('#123456');
+    expect(leido?.marca.contacto.whatsapp).toBe('522281234567');
+
+    const d = await en(a, () =>
+      db.guardarDatosNegocio(
+        {
+          correo: 'nuevo@tacos.mx',
+          whatsapp: '522289998877',
+          sitio: '',
+          instagram: '',
+          razonSocial: 'Tacos SA',
+          domicilio: 'Calle 1, Xalapa',
+          correoPrivacidad: 'datos@tacos.mx',
+        },
+        actor,
+      ),
+    );
+    expect(d.ok).toBe(true);
+    leido = await db.negocioPorSlug('prueba-marca-a');
+    expect(leido?.marca.colores.fondo).toBe('#123456');
+    expect(leido?.marca.contacto).toMatchObject({
+      correo: 'nuevo@tacos.mx',
+      whatsapp: '522289998877',
+    });
+    expect(leido?.marca.legal.domicilio).toBe('Calle 1, Xalapa');
+    const malo = await en(a, () =>
+      db.guardarDatosNegocio(
+        {
+          correo: 'sin-arroba',
+          whatsapp: '',
+          sitio: '',
+          instagram: '',
+          razonSocial: '',
+          domicilio: '',
+          correoPrivacidad: '',
+        },
+        actor,
+      ),
+    );
+    expect(malo.ok).toBe(false);
+    // Se regresa el contacto para las pruebas que siguen.
+    await en(a, () => db.guardarMarca(cambios(), actor));
+  });
+
   it('no toca al otro negocio', async () => {
     const otro = await db.negocioPorSlug('prueba-marca-b');
     expect(otro?.nombre).toBe('Negocio B');

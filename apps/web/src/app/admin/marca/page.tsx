@@ -8,10 +8,14 @@ import { exigirNegocio } from '@/lib/negocio';
 import { FormularioMarca } from './FormularioMarca';
 import { Logotipos } from './Logotipos';
 
-export const metadata: Metadata = { title: 'Marca y datos' };
+export const metadata: Metadata = { title: 'Tu marca' };
 export const dynamic = 'force-dynamic';
 
-/** El negocio viste su programa: nombre, diseño, colores y datos de contacto. */
+/**
+ * «Tu marca»: lo que ven tus clientes. Logotipo, nombre, colores y estilo, con
+ * la tarjeta en vivo. El contacto y los datos legales viven en «Datos del
+ * negocio» (`/admin/datos`).
+ */
 export default async function MarcaPage() {
   const sesion = await exigirRol(ROLES_USUARIOS);
   const [negocio, programa] = await Promise.all([exigirNegocio(), programaVigente()]);
@@ -19,8 +23,8 @@ export default async function MarcaPage() {
     <MarcoPanel
       sesion={sesion}
       actual="/admin/marca"
-      titulo="Marca y datos"
-      descripcion="Así ven tu programa tus clientes. El logotipo se guarda al elegirlo; lo demás, al tocar Guardar."
+      titulo="Tu marca"
+      descripcion="Así ven tu tarjeta tus clientes. El logotipo se guarda al elegirlo; lo demás, al tocar «Guardar cambios»."
     >
       <div className="grid gap-12">
         <Logotipos marca={negocio.marca} activo={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />

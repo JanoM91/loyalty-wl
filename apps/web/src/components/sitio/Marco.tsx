@@ -47,12 +47,21 @@ function Logo({ enlace }: { enlace: boolean }) {
   );
 }
 
-export function Marco({ actual, children }: { actual?: string; children: ReactNode }) {
+export function Marco({
+  actual,
+  compacto = false,
+  children,
+}: {
+  actual?: string;
+  /** En el celular, el encabezado queda en una línea: logo y «Entrar». */
+  compacto?: boolean;
+  children: ReactNode;
+}) {
   return (
     <div className="cl">
       <PixelMeta />
       <div className="bar" aria-hidden="true" />
-      <header>
+      <header className={compacto ? 'cab-compacta' : undefined}>
         <div
           className="wrap row"
           style={{
@@ -74,6 +83,13 @@ export function Marco({ actual, children }: { actual?: string; children: ReactNo
                 {p.nombre}
               </Link>
             ))}
+            <Link
+              href="/entrar"
+              className={actual === '/entrar' ? 'nl cur siempre' : 'nl siempre'}
+              aria-current={actual === '/entrar' ? 'page' : undefined}
+            >
+              Entrar
+            </Link>
             <Link href="/empezar" className="btn sm">
               Prueba gratis
             </Link>
@@ -107,6 +123,9 @@ export function Marco({ actual, children }: { actual?: string; children: ReactNo
                 {p.nombre}
               </Link>
             ))}
+            <Link href="/entrar" className="nl">
+              Entrar a mi panel
+            </Link>
             <Link href="/terminos" className="nl">
               Términos
             </Link>

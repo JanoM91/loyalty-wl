@@ -54,6 +54,7 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
   const [logo, setLogo] = useState<LogoListo | null>(null);
   const [leyendoLogo, setLeyendoLogo] = useState(false);
   const [avisoFoto, setAvisoFoto] = useState('');
+  const [duenio, setDuenio] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [correo, setCorreo] = useState('');
   const [clave, setClave] = useState('');
@@ -79,9 +80,13 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
   );
 
   // Si el servidor rechaza un dato, se regresa al paso donde se escribe.
+  // Tras «ya tienes club» se ofrece entrar; si corrige un dato, vuelve «Crear».
+  const [corrigio, setCorrigio] = useState(false);
   useEffect(() => {
     if (estado.paso) setPaso(estado.paso);
+    setCorrigio(false);
   }, [estado]);
+  const ofrecerEntrar = Boolean(estado.yaTieneClub) && !corrigio;
 
   // Al cambiar de paso, el foco va a su título: el lector de pantalla lo anuncia.
   useEffect(() => {
@@ -144,6 +149,7 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
     if (n === 1 && nombre.trim().length < 2) return 'Escribe el nombre de tu negocio.';
     if (n === 2 && premio.trim().length < 2) return 'Escribe el premio de tu tarjeta.';
     if (n === 3) {
+      if (duenio.trim().length < 2) return 'Escribe tu nombre.';
       if (whatsapp.replace(/\D/g, '').length < 10) return 'Escribe tu WhatsApp con 10 dígitos.';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())) return 'Escribe un correo válido.';
       if (clave.length < MINIMO_CLAVE)
@@ -192,7 +198,10 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
       action={enviar}
       onSubmit={alEnviar}
       // Al corregir un dato, el aviso anterior sobra.
-      onChange={() => aviso && setAviso('')}
+      onChange={() => {
+        if (aviso) setAviso('');
+        if (estado.yaTieneClub) setCorrigio(true);
+      }}
       noValidate
       className="fm"
     >
@@ -476,6 +485,18 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
             Con esto entras a tu panel y a tu caja desde cualquier celular.
           </p>
         </div>
+        <label className="fl" htmlFor="alta-duenio">
+          Tu nombre
+          <input
+            id="alta-duenio"
+            name="duenio"
+            className="in"
+            maxLength={80}
+            autoComplete="name"
+            value={duenio}
+            onChange={(e) => setDuenio(e.target.value)}
+          />
+        </label>
         <label className="fl" htmlFor="alta-whatsapp">
           Tu WhatsApp
           <input
@@ -546,8 +567,26 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
           {error}
         </p>
       ) : null}
-
-      {paso < 3 ? (
+      {ofrecerEntrar ? (
+        <>
+          <a href="/entrar" className="btn">
+            Entrar a mi panel
+          </a>
+          <a
+            href="/entrar/recuperar"
+            className="tab"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            Olvidé mi contraseña
+          </a>
+          <span className="sm2">¿Es otro negocio? Cambia el correo y el WhatsApp.</span>
+        </>
+      ) : paso < 3 ? (
         <button type="submit" className="btn">
           Siguiente
         </button>
@@ -556,7 +595,7 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
           {enviando ? 'Creando tu club…' : 'Crear mi club gratis'}
         </button>
       )}
-      <span className="sm2">7 días gratis. Sin tarjeta bancaria.</span>
+      {ofrecerEntrar ? null : <span className="sm2">7 días gratis. Sin tarjeta bancaria.</span>}
     </form>
   );
 }

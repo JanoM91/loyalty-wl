@@ -313,17 +313,13 @@ export function FormularioPrograma({ programa }: { programa: ProgramaLealtad }) 
           </Alerta>
         )}
         {estado.ok && estado.version && (
-          <Alerta tono="ok">
-            Listo: guardado como versión {estado.version}. Las tarjetas de tus clientes ya lo
-            muestran.
-          </Alerta>
+          <Alerta tono="ok">Listo, guardado. Las tarjetas de tus clientes ya lo muestran.</Alerta>
         )}
 
         <p className="text-xs text-muted">
-          Al guardar se publica una versión nueva y entra en vigor de inmediato en caja, en la
-          tarjeta de cada cliente y en Apple y Google Wallet. Los premios ya ganados conservan el
-          nombre con el que se ganaron. Si cambias lo que se promete, actualiza también los términos
-          del programa.
+          Al guardar, el cambio entra en vigor de inmediato en caja, en la tarjeta de cada cliente y
+          en Apple y Google Wallet. Los premios ya ganados conservan el nombre con el que se
+          ganaron. Si cambias lo que se promete, actualiza también los términos del programa.
         </p>
         <div>
           <BotonEnviar texto="Guardar cambios" enviando="Guardando…" />

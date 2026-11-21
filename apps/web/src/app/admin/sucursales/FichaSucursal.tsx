@@ -85,7 +85,7 @@ export function FichaSucursal({ sucursal }: { sucursal: DatosSucursal }) {
             name="telefono"
             type="tel"
             defaultValue={sucursal.telefono}
-            placeholder="228 818 5964"
+            placeholder="Ej. 228 123 4567"
             className={entrada}
           />
         </Campo>
@@ -93,14 +93,14 @@ export function FichaSucursal({ sucursal }: { sucursal: DatosSucursal }) {
         <Campo
           id={`wa-${sucursal.slug}`}
           etiqueta="WhatsApp"
-          ayuda="El número tal cual. Yo le pongo el 52 delante."
+          ayuda="Diez dígitos. Lo guardamos con el 52 de México."
         >
           <input
             id={`wa-${sucursal.slug}`}
             name="whatsapp"
             type="tel"
             defaultValue={sucursal.whatsapp}
-            placeholder="228 818 5964"
+            placeholder="Ej. 228 123 4567"
             className={entrada}
           />
         </Campo>

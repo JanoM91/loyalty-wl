@@ -100,24 +100,11 @@ export function FormularioMarca({
         </section>
 
         <section className="grid gap-4">
-          <h2 className="text-xl text-ink">Diseño</h2>
-          <input type="hidden" name="plantilla" value={plantilla} />
-          <div className="flex flex-wrap gap-2">
-            {PLANTILLAS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                aria-pressed={plantilla === p.id}
-                onClick={() => setPlantilla(p.id)}
-                className={`grid gap-0.5 border px-4 py-3 text-left text-[15px] ${plantilla === p.id ? 'border-ink text-ink' : 'border-rule text-muted hover:text-ink'}`}
-              >
-                <b className="font-semibold">{p.nombre}</b>
-                <span className="text-[13px]">{p.nota}</span>
-              </button>
-            ))}
-          </div>
-
-          <p className="mt-2 text-[14px] text-muted">Empieza con una combinación y ajústala.</p>
+          <h2 className="text-xl text-ink">Colores</h2>
+          <p className="-mt-2 text-[14px] text-muted">
+            Toca una combinación y mira la tarjeta. Si subiste tu logotipo, arriba puedes usar sus
+            colores.
+          </p>
           <div className="flex flex-wrap gap-2">
             {COMBINACIONES.map((c) => (
               <button
@@ -127,7 +114,7 @@ export function FormularioMarca({
                   setColores(c.colores);
                   setPlantilla(c.plantilla);
                 }}
-                className="flex items-center gap-2 rounded-full border border-rule py-1.5 pr-3.5 pl-1.5 text-[14px] text-ink hover:border-ink"
+                className="flex min-h-[44px] items-center gap-2 rounded-full border border-rule py-1.5 pr-3.5 pl-1.5 text-[14px] text-ink hover:border-ink"
               >
                 <span
                   aria-hidden="true"
@@ -144,69 +131,53 @@ export function FormularioMarca({
             ))}
           </div>
 
-          <div className="mt-2 grid gap-3 sm:grid-cols-2">
-            {COLORES.map((c) => (
-              <label key={c.id} className="flex items-center gap-3 text-[14px] text-muted">
-                <input
-                  type="color"
-                  name={c.id}
-                  value={colores[c.id]}
-                  onChange={(e) => setColores({ ...colores, [c.id]: e.target.value })}
-                  className="h-12 w-12 flex-none cursor-pointer rounded-full border border-rule bg-transparent p-1"
-                />
-                <span>
-                  <b className="block text-[15px] font-semibold text-ink">{c.nombre}</b>
-                  {c.nota}
-                </span>
-              </label>
+          <details className="group rounded-[16px] border border-rule bg-white px-4 py-1">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between text-[15px] font-semibold text-ink">
+              Ajustar cada color
+              <span
+                aria-hidden="true"
+                className="text-muted transition-transform group-open:rotate-90"
+              >
+                ›
+              </span>
+            </summary>
+            <div className="grid gap-3 pt-2 pb-4 sm:grid-cols-2">
+              {COLORES.map((c) => (
+                <label key={c.id} className="flex items-center gap-3 text-[14px] text-muted">
+                  <input
+                    type="color"
+                    name={c.id}
+                    value={colores[c.id]}
+                    onChange={(e) => setColores({ ...colores, [c.id]: e.target.value })}
+                    className="h-12 w-12 flex-none cursor-pointer rounded-full border border-rule bg-transparent p-1"
+                  />
+                  <span>
+                    <b className="block text-[15px] font-semibold text-ink">{c.nombre}</b>
+                    {c.nota}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </details>
+        </section>
+
+        <section className="grid gap-4">
+          <h2 className="text-xl text-ink">Estilo</h2>
+          <input type="hidden" name="plantilla" value={plantilla} />
+          <div className="flex flex-wrap gap-2">
+            {PLANTILLAS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                aria-pressed={plantilla === p.id}
+                onClick={() => setPlantilla(p.id)}
+                className={`grid gap-0.5 border px-4 py-3 text-left text-[15px] ${plantilla === p.id ? 'border-ink text-ink' : 'border-rule text-muted hover:text-ink'}`}
+              >
+                <b className="font-semibold">{p.nombre}</b>
+                <span className="text-[13px]">{p.nota}</span>
+              </button>
             ))}
           </div>
-        </section>
-
-        <section className="grid gap-4">
-          <h2 className="text-xl text-ink">Contacto</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo
-              nombre="correo"
-              etiqueta="Correo"
-              valor={marca.contacto.correo ?? ''}
-              tipo="email"
-            />
-            <Campo
-              nombre="whatsapp"
-              etiqueta="WhatsApp"
-              valor={marca.contacto.whatsapp?.replace(/^52/, '') ?? ''}
-              nota="Diez dígitos."
-              tipo="tel"
-            />
-            <Campo
-              nombre="sitio"
-              etiqueta="Sitio web"
-              valor={marca.contacto.sitio ?? ''}
-              nota="Empieza por https://"
-            />
-            <Campo nombre="instagram" etiqueta="Instagram" valor={marca.redes.instagram ?? ''} />
-          </div>
-        </section>
-
-        <section className="grid gap-4">
-          <h2 className="text-xl text-ink">Datos para términos y privacidad</h2>
-          <p className="-mt-2 max-w-prose text-[14px] text-muted">
-            Aparecen en los términos del programa y en el aviso de privacidad. Son plantillas:
-            revísalas con tu abogado antes de abrir el programa al público.
-          </p>
-          <Campo
-            nombre="razonSocial"
-            etiqueta="Razón social"
-            valor={marca.legal.razonSocial ?? ''}
-          />
-          <Campo nombre="domicilio" etiqueta="Domicilio" valor={marca.legal.domicilio ?? ''} />
-          <Campo
-            nombre="correoPrivacidad"
-            etiqueta="Correo para aclaraciones y datos personales"
-            valor={marca.legal.correoPrivacidad ?? ''}
-            tipo="email"
-          />
         </section>
 
         <div className="grid gap-3">
@@ -220,7 +191,7 @@ export function FormularioMarca({
               role="status"
               className="border-l-[3px] border-disponible px-3 py-2 text-[15px] text-ink"
             >
-              Marca guardada.{' '}
+              Listo, guardado.{' '}
               {estado.avisos.length > 0 ? estado.avisos.join(' ') : 'Ya la ven tus clientes.'}
             </p>
           )}
@@ -229,7 +200,7 @@ export function FormularioMarca({
             disabled={guardando}
             className="min-h-[52px] justify-self-start rounded-full bg-ink px-8 text-[16px] font-semibold text-cream disabled:opacity-50"
           >
-            {guardando ? 'Guardando…' : 'Guardar marca'}
+            {guardando ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
       </div>

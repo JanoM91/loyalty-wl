@@ -1024,8 +1024,8 @@ function Resultado(p: {
       <div className="grid gap-4">
         <Aviso tono="atencion" titulo="Guardado como pendiente" icono="reloj">
           {r.razon === 'CONTINGENCIA'
-            ? 'Se conserva la fecha real de compra. Administración lo confirmará y entonces sumará el sello.'
-            : 'Administración revisará el ticket con su foto y decidirá.'}
+            ? 'Se conserva la fecha real de compra. El dueño o la gerencia lo confirmará y entonces se sumará el sello.'
+            : 'El dueño o la gerencia revisará el ticket con su foto y decidirá.'}
         </Aviso>
         <BotonSiguiente onClick={p.onSiguiente} />
       </div>

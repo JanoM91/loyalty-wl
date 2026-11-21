@@ -37,10 +37,13 @@ export default async function Listo({
 
   const programa = await conNegocio(negocio, () => programaVigente());
   const hito = programa.hitos[programa.hitos.length - 1];
-  const panel = `${await origenDeLaPeticion()}/${negocio.slug}/admin`;
+  const origen = await origenDeLaPeticion();
+  const panel = `${origen}/${negocio.slug}/admin`;
   const vence = negocio.ajustes.pruebaVence;
   const dias = diasRestantesDePrueba(vence);
   const { fondo, sobreFondo, acento } = negocio.marca.colores;
+  // «Arranca» en el panel: logotipo (si falta), tu tarjeta, tu sello y tu QR.
+  const pasos = negocio.marca.logoUrl || negocio.marca.logoClaroUrl ? 3 : 4;
 
   return (
     <Marco>
@@ -101,12 +104,12 @@ export default async function Listo({
 
           <p className="lead" style={{ fontSize: 19 }}>
             {sinSesion
-              ? 'Entra con tu correo y la contraseña que elegiste. Adentro te esperan 3 pasos cortos para estrenarlo con tu primer cliente: tú.'
-              : 'Ya entraste a tu panel. Te faltan 3 pasos cortos para estrenarlo con tu primer cliente: tú.'}
+              ? `Entra con tu correo y la contraseña que elegiste. Adentro te esperan ${pasos} pasos cortos para estrenarlo con tu primer cliente: tú.`
+              : `Ya entraste a tu panel. Te faltan ${pasos} pasos cortos para estrenarlo con tu primer cliente: tú.`}
           </p>
           {logo === '0' ? (
             <p className="p" style={{ fontSize: 16 }}>
-              No pudimos guardar tu logotipo. Súbelo desde tu panel, en Marca y datos.
+              No pudimos guardar tu logotipo. Súbelo desde tu panel, en Tu marca.
             </p>
           ) : null}
 
@@ -121,6 +124,7 @@ export default async function Listo({
           <div className="panel col" style={{ gap: 10, padding: 22, boxShadow: 'none' }}>
             <span className="p" style={{ fontSize: 15 }}>
               La dirección de tu panel. Guárdala o agrégala a la pantalla de inicio de tu celular.
+              También entras desde {origen.replace(/^https?:\/\//, '')}, en «Entrar».
             </span>
             <div className="row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
               <b style={{ wordBreak: 'break-all', flex: '1 1 220px' }}>

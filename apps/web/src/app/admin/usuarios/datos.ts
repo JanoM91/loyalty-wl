@@ -1,11 +1,24 @@
-import { DESCRIPCION_ROLES, ETIQUETA_ROL, ROLES_USUARIO, prisma } from '@wl/database';
+import {
+  DESCRIPCION_ROLES,
+  ETIQUETA_ROL,
+  ROLES_OFRECIDOS,
+  prisma,
+  type UserRole,
+} from '@wl/database';
 
 import type { OpcionRol, OpcionSucursal } from './FormularioUsuario';
 
 /** Datos que los formularios (navegador) no pueden pedir a la base por su cuenta. */
 
-export function opcionesRol(): OpcionRol[] {
-  return ROLES_USUARIO.map((r) => {
+/**
+ * Roles que se ofrecen. «Administración» solo aparece si alguien ya lo tiene
+ * (`ademas`): así su cuenta se puede editar sin cambiarle el rol.
+ */
+export function opcionesRol(ademas: readonly UserRole[] = []): OpcionRol[] {
+  const roles = [...ademas.filter((r) => r === 'ADMIN'), ...ROLES_OFRECIDOS].filter(
+    (r, i, todos) => todos.indexOf(r) === i,
+  );
+  return roles.map((r) => {
     const d = DESCRIPCION_ROLES[r];
     return {
       valor: r,

@@ -17,11 +17,8 @@ import {
  * (migración `marca_editable`).
  */
 
-export interface CambiosMarca {
-  readonly nombre: string;
-  readonly plantilla: string;
-  readonly frase: string;
-  readonly colores: Record<keyof ColoresMarca, string>;
+/** Contacto y datos legales del negocio («Datos del negocio» en el panel). */
+export interface DatosNegocio {
   readonly correo: string;
   readonly whatsapp: string;
   readonly sitio: string;
@@ -29,6 +26,17 @@ export interface CambiosMarca {
   readonly razonSocial: string;
   readonly domicilio: string;
   readonly correoPrivacidad: string;
+}
+
+/**
+ * Lo que se ve («Tu marca» en el panel). Si llegan también los datos del
+ * negocio, se guardan juntos; si no, los guardados se conservan.
+ */
+export interface CambiosMarca extends Partial<DatosNegocio> {
+  readonly nombre: string;
+  readonly plantilla: string;
+  readonly frase: string;
+  readonly colores: Record<keyof ColoresMarca, string>;
 }
 
 export type ResultadoMarca =
@@ -42,6 +50,46 @@ const limpio = (v: string, max: number): string | null => {
   const t = v.trim().replace(/\s+/g, ' ');
   return t === '' ? null : t.slice(0, max);
 };
+
+type RevisionDatos =
+  | { readonly ok: false; readonly error: string }
+  | {
+      readonly ok: true;
+      readonly aplicar: (
+        actual: MarcaNegocio,
+      ) => Pick<MarcaNegocio, 'contacto' | 'redes' | 'legal'>;
+    };
+
+/** Revisa el contacto y los datos legales; devuelve cómo aplicarlos a la marca. */
+function revisarDatos(d: DatosNegocio): RevisionDatos {
+  for (const correo of [d.correo, d.correoPrivacidad]) {
+    if (correo.trim() !== '' && !CORREO.test(correo.trim()))
+      return { ok: false, error: 'Revisa los correos: uno no tiene forma de correo.' };
+  }
+  let digitos = d.whatsapp.replace(/\D/g, '');
+  if (digitos.length === 12 && digitos.startsWith('52')) digitos = digitos.slice(2);
+  if (digitos !== '' && digitos.length !== 10)
+    return { ok: false, error: 'El WhatsApp debe tener diez dígitos.' };
+  const sitio = limpio(d.sitio, 200);
+  if (sitio && !/^https:\/\/[^\s]+$/.test(sitio))
+    return { ok: false, error: 'El sitio debe empezar por https://' };
+  return {
+    ok: true,
+    aplicar: (actual) => ({
+      contacto: {
+        correo: limpio(d.correo, 160)?.toLowerCase() ?? null,
+        whatsapp: digitos ? `52${digitos}` : null,
+        sitio,
+      },
+      redes: { ...actual.redes, instagram: limpio(d.instagram, 60)?.replace(/^@/, '') ?? null },
+      legal: {
+        razonSocial: limpio(d.razonSocial, 200),
+        domicilio: limpio(d.domicilio, 300),
+        correoPrivacidad: limpio(d.correoPrivacidad, 160)?.toLowerCase() ?? null,
+      },
+    }),
+  };
+}
 
 export async function guardarMarca(
   d: CambiosMarca,
@@ -63,16 +111,21 @@ export async function guardarMarca(
   const { errores, avisos } = revisarColores(colores);
   if (errores[0]) return { ok: false, error: errores[0] };
 
-  for (const correo of [d.correo, d.correoPrivacidad]) {
-    if (correo.trim() !== '' && !CORREO.test(correo.trim()))
-      return { ok: false, error: 'Revisa los correos: uno no tiene forma de correo.' };
-  }
-  const digitos = d.whatsapp.replace(/\D/g, '');
-  if (digitos !== '' && digitos.length !== 10)
-    return { ok: false, error: 'El WhatsApp debe tener diez dígitos.' };
-  const sitio = limpio(d.sitio, 200);
-  if (sitio && !/^https:\/\/[^\s]+$/.test(sitio))
-    return { ok: false, error: 'El sitio debe empezar por https://' };
+  // Los datos del negocio solo se tocan si llegaron (la pantalla vieja los
+  // mandaba junto con la marca; «Tu marca» ya no).
+  const traeDatos = d.correo !== undefined;
+  const datos = traeDatos
+    ? revisarDatos({
+        correo: d.correo ?? '',
+        whatsapp: d.whatsapp ?? '',
+        sitio: d.sitio ?? '',
+        instagram: d.instagram ?? '',
+        razonSocial: d.razonSocial ?? '',
+        domicilio: d.domicilio ?? '',
+        correoPrivacidad: d.correoPrivacidad ?? '',
+      })
+    : null;
+  if (datos && !datos.ok) return { ok: false, error: datos.error };
 
   const marca = await transaccion(async (tx) => {
     // Se parte de lo guardado ahora mismo, no de la copia del contexto: lo que
@@ -87,17 +140,7 @@ export async function guardarMarca(
       plantilla: d.plantilla as PlantillaMarca,
       frase: limpio(d.frase, 80) ?? '',
       colores,
-      contacto: {
-        correo: limpio(d.correo, 160)?.toLowerCase() ?? null,
-        whatsapp: digitos ? `52${digitos}` : null,
-        sitio,
-      },
-      redes: { ...actual.redes, instagram: limpio(d.instagram, 60)?.replace(/^@/, '') ?? null },
-      legal: {
-        razonSocial: limpio(d.razonSocial, 200),
-        domicilio: limpio(d.domicilio, 300),
-        correoPrivacidad: limpio(d.correoPrivacidad, 160)?.toLowerCase() ?? null,
-      },
+      ...(datos?.ok ? datos.aplicar(actual) : {}),
     };
     await tx.tenant.update({
       where: { id: negocio.id },
@@ -165,6 +208,37 @@ export async function guardarLogo(
         entityType: 'tenant',
         entityId: negocio.id,
         metadata: { tipo },
+      },
+    });
+  });
+  return { ok: true };
+}
+
+/** Guarda solo el contacto y los datos legales; la marca visible no cambia. */
+export async function guardarDatosNegocio(
+  d: DatosNegocio,
+  actor: { readonly userId: string },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const negocio = await negocioActual();
+  const datos = revisarDatos(d);
+  if (!datos.ok) return datos;
+  await transaccion(async (tx) => {
+    const fila = await tx.tenant.findUniqueOrThrow({
+      where: { id: negocio.id },
+      select: { brand: true },
+    });
+    const actual = leerMarca(fila.brand);
+    const marca: MarcaNegocio = { ...actual, ...datos.aplicar(actual) };
+    await tx.tenant.update({
+      where: { id: negocio.id },
+      data: { brand: marca as unknown as Prisma.InputJsonValue },
+    });
+    await tx.auditLog.create({
+      data: {
+        userId: actor.userId,
+        action: 'marca.datos',
+        entityType: 'tenant',
+        entityId: negocio.id,
       },
     });
   });

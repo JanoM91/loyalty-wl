@@ -133,4 +133,23 @@ describe.skipIf(!CON_BD)('panel de plataforma', () => {
       await db.borrarNegocio(club.id);
     }
   });
+  it('encuentra los clubes de un correo solo si la cuenta tiene contraseña y está activa', async () => {
+    const correo = `club-${randomBytes(4).toString('hex')}@ejemplo.mx`;
+    expect(await db.clubesDelCorreo(correo)).toEqual([]);
+    const inv = await db.invitarDuenio(negocio, { email: correo, nombre: 'Ana' });
+    expect(inv.ok).toBe(true);
+    if (!inv.ok) return;
+    // Sin contraseña todavía: no cuenta.
+    expect(await db.clubesDelCorreo(correo)).toEqual([]);
+    const fijada = await en(negocio, () =>
+      db.definirContrasenaConEnlace(
+        inv.token,
+        `${randomBytes(9).toString('base64url')} otra frase`,
+      ),
+    );
+    expect(fijada.ok).toBe(true);
+    const clubes = await db.clubesDelCorreo(correo.toUpperCase());
+    expect(clubes.map((c) => c.slug)).toEqual(['prueba-plataforma']);
+    expect(await db.clubesDelCorreo('no-es-correo')).toEqual([]);
+  });
 });

@@ -86,7 +86,7 @@ function CamposUsuario({
           <>
             <input type="hidden" name="rol" value={valores.rol} />
             <p className="mt-1 text-xs text-muted">
-              Tu propio rol no se cambia desde aquí: pídeselo a otra persona con rol Administración.
+              Tu propio rol no se cambia desde aquí: pídeselo a otra persona con rol Dueño.
             </p>
           </>
         )}

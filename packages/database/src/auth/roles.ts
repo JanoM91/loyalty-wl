@@ -18,6 +18,13 @@ import type { UserRole } from '@prisma/client';
  */
 export const ROLES_USUARIO: readonly UserRole[] = ['ADMIN', 'DUENO', 'GERENTE', 'SUCURSAL'];
 
+/**
+ * Roles que el panel ofrece al invitar a alguien. «Administración» hace lo
+ * mismo que «Dueño»; se conserva para las cuentas que ya lo tienen, pero no
+ * se ofrece: en un negocio chico confunde tener dos roles casi iguales.
+ */
+export const ROLES_OFRECIDOS: readonly UserRole[] = ['DUENO', 'GERENTE', 'SUCURSAL'];
+
 export const ETIQUETA_ROL: Record<UserRole, string> = {
   ADMIN: 'Administración',
   DUENO: 'Dueño',
@@ -28,8 +35,8 @@ export const ETIQUETA_ROL: Record<UserRole, string> = {
 };
 
 export const DESCRIPCION_ROLES: Record<UserRole, string> = {
-  ADMIN: 'todo, incluidos los usuarios del panel',
-  DUENO: 'todo, incluidos los usuarios; su cuenta se distingue en la bitácora',
+  ADMIN: 'lo mismo que Dueño; para cuentas creadas antes',
+  DUENO: 'todo, incluido el equipo del panel',
   GERENTE: 'programa de lealtad, sucursales, tarjetas y reportes; no administra usuarios',
   SUCURSAL: 'solo la caja de lealtad de su sucursal',
   MARKETING: 'reservado para campañas; todavía sin pantallas',
