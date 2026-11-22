@@ -43,3 +43,21 @@ jobs:
       # Incluye las pruebas de fuga entre negocios: si fallan, no se fusiona.
       - run: pnpm test
       - run: pnpm build
+      # Recorrido completo en un navegador: alta → panel → tarjeta → caja → premio.
+      - name: Navegador para el recorrido
+        run: pnpm --filter @wl/web exec playwright install --with-deps chromium
+      - name: Recorrido completo
+        run: pnpm --filter @wl/web e2e
+        env:
+          CRON_SECRET: secreto-de-ci-solo-para-pruebas
+          WL_SECRETO_ENLACES: secreto-de-ci-solo-para-pruebas
+          WL_SAL_RED: sal-de-ci-solo-para-pruebas
+      - name: Evidencia del recorrido si falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recorrido
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          retention-days: 7
