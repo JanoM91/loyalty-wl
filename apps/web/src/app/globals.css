@@ -70,6 +70,9 @@
   --text-color-crust: var(--wl-tinta);
   --background-color-crust-dark: var(--wl-fondo);
   --color-accent: var(--wl-acento);
+  /* Acento que se lee sobre fondo claro (barras, bordes de aviso). El panel lo
+     fija en coral porque su acento lima no se ve sobre crema; sin él, es el acento. */
+  --color-realce: var(--wl-realce, var(--wl-acento));
 
   /* Estados con significado (listo, aviso, error). No cambian con la marca. */
   --color-forest: #2f6b3f;

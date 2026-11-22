@@ -84,7 +84,7 @@ export default async function TarjetasPage({
               ? 'Nadie coincide con esa búsqueda.'
               : 'Todavía no hay clientes.'}
           </p>
-          <p className="mt-1 text-sm text-[#3C5A51]">
+          <p className="mt-1 text-sm text-[#5A4F63]">
             {q || filtro !== 'todas'
               ? 'Prueba con otro nombre o con los últimos 4 dígitos del celular.'
               : 'Aparecen aquí en cuanto alguien escanea tu cartel QR o lo das de alta en la caja.'}
@@ -110,7 +110,7 @@ export default async function TarjetasPage({
                   <span className="block truncate font-semibold text-ink">
                     {t.nombre ?? 'Sin nombre'}
                   </span>
-                  <span className="block truncate text-xs text-[#3C5A51]">
+                  <span className="block truncate text-xs text-[#5A4F63]">
                     {t.ultimaVisita
                       ? `Última visita ${fechaCivil(t.ultimaVisita)}`
                       : 'Sin visitas aún'}
@@ -126,7 +126,7 @@ export default async function TarjetasPage({
                       {t.premiosDisponibles === 1 ? '1 premio' : `${t.premiosDisponibles} premios`}
                     </span>
                   ) : (
-                    <span className="block text-[11px] text-[#3C5A51]">sellos</span>
+                    <span className="block text-[11px] text-[#5A4F63]">sellos</span>
                   )}
                 </span>
               </a>
@@ -201,7 +201,7 @@ export default async function TarjetasPage({
         </table>
       </div>
       {tarjetas.length > 0 && (
-        <p className="mt-3 text-xs text-[#3C5A51]">
+        <p className="mt-3 text-xs text-[#5A4F63]">
           Se muestran hasta 200 clientes, los más recientes primero.
         </p>
       )}

@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { IsotipoClub } from '@/components/ClubLealtad';
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 
 import { Burbuja, IconoSitio, iconoPara, type NombreIconoSitio } from './Iconos';
 import { PixelMeta } from './Medicion';
 import { minimo } from './medidas';
+import '@fontsource-variable/fredoka';
 import './sitio.css';
 
 /**
@@ -29,19 +31,23 @@ export function enlaceWhatsApp(): string {
 
 export { minimo };
 
-function Logo({ enlace }: { enlace: boolean }) {
+function Logo({ enlace, oscuro = false }: { enlace: boolean; oscuro?: boolean }) {
   const contenido = (
     <>
-      <span className="dot" aria-hidden="true" />
-      club-lealtad
+      <IsotipoClub oscuro={oscuro} />
+      <span className="wm" aria-hidden="true">
+        club
+        <span className="px" />
+        lealtad
+      </span>
     </>
   );
   return enlace ? (
-    <Link href="/" className="logo">
+    <Link href="/" className="logo" aria-label="club-lealtad, inicio">
       {contenido}
     </Link>
   ) : (
-    <span className="logo" style={{ minHeight: 0 }}>
+    <span className="logo" role="img" aria-label="club-lealtad" style={{ minHeight: 0 }}>
       {contenido}
     </span>
   );
@@ -109,7 +115,7 @@ export function Marco({
           }}
         >
           <div className="col" style={{ gap: 4 }}>
-            <Logo enlace={false} />
+            <Logo enlace={false} oscuro />
             <span style={{ color: 'var(--dark-muted)' }}>
               Un servicio de Exkalibur Consulting · Xalapa, Veracruz
             </span>

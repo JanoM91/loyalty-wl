@@ -834,7 +834,7 @@ function MiniSellos({ estampas, programa }: { estampas: number; programa: Progra
         return (
           <i
             key={i}
-            className={`block h-4 w-4 rounded-full ${on ? (hito ? 'bg-crust-light' : 'bg-crust') : hito ? 'border-[1.5px] border-crust-light' : 'border-[1.5px] border-dashed border-[#cbbca6]'}`}
+            className={`block h-4 w-4 rounded-[5px] ${on ? (hito ? 'border-[1.5px] border-ink bg-realce' : 'border-[1.5px] border-ink bg-crust') : hito ? 'border-[1.5px] border-realce' : 'border-[1.5px] border-dashed border-[#cbbca6]'}`}
           />
         );
       })}

@@ -20,8 +20,8 @@ export const metadata: Metadata = { title: 'Mensajes a clientes' };
 export const dynamic = 'force-dynamic';
 
 const TARJETA =
-  'rounded-[22px] border-[1.5px] border-[#CDE8DC] bg-white p-5 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
-const SUAVE = 'text-[#3C5A51]';
+  'rounded-[22px] border-[1.5px] border-[#E8D8C6] bg-white p-5 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
+const SUAVE = 'text-[#5A4F63]';
 
 const cuando = (d: Date) =>
   d.toLocaleString('es-MX', {
