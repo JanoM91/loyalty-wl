@@ -24,12 +24,12 @@ export default async function NegociosPage({
   searchParams: Promise<{ borrado?: string }>;
 }) {
   const sesion = await exigirPlataforma();
-  const [negocios, pausados, automatico, { borrado }] = await Promise.all([
+  const [negocios, automatico, { borrado }] = await Promise.all([
     listarNegocios(),
-    clubesEnPausa(),
     borradoAutomaticoEncendido(),
     searchParams,
   ]);
+  const pausados = await clubesEnPausa(new Date(), negocios);
   const listos = pausados.filter((c) => c.listo);
   return (
     <MarcoPlataforma

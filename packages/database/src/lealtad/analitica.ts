@@ -128,9 +128,9 @@ export async function analiticaLealtad(dias = DIAS_ANALITICA): Promise<Analitica
     await Promise.all([
       prisma.$queryRaw<FilaResumen[]>`
         WITH hoy AS (SELECT (now() AT TIME ZONE ${zona}::text)::date AS d),
-        c AS (SELECT lc.*, (lc.created_at AT TIME ZONE ${zona}::text)::date AS alta
+        c AS (SELECT lc.id, lc.stamps, lc.email, lc.email_verified_at, lc.phone, lc.phone_verified_at, lc.marketing_opt_in, lc.google_wallet_object_at, lc.created_at, (lc.created_at AT TIME ZONE ${zona}::text)::date AS alta
               FROM loyalty_card lc WHERE lc.is_active),
-        a AS (SELECT * FROM loyalty_accrual WHERE status = 'ACREDITADA' AND capture_source <> 'MIGRACION'),
+        a AS (SELECT card_id, branch_id, purchase_date, photo_url, ticket_folio, note, capture_source FROM loyalty_accrual WHERE status = 'ACREDITADA' AND capture_source <> 'MIGRACION'),
         vt AS (SELECT card_id, count(*) AS n FROM a GROUP BY card_id)
         SELECT
           to_char((SELECT d FROM hoy), 'YYYY-MM-DD') AS hoy,
@@ -165,7 +165,7 @@ export async function analiticaLealtad(dias = DIAS_ANALITICA): Promise<Analitica
           (SELECT count(*) FROM c WHERE c.alta = d.dia)::int AS altas
         FROM dias d ORDER BY d.dia`,
       prisma.$queryRaw<PasoVerificacion[]>`
-        WITH c AS (SELECT * FROM loyalty_card WHERE is_active)
+        WITH c AS (SELECT id, stamps, email, email_verified_at, phone, phone_verified_at FROM loyalty_card WHERE is_active)
         SELECT paso, orden, n::int AS n FROM (VALUES
           ('Tarjetas activas', 1, (SELECT count(*) FROM c)),
           ('Con correo', 2, (SELECT count(*) FROM c WHERE email IS NOT NULL)),
@@ -182,7 +182,7 @@ export async function analiticaLealtad(dias = DIAS_ANALITICA): Promise<Analitica
         FROM pos ORDER BY 1`,
       prisma.$queryRaw<SucursalAnalitica[]>`
         WITH hoy AS (SELECT (now() AT TIME ZONE ${zona}::text)::date AS d),
-        a AS (SELECT * FROM loyalty_accrual WHERE status = 'ACREDITADA' AND capture_source <> 'MIGRACION')
+        a AS (SELECT card_id, branch_id, purchase_date, photo_url, ticket_folio, note, capture_source FROM loyalty_accrual WHERE status = 'ACREDITADA' AND capture_source <> 'MIGRACION')
         SELECT b.name AS sucursal,
           CASE WHEN b.loyalty_enabled AND b.is_active THEN 'Participa' ELSE 'No participa' END AS estado,
           (SELECT count(*) FROM a, hoy WHERE a.branch_id = b.id AND a.purchase_date > hoy.d - 7)::int AS "visitas7d",
@@ -194,7 +194,7 @@ export async function analiticaLealtad(dias = DIAS_ANALITICA): Promise<Analitica
           (SELECT count(*) FROM loyalty_accrual x WHERE x.branch_id = b.id AND x.status = 'PENDIENTE')::int AS pendientes
         FROM branch b WHERE b.is_active ORDER BY visitas DESC, b.name`,
       prisma.$queryRaw<CategoriaCaptura[]>`
-        WITH a AS (SELECT * FROM loyalty_accrual WHERE status = 'ACREDITADA' AND capture_source <> 'MIGRACION')
+        WITH a AS (SELECT card_id, branch_id, purchase_date, photo_url, ticket_folio, note, capture_source FROM loyalty_accrual WHERE status = 'ACREDITADA' AND capture_source <> 'MIGRACION')
         SELECT grupo, categoria, orden, n FROM (
           SELECT 'comprobante' AS grupo, 'Folio y foto' AS categoria, 1 AS orden, count(*)::int AS n FROM a WHERE photo_url IS NOT NULL AND ticket_folio NOT LIKE 'SF-%'
           UNION ALL SELECT 'comprobante', 'Solo folio', 2, count(*)::int FROM a WHERE photo_url IS NULL AND ticket_folio NOT LIKE 'SF-%'

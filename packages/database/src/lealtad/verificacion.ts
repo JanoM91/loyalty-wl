@@ -116,6 +116,7 @@ export async function verificarCodigo(
   const vigente = await prisma.loyaltyCode.findFirst({
     where: { cardId, purpose: 'VERIFICAR_CORREO', consumedAt: null },
     orderBy: { createdAt: 'desc' },
+    select: { id: true, email: true, codeHash: true, expiresAt: true, attempts: true },
   });
 
   if (!vigente || vigente.expiresAt <= new Date()) {
