@@ -117,6 +117,10 @@ export function Caja({
   const [tarjeta, setTarjeta] = useState<VistaCaja | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
+  // La búsqueda lleva su propio estado y no la transición: si coincide con el
+  // refresco de la pantalla, la transición puede quedarse pendiente y dejar el
+  // botón en «Sumando…» aunque la tarjeta ya se mostró.
+  const [buscando, setBuscando] = useState(false);
 
   const [ticket, setTicket] = useState(ticketVacio(hoy));
   const [confirmado, setConfirmado] = useState(false);
@@ -134,7 +138,7 @@ export function Caja({
   const [entrega, setEntrega] = useState<{ ok: boolean; texto: string } | null>(null);
   const [reportado, setReportado] = useState(false);
 
-  function reiniciar() {
+  function limpiar() {
     setPaso('inicio');
     setNuevoCliente(false);
     setCobrarPromo(false);
@@ -148,11 +152,18 @@ export function Caja({
     setEntregaConfirmada(false);
     setEntrega(null);
     setReportado(false);
+  }
+
+  /** Vuelve al inicio de la caja y refresca los números del día. */
+  function reiniciar() {
+    limpiar();
     router.refresh();
   }
 
   function empezar(m: Modo) {
-    reiniciar();
+    // Sin refrescar: al empezar una operación no hace falta, y el refresco
+    // chocaría con la búsqueda de la tarjeta que viene enseguida.
+    limpiar();
     setModo(m);
     setPaso('escanear');
   }
@@ -160,15 +171,20 @@ export function Caja({
   const buscar = useCallback(
     (texto: string) => {
       setError(null);
-      iniciar(async () => {
-        const r = await buscarTarjeta(texto, sucursal.slug);
-        if (!r.ok) {
-          setError(r.error);
-          return;
-        }
-        setTarjeta(r.tarjeta);
-        setPaso('tarjeta');
-      });
+      setBuscando(true);
+      buscarTarjeta(texto, sucursal.slug)
+        .then((r) => {
+          if (!r.ok) {
+            setError(r.error);
+            return;
+          }
+          setTarjeta(r.tarjeta);
+          setPaso('tarjeta');
+        })
+        .catch(() =>
+          setError('No se pudo buscar la tarjeta. Revisa tu conexión e intenta de nuevo.'),
+        )
+        .finally(() => setBuscando(false));
     },
     [sucursal.slug],
   );
@@ -427,7 +443,7 @@ export function Caja({
               />
               <button
                 type="submit"
-                disabled={ocupado}
+                disabled={buscando}
                 className="min-h-[48px] flex-none rounded-sm bg-ink px-5 font-semibold text-cream disabled:opacity-50"
               >
                 Buscar
@@ -446,7 +462,7 @@ export function Caja({
               Reponer su acceso
             </a>
           </p>
-          {ocupado && <p className="text-sm text-muted">Buscando…</p>}
+          {buscando && <p className="text-sm text-muted">Buscando…</p>}
           {error && <Aviso tono="error">{error}</Aviso>}
         </>
       )}
