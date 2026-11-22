@@ -1,0 +1,208 @@
+/*
+ * Loader de club-lealtad: la tarjeta negra se sella sola. Tres sellos lima
+ * aparecen uno tras otro, luego el premio coral y la tarjeta da un saltito;
+ * se vacía y vuelve a empezar (ciclo de 2.2 s).
+ *
+ * Variante «negocio»: la misma tarjeta con los colores de cada negocio y sin
+ * la marca de club-lealtad (sus clientes solo ven la marca del negocio).
+ *
+ * Aparece con 150 ms de retraso para no parpadear en cargas rápidas.
+ */
+.wl-cargando {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  animation: wl-carg-entra 0.25s ease-out 0.15s both;
+}
+.wl-cargando.area {
+  min-height: 60vh;
+}
+.wl-cargando.club {
+  background: #fff6ea;
+  color: #120a2a;
+}
+.wl-cargando.negocio {
+  color: var(--wl-tinta);
+}
+.wl-cargando.fijo {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 0;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.wl-cargando.club.fijo {
+  background: color-mix(in srgb, #fff6ea 86%, transparent);
+}
+.wl-cargando.negocio.fijo {
+  background: color-mix(in srgb, var(--wl-papel) 86%, transparent);
+}
+/* Si la página siguiente ya muestra su propio loader, no se encima el otro. */
+body:has(.wl-cargando:not(.fijo)) .wl-cargando.fijo {
+  display: none;
+}
+@keyframes wl-carg-entra {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.wl-carg-logo {
+  display: block;
+  width: 104px;
+  height: 104px;
+}
+.wl-carg-logo .atras,
+.wl-carg-logo .frente,
+.wl-carg-logo .sello {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.wl-carg-logo .atras {
+  animation: wl-carg-atras 2.2s ease-in-out infinite;
+}
+.wl-carg-logo .frente {
+  animation: wl-carg-frente 2.2s ease-in-out infinite;
+}
+.wl-carg-logo .s1 {
+  animation: wl-carg-s1 2.2s cubic-bezier(0.3, 1.6, 0.5, 1) infinite;
+}
+.wl-carg-logo .s2 {
+  animation: wl-carg-s2 2.2s cubic-bezier(0.3, 1.6, 0.5, 1) infinite;
+}
+.wl-carg-logo .s3 {
+  animation: wl-carg-s3 2.2s cubic-bezier(0.3, 1.6, 0.5, 1) infinite;
+}
+.wl-carg-logo .s4 {
+  animation: wl-carg-s4 2.2s cubic-bezier(0.3, 1.8, 0.5, 1) infinite;
+}
+
+/* Cada sello entra en su momento y todos salen juntos al final del ciclo. */
+@keyframes wl-carg-s1 {
+  0%,
+  6% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  16%,
+  86% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  96%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+@keyframes wl-carg-s2 {
+  0%,
+  18% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  28%,
+  86% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  96%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+@keyframes wl-carg-s3 {
+  0%,
+  30% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40%,
+  86% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  96%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+@keyframes wl-carg-s4 {
+  0%,
+  46% {
+    transform: scale(0) rotate(-20deg);
+    opacity: 0;
+  }
+  56% {
+    transform: scale(1.25) rotate(8deg);
+    opacity: 1;
+  }
+  62%,
+  86% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+  96%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+/* Saltito de la tarjeta cuando llega el premio. */
+@keyframes wl-carg-frente {
+  0%,
+  50%,
+  70%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  58% {
+    transform: translateY(-5%) scale(1.04);
+  }
+}
+@keyframes wl-carg-atras {
+  0%,
+  50%,
+  72%,
+  100% {
+    transform: rotate(0);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+}
+
+.wl-carg-marca {
+  font-family: 'Fredoka Variable', 'Fredoka', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.wl-carg-marca i {
+  display: inline-block;
+  width: 0.2em;
+  height: 0.2em;
+  border-radius: 0.05em;
+  background: #ff5b3a;
+  margin: 0 0.07em;
+  vertical-align: 0.14em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl-cargando,
+  .wl-carg-logo * {
+    animation: none !important;
+  }
+}

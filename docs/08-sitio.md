@@ -37,6 +37,16 @@ Jano eligió el logo **«Tarjeta negra»**: una tarjeta negra de sellos con filo
 - Panel del dueño (`ESTILO_PANEL` en `lib/admin/panel.ts`): mismos colores y títulos en Fredoka. La lima va en rellenos con texto noche y sobre fondos oscuros; donde el acento va solo sobre crema (barras, progreso, bordes de aviso) se usa `realce` (coral, `--wl-realce`). Fuera del panel, `realce` es el acento del negocio. Los sellos de la caja llevan contorno noche.
 - Las piezas de «Juega y gana» (#18) usan `--acc` en sus sombras.
 
+## Loader (22 nov 2026)
+
+Pedido por Jano: un loader con el logotipo en movimiento al cargar páginas y al pasar de una a otra, en el sitio, el panel del dueño y en general.
+
+- `components/Cargando.tsx` y `cargando.css`: la tarjeta negra se sella sola (tres sellos lima, luego el premio coral y un saltito; ciclo de 2.2 s). Aparece con 150 ms de retraso para no parpadear. Con movimiento reducido, el logotipo queda quieto.
+- Variante `negocio`: la misma tarjeta con los colores del negocio y sin la marca de club-lealtad, para la tarjeta del cliente y la página de inicio de cada club.
+- `loading.tsx` en `app/` (club o negocio según la cabecera del negocio, sin ir a la base), `app/admin/`, `app/plataforma/` (club) y `app/lealtad/` (negocio): se ven mientras carga una página.
+- `components/CargandoAlNavegar.tsx`, montado en el sitio (`Marco.tsx`), el panel, la plataforma, la tarjeta y el inicio del club: al tocar un enlace interno, la página actual queda detrás del loader hasta que llega la siguiente. Cubre los enlaces normales del panel y los `<Link>` de Next; si la ruta ya muestra su `loading.tsx`, se esconde para no duplicarse (`:has` en `cargando.css`). No se muestra en anclas, archivos, `/api/`, enlaces externos ni en formularios con acción de servidor. Se quita solo a los 15 s.
+- Las páginas que no existen siguen respondiendo 404.
+
 ## Decisiones de Jano
 
 - Todos los botones de contacto van a WhatsApp (`WL_CONTACTO_WHATSAPP`; si falta, +52 2222 5513 73). Más adelante irá a un contacto único con un agente de IA.

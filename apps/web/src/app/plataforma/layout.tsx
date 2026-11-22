@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import '@fontsource-variable/fredoka';
 
+import { CargandoAlNavegar } from '@/components/CargandoAlNavegar';
 import { ESTILO_PANEL } from '@/lib/admin/panel';
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function PlataformaLayout({ children }: { children: ReactNode }) 
   return (
     <div data-plantilla="aire" style={ESTILO_PANEL} className="min-h-screen bg-crumb text-ink">
       {children}
+      <CargandoAlNavegar />
     </div>
   );
 }
