@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { programaVigente } from '@wl/database';
-import { textoProximoPremio } from '@wl/domain';
+import { diaConMes, textoProximoPremio } from '@wl/domain';
 
 import { Aviso } from '@/components/lealtad/Aviso';
 import { Icono, iconoDePremio } from '@/components/lealtad/Iconos';
@@ -16,19 +16,20 @@ export default async function PremiosPage() {
   const programa = await programaVigente();
   const disponibles = t.premios.filter((p) => p.disponible);
   const entregados = t.premios.filter((p) => !p.disponible);
+  const porCanjear = disponibles.length + t.regalos.length;
 
   return (
     <>
       <div className="grid gap-1">
         <h1 className="text-2xl text-ink">Mis premios</h1>
         <p className="text-sm text-ink-soft">
-          {disponibles.length > 0
-            ? `${disponibles.length} ${disponibles.length === 1 ? 'listo' : 'listos'} para canjear en caja.`
+          {porCanjear > 0
+            ? `${porCanjear} ${porCanjear === 1 ? 'listo' : 'listos'} para canjear en caja.`
             : textoProximoPremio(t.estampas, programa)}
         </p>
       </div>
 
-      {!t.verificada && disponibles.length > 0 && (
+      {!t.verificada && porCanjear > 0 && (
         <Aviso tono="atencion" titulo="Para canjear necesitas verificar tu correo o tu celular">
           <a
             href={t.correo ? '/lealtad/verificar' : '/lealtad/perfil#correo'}
@@ -51,6 +52,28 @@ export default async function PremiosPage() {
                 <b className="block text-[15px] font-semibold text-ink">{p.nombre}</b>
                 <span className="block text-xs text-muted">
                   Estampa {p.posicion} · tarjeta {p.ciclo} · desde el {fechaLarga(p.generado)}
+                </span>
+              </span>
+              <span className="rounded-full bg-disponible/10 px-2.5 py-0.5 text-xs font-semibold text-disponible">
+                Disponible
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {t.regalos.length > 0 && (
+        <ul className="divide-y divide-rule overflow-hidden rounded-lg border border-rule bg-cream">
+          {t.regalos.map((g) => (
+            <li key={g.id} className="flex items-center gap-3 px-3.5 py-3">
+              <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-accent/15 text-crust-dark">
+                <Icono nombre="regalo" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <b className="block text-[15px] font-semibold text-ink">{g.titulo}</b>
+                <span className="block text-xs text-muted">
+                  {g.tipo === 'CUMPLE' ? 'Regalo de cumpleaños' : 'Regalo por volver'} · vale hasta
+                  el {diaConMes(g.ultimoDia)}
                 </span>
               </span>
               <span className="rounded-full bg-disponible/10 px-2.5 py-0.5 text-xs font-semibold text-disponible">
@@ -98,7 +121,7 @@ export default async function PremiosPage() {
         </section>
       )}
 
-      <NavTarjeta actual="/lealtad/premios" premiosListos={disponibles.length} />
+      <NavTarjeta actual="/lealtad/premios" premiosListos={porCanjear} />
     </>
   );
 }

@@ -13,6 +13,7 @@ import { prisma, negocioActual, esErrorUnico, camposDelError } from '../index';
 import { estadoComercialDe } from '../negocio';
 import { describirPremioGanado } from './caja';
 import { programaVigente } from './programa';
+import { regalosDeTarjeta, type RegaloTarjeta } from '../regalos';
 
 /**
  * Tarjetas de lealtad del lado del cliente: alta, sesión y perfil.
@@ -252,6 +253,8 @@ export interface VistaTarjeta {
   readonly cumpleMes: number | null;
   readonly alta: Date;
   readonly premios: readonly PremioTarjeta[];
+  /** Regalos automáticos sin cobrar y sin vencer («Te extrañamos», cumpleaños). */
+  readonly regalos: readonly RegaloTarjeta[];
   readonly visitas: readonly VisitaTarjeta[];
 }
 
@@ -272,7 +275,7 @@ export async function obtenerTarjeta(cardId: string): Promise<VistaTarjeta | nul
     },
   });
   if (!t) return null;
-  const programa = await programaVigente();
+  const [programa, regalos] = await Promise.all([programaVigente(), regalosDeTarjeta(t.id)]);
 
   return {
     id: t.id,
@@ -302,6 +305,7 @@ export async function obtenerTarjeta(cardId: string): Promise<VistaTarjeta | nul
       entregado: r.redeemedAt,
       sucursalEntrega: r.redeemedBranch?.name ?? null,
     })),
+    regalos,
     visitas: t.accruals.map((a) => ({
       id: a.id,
       fecha: a.purchaseDate,

@@ -212,7 +212,7 @@ export default async function JuegosPage() {
 
       <NavTarjeta
         actual="/lealtad/juegos"
-        premiosListos={t.premios.filter((p) => p.disponible).length}
+        premiosListos={t.premios.filter((p) => p.disponible).length + t.regalos.length}
       />
     </>
   );

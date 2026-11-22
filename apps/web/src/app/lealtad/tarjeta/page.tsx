@@ -12,6 +12,7 @@ import { arcadeVisible } from '@/lib/lealtad/arcade';
 import { walletActivo } from '@/lib/wallet/activo';
 import { exigirTarjeta } from '@/lib/lealtad/sesion';
 import { cuponesArcadeDeTarjeta, programaVigente } from '@wl/database';
+import { diaConMes } from '@wl/domain';
 
 export const metadata: Metadata = { title: 'Mi tarjeta' };
 export const dynamic = 'force-dynamic';
@@ -38,7 +39,7 @@ export default async function TarjetaPage({
     ? (await cuponesArcadeDeTarjeta(t.id)).filter((c) => c.estado === 'DISPONIBLE').length
     : 0;
   // La verificación se pide fuerte cuando hay algo que cobrar; antes, solo un recordatorio.
-  const porCobrar = listos.length + promociones;
+  const porCobrar = listos.length + promociones + t.regalos.length;
   const verificar = {
     url: t.correo ? '/lealtad/verificar' : '/lealtad/perfil#correo',
     texto: t.correo ? 'Verificar mi correo' : 'Agregar mi correo',
@@ -83,6 +84,28 @@ export default async function TarjetaPage({
           </p>
         </div>
       )}
+
+      {t.regalos.map((g) => (
+        <div
+          key={g.id}
+          className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 rounded-lg bg-crust-dark p-3.5 text-cream"
+        >
+          <span
+            className="grid h-11 w-11 place-items-center rounded-full bg-cream/15"
+            aria-hidden="true"
+          >
+            <Icono nombre="regalo" width={24} height={24} />
+          </span>
+          <p className="text-sm leading-snug">
+            <b className="block font-display text-lg leading-tight">
+              {g.tipo === 'CUMPLE'
+                ? '¡Feliz cumpleaños! Tienes un regalo'
+                : 'Te guardamos un regalo'}
+            </b>
+            {g.titulo}. Muestra tu código en caja antes del {diaConMes(g.ultimoDia)}.
+          </p>
+        </div>
+      ))}
 
       {!t.verificada && porCobrar > 0 && (
         <Aviso tono="atencion" titulo="Para cobrarlo, verifica tu correo o tu celular">
@@ -160,7 +183,7 @@ export default async function TarjetaPage({
         anticipación.
       </p>
 
-      <NavTarjeta actual="/lealtad/tarjeta" premiosListos={listos.length} />
+      <NavTarjeta actual="/lealtad/tarjeta" premiosListos={listos.length + t.regalos.length} />
     </>
   );
 }

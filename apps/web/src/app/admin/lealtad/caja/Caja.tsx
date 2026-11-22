@@ -692,7 +692,7 @@ export function Caja({
             <>
               <div className="grid justify-items-center gap-1 rounded-lg bg-disponible/10 p-5 text-center">
                 <Icono nombre="regalo" width={36} height={36} className="text-disponible" />
-                <p className="font-display text-xl text-ink">Premio entregado: {entrega.texto}</p>
+                <p className="font-display text-xl text-ink">Entregado: {entrega.texto}</p>
                 <p className="text-sm text-ink-soft">
                   {sucursal.nombre} · {new Date().toLocaleDateString('es-MX')}
                 </p>
@@ -733,7 +733,9 @@ export function Caja({
                       <b className="block text-[15px] font-semibold text-ink">{p.nombre}</b>
                       {p.incluye}
                       <span className="block text-xs text-muted">
-                        Estampa {p.posicion} · tarjeta {p.ciclo}
+                        {p.regalo
+                          ? 'Regalo automático del club · no gasta sellos'
+                          : `Estampa ${p.posicion} · tarjeta ${p.ciclo}`}
                       </span>
                     </span>
                   </label>

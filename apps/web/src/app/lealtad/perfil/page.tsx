@@ -166,7 +166,7 @@ export default async function PerfilPage({
 
       <NavTarjeta
         actual="/lealtad/perfil"
-        premiosListos={t.premios.filter((p) => p.disponible).length}
+        premiosListos={t.premios.filter((p) => p.disponible).length + t.regalos.length}
       />
     </>
   );

@@ -11,6 +11,8 @@
  * En desarrollo, el contenido se escribe en la consola del servidor.
  */
 
+import { negocioFijado } from '@wl/database';
+
 import { negocioDeLaPeticion } from '@/lib/negocio';
 
 import {
@@ -42,11 +44,20 @@ export const CORREO_CONFIGURADO = Boolean(
 /** API de Resend. Se puede apuntar a un simulador local para probar. */
 const API = (process.env.RESEND_API_URL ?? 'https://api.resend.com').replace(/\/$/, '');
 
+/**
+ * El negocio del correo: el fijado con `conNegocio` (una tarea diaria que
+ * escribe a los clientes de cada club) o el de la petición. Sin ninguno, el
+ * correo sale como club-lealtad.
+ */
+async function negocioDelCorreo() {
+  return negocioFijado() ?? (await negocioDeLaPeticion());
+}
+
 /** Remitente y «responder a» del negocio en curso (o de la plataforma). */
 async function remitenteDelNegocio(): Promise<{ from: string; replyTo?: string } | null> {
   const direccion = process.env.RESEND_FROM_EMAIL;
   if (!direccion) return null;
-  const negocio = await negocioDeLaPeticion();
+  const negocio = await negocioDelCorreo();
   const nombre = (negocio?.nombre ?? process.env.RESEND_FROM_NAME ?? 'Programa de lealtad').replace(
     /[<>"\r\n]/g,
     '',
@@ -180,7 +191,7 @@ const LOGOTIPO_CORREO =
 
 /** Pone el nombre y los colores del negocio en un correo armado con la plantilla. */
 async function vestirCorreo(html: string): Promise<string> {
-  const negocio = await negocioDeLaPeticion();
+  const negocio = await negocioDelCorreo();
   const nombre = negocio?.nombre ?? process.env.RESEND_FROM_NAME ?? 'club-lealtad';
   // Sin negocio (correos del sitio, como la bienvenida): colores de club-lealtad.
   const fondo =

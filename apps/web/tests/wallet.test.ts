@@ -38,6 +38,7 @@ const tarjeta = (extra: Partial<VistaTarjeta> = {}): VistaTarjeta => ({
   cumpleMes: null,
   alta: new Date('2026-10-01T00:00:00Z'),
   premios: [],
+  regalos: [],
   visitas: [],
   ...extra,
 });
