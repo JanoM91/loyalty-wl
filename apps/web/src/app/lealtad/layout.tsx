@@ -5,6 +5,7 @@ import { LogoMarca } from '@/components/Marca';
 import { sesionActual } from '@/lib/admin/sesion';
 import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
+import { CargandoAlNavegar } from '@/components/CargandoAlNavegar';
 
 export async function generateMetadata(): Promise<Metadata> {
   const [negocio, base] = await Promise.all([exigirNegocio(), rutaBase()]);
@@ -64,6 +65,7 @@ export default async function LealtadLayout({ children }: { children: ReactNode 
       <main id="contenido" className="mx-auto grid max-w-md gap-4 px-5 pt-4 pb-28">
         {children}
       </main>
+      <CargandoAlNavegar variante="negocio" />
 
       <footer className="mx-auto max-w-md px-5 pb-28 text-[13px] text-muted">
         <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-1">

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { CargandoAlNavegar } from '@/components/CargandoAlNavegar';
 import { IsotipoClub } from '@/components/ClubLealtad';
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 
@@ -66,6 +67,7 @@ export function Marco({
   return (
     <div className="cl">
       <PixelMeta />
+      <CargandoAlNavegar />
       <div className="bar" aria-hidden="true" />
       <header className={compacto ? 'cab-compacta' : undefined}>
         <div
