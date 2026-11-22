@@ -37,6 +37,12 @@ export default async function TarjetaPage({
   const promociones = arcade
     ? (await cuponesArcadeDeTarjeta(t.id)).filter((c) => c.estado === 'DISPONIBLE').length
     : 0;
+  // La verificación se pide fuerte cuando hay algo que cobrar; antes, solo un recordatorio.
+  const porCobrar = listos.length + promociones;
+  const verificar = {
+    url: t.correo ? '/lealtad/verificar' : '/lealtad/perfil#correo',
+    texto: t.correo ? 'Verificar mi correo' : 'Agregar mi correo',
+  };
 
   return (
     <>
@@ -78,14 +84,11 @@ export default async function TarjetaPage({
         </div>
       )}
 
-      {!t.verificada && (
-        <Aviso tono="atencion" titulo="Verifica tu correo o tu celular para canjear">
-          Tus sellos ya cuentan.{' '}
-          <a
-            href={t.correo ? '/lealtad/verificar' : '/lealtad/perfil#correo'}
-            className="font-semibold underline"
-          >
-            {t.correo ? 'Verificar mi correo' : 'Agregar mi correo'}
+      {!t.verificada && porCobrar > 0 && (
+        <Aviso tono="atencion" titulo="Para cobrarlo, verifica tu correo o tu celular">
+          Es un paso y solo una vez.{' '}
+          <a href={verificar.url} className="font-semibold underline">
+            {verificar.texto}
           </a>
           {t.celular && !t.correo && <> o pide en caja que te manden tu enlace por WhatsApp.</>}
         </Aviso>
@@ -119,6 +122,15 @@ export default async function TarjetaPage({
         <BotonAppleWallet />
         <BotonGoogleWallet />
       </section>
+
+      {!t.verificada && porCobrar === 0 && (
+        <p className="text-xs text-muted">
+          Antes de tu primer premio, verifica tu correo o tu celular para poder cobrarlo.{' '}
+          <a href={verificar.url} className="font-semibold text-ink underline">
+            {verificar.texto}
+          </a>
+        </p>
+      )}
 
       {arcade && (
         <a

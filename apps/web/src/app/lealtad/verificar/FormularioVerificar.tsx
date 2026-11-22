@@ -67,7 +67,7 @@ export function FormularioVerificar() {
           pattern="\d{6}"
           required
           placeholder="••••••"
-          className="min-h-[56px] w-full rounded-sm border-[1.5px] border-rule bg-white px-3 text-center font-mono text-2xl focus:border-ink focus:outline-none"
+          className="min-h-[56px] w-full rounded-sm border-[1.5px] border-rule bg-white px-3 text-[#1d1d1f] placeholder:text-[#8a8a8e] text-center font-mono text-2xl focus:border-ink focus:outline-none"
         />
         {confirmacion.error && <Aviso tono="error">{confirmacion.error}</Aviso>}
         <Boton texto="Confirmar" enviando="Comprobando…" />
