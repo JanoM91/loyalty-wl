@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: 'Mi plan' };
 export const dynamic = 'force-dynamic';
 
 const TARJETA =
-  'rounded-[22px] border-[1.5px] border-[#CDE8DC] bg-white p-5 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
+  'rounded-[22px] border-[1.5px] border-[#E8D8C6] bg-white p-5 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
 
 const fecha = (d: Date) =>
   d.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'long' });
@@ -67,16 +67,16 @@ export default async function PlanPage() {
       <div className="flex max-w-2xl flex-col gap-4">
         <section className={`${TARJETA} wl-entra ${estado === 'PAUSADO' ? 'border-ink' : ''}`}>
           <h2 className="text-[24px]">{titulo}</h2>
-          <p className="mt-1.5 text-[15px] text-[#3C5A51]">{texto}</p>
+          <p className="mt-1.5 text-[15px] text-[#5A4F63]">{texto}</p>
         </section>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <section className={TARJETA}>
-            <span className="text-[14px] font-semibold text-[#3C5A51]">Mensual</span>
+            <span className="text-[14px] font-semibold text-[#5A4F63]">Mensual</span>
             <p className="mt-1 font-display text-[34px] leading-none font-extrabold">
               {lite.mes !== null ? pesos(lite.mes) : 'Pregúntanos'}
             </p>
-            <p className="mt-1 text-[14px] text-[#3C5A51]">al mes, IVA incluido</p>
+            <p className="mt-1 text-[14px] text-[#5A4F63]">al mes, IVA incluido</p>
             <a
               href={mensaje('mensual')}
               className="mt-4 inline-flex min-h-[48px] w-full items-center justify-center rounded-[16px] border-[1.5px] border-ink px-4 font-semibold text-ink"
@@ -85,13 +85,13 @@ export default async function PlanPage() {
             </a>
           </section>
           <section className={`${TARJETA} border-ink`}>
-            <span className="text-[14px] font-semibold text-[#3C5A51]">
+            <span className="text-[14px] font-semibold text-[#5A4F63]">
               Anual{ahorro ? ` · ahorras ${pesos(ahorro)}` : ''}
             </span>
             <p className="mt-1 font-display text-[34px] leading-none font-extrabold">
               {lite.anio !== null ? pesos(lite.anio) : 'Pregúntanos'}
             </p>
-            <p className="mt-1 text-[14px] text-[#3C5A51]">al año, IVA incluido</p>
+            <p className="mt-1 text-[14px] text-[#5A4F63]">al año, IVA incluido</p>
             <a
               href={mensaje('anual')}
               className="mt-4 inline-flex min-h-[48px] w-full items-center justify-center rounded-[16px] bg-ink px-4 font-semibold text-cream"
@@ -102,9 +102,9 @@ export default async function PlanPage() {
         </div>
 
         <section className={`${TARJETA} grid gap-2`}>
-          <span className="text-[14px] font-semibold text-[#3C5A51]">Servicio adicional</span>
+          <span className="text-[14px] font-semibold text-[#5A4F63]">Servicio adicional</span>
           <h2 className="text-[22px]">Juega y gana</h2>
-          <p className="text-[15px] text-[#3C5A51]">
+          <p className="text-[15px] text-[#5A4F63]">
             {arcadeVigente(negocio.ajustes.arcade) && negocio.ajustes.arcade?.pagadoHasta
               ? `Activo, pagado hasta el ${fecha(new Date(negocio.ajustes.arcade.pagadoHasta))}.`
               : 'Juegos con tu marca dentro de la tarjeta de tus clientes, con retos y promociones que se cobran en tu caja.'}{' '}
@@ -120,7 +120,7 @@ export default async function PlanPage() {
           </a>
         </section>
 
-        <p className="text-[14px] text-[#3C5A51]">
+        <p className="text-[14px] text-[#5A4F63]">
           Te escribimos por WhatsApp con el enlace de pago y activamos tu club en cuanto se
           acredita. Si necesitas factura, pídela en el mismo chat.
         </p>

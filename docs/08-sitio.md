@@ -33,7 +33,8 @@ Jano eligió el logo **«Tarjeta negra»**: una tarjeta negra de sellos con filo
 - Logo en encabezado y pie: `Isotipo` y `Logo` en `Marco.tsx`.
 - Favicon, ícono de iPhone e imagen al compartir: archivos `club-lealtad-*` en `apps/web/public`, declarados en `metadatosDelSitio()` (`lib/sitio.ts`). Solo las páginas del sitio los llevan; tarjetas y paneles siguen con la marca de cada negocio.
 - Los correos del sitio (sin negocio) usan noche y crema (`lib/correo.ts`).
-- El panel del dueño (`lib/admin/panel.ts` y clases con `#00C389`/`#5B2EFF`) conserva por ahora la paleta anterior.
+- Panel del dueño (`ESTILO_PANEL` en `lib/admin/panel.ts`): mismos colores y títulos en Fredoka. La lima va en rellenos con texto noche y sobre fondos oscuros; donde el acento va solo sobre crema (barras, progreso, bordes de aviso) se usa `realce` (coral, `--wl-realce`). Fuera del panel, `realce` es el acento del negocio. Los sellos de la caja llevan contorno noche.
+- Las piezas de «Juega y gana» (#18) usan `--acc` en sus sombras.
 
 ## Decisiones de Jano
 
