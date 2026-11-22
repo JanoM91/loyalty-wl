@@ -26,6 +26,7 @@ export function AvisoNavegadorIntegrado() {
     url: string;
   } | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [mostrarEnlace, setMostrarEnlace] = useState(false);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -48,7 +49,7 @@ export function AvisoNavegadorIntegrado() {
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2500);
     } catch {
-      window.prompt('Copia este enlace y ábrelo en tu navegador:', url);
+      setMostrarEnlace(true);
     }
   }
 
@@ -69,6 +70,21 @@ export function AvisoNavegadorIntegrado() {
     </span>
   );
 
+  const enlaceManual = mostrarEnlace && (
+    <span className="mt-2 block">
+      <span className="block text-xs">
+        No pudimos copiarlo solo. Toca el enlace, cópialo y pégalo en tu navegador.
+      </span>
+      <input
+        readOnly
+        value={url}
+        onFocus={(e) => e.currentTarget.select()}
+        aria-label="Enlace de tu tarjeta"
+        className="mt-1 w-full rounded-md border border-rule bg-cream px-2 py-1 text-xs text-ink"
+      />
+    </span>
+  );
+
   if (estado.integrado) {
     return (
       <Aviso tono="atencion" titulo="Ábrelo en tu navegador antes de continuar">
@@ -76,6 +92,7 @@ export function AvisoNavegadorIntegrado() {
         encontrar en Safari ni en Chrome. Toca el menú de la app (⋮ o el icono de compartir) y elige
         «Abrir en el navegador», o copia el enlace y pégalo en Safari o Chrome.
         {acciones}
+        {enlaceManual}
       </Aviso>
     );
   }
@@ -87,6 +104,7 @@ export function AvisoNavegadorIntegrado() {
       <button type="button" onClick={copiar} className="underline underline-offset-4">
         {copiado ? 'Enlace copiado' : 'Copiar enlace'}
       </button>
+      {enlaceManual}
     </p>
   );
 }

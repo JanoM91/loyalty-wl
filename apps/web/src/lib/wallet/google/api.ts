@@ -52,6 +52,7 @@ async function llamar(
   const token = await tokenDeAcceso(config);
   const r = await fetch(`${API}${ruta}`, {
     method: metodo,
+    signal: AbortSignal.timeout(8000),
     headers: {
       authorization: `Bearer ${token}`,
       ...(cuerpo !== undefined ? { 'content-type': 'application/json' } : {}),

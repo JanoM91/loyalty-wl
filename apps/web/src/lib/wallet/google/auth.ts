@@ -74,6 +74,7 @@ export async function tokenDeAcceso(config: ConfigGoogleWallet): Promise<string>
 
   const r = await fetch(TOKEN_URL, {
     method: 'POST',
+    signal: AbortSignal.timeout(8000),
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',

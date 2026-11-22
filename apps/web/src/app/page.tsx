@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { prisma, programaVigente } from '@wl/database';
+import { PROGRAMA_BASE } from '@wl/domain';
 
 import { InicioNegocio } from '@/components/inicio/InicioNegocio';
 import { Inicio as InicioDelServicio } from '@/components/sitio/Inicio';
@@ -32,12 +33,20 @@ export default async function Inicio() {
   if (!process.env.WL_NEGOCIO_UNICO) redirect(await ruta('/lealtad'));
 
   const [programa, sucursales] = await Promise.all([
-    programaVigente(),
-    prisma.branch.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' },
-      select: { name: true, addressLine: true, neighborhood: true, city: true, phone: true },
+    programaVigente().catch((e: unknown) => {
+      console.error('[inicio] No se pudo leer el programa vigente:', e);
+      return PROGRAMA_BASE;
     }),
+    prisma.branch
+      .findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: { name: true, addressLine: true, neighborhood: true, city: true, phone: true },
+      })
+      .catch((e: unknown) => {
+        console.error('[inicio] No se pudieron leer las sucursales:', e);
+        return [];
+      }),
   ]);
   return (
     <InicioNegocio
