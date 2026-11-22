@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import {
   TOPE_MENSAJES_POR_OMISION,
   estadoComercialDe,
-  listarNegocios,
+  obtenerNegocioEnLista,
   plantillaArcade,
   preciosDelServicio,
 } from '@wl/database';
@@ -57,7 +57,7 @@ export default async function NegocioPage({
 }) {
   const sesion = await exigirPlataforma();
   const [{ slug }, { enlace, borrar: borrarError }] = await Promise.all([params, searchParams]);
-  const fila = (await listarNegocios()).find((n) => n.negocio.slug === slug);
+  const fila = await obtenerNegocioEnLista(slug);
   if (!fila) notFound();
   const { negocio } = fila;
 

@@ -1,5 +1,6 @@
 import {
   PROGRAMA_BASE,
+  ZONA_HORARIA_POR_OMISION,
   diasEnPausa,
   esPrefijoCodigo,
   esSlugDeNegocio,
@@ -15,8 +16,9 @@ import type { Prisma, PrismaClient } from '@prisma/client';
 import { crearCliente } from './cliente';
 import {
   conNegocio,
+  leerAjustes,
+  leerMarca,
   negocioPorId,
-  negocioPorSlug,
   type AjustesNegocio,
   type MarcaNegocio,
   type Negocio,
@@ -34,17 +36,24 @@ import { prisma } from './index';
  * plataforma (`/plataforma`), que por eso necesita `DIRECT_URL` en el servidor.
  */
 
-let duenio: PrismaClient | null = null;
+/** En desarrollo, Next recarga módulos: el singleton vive en `globalThis` para no fugar conexiones. */
+const global = globalThis as unknown as { wlPrismaDuenio?: PrismaClient };
+
+let duenio: PrismaClient | null = global.wlPrismaDuenio ?? null;
 
 export function clienteDuenio(): PrismaClient {
   const url = process.env.DIRECT_URL;
   if (!url) throw new Error('Falta DIRECT_URL: las operaciones de plataforma usan el rol dueño.');
   duenio ??= crearCliente(url);
+  if (process.env.NODE_ENV !== 'production') global.wlPrismaDuenio = duenio;
   return duenio;
 }
 
 export function desconectarPlataforma(): Promise<void> {
-  return duenio ? duenio.$disconnect() : Promise.resolve();
+  const cliente = duenio;
+  duenio = null;
+  global.wlPrismaDuenio = undefined;
+  return cliente ? cliente.$disconnect() : Promise.resolve();
 }
 
 export interface SucursalNueva {
@@ -217,29 +226,72 @@ export interface NegocioEnLista {
   readonly usuarios: number;
 }
 
+const SELECCION_EN_LISTA = {
+  id: true,
+  slug: true,
+  name: true,
+  status: true,
+  timezone: true,
+  codePrefix: true,
+  brand: true,
+  settings: true,
+  createdAt: true,
+  _count: { select: { branchs: true, loyaltyCards: true, userAccounts: true } },
+} as const;
+
+interface FilaEnLista {
+  readonly id: string;
+  readonly slug: string;
+  readonly name: string;
+  readonly status: string;
+  readonly timezone: string;
+  readonly codePrefix: string;
+  readonly brand: unknown;
+  readonly settings: unknown;
+  readonly createdAt: Date;
+  readonly _count: {
+    readonly branchs: number;
+    readonly loyaltyCards: number;
+    readonly userAccounts: number;
+  };
+}
+
+/** Misma lectura que `negocioPorSlug`, sobre la fila ya leída (sin otra consulta por negocio). */
+function aNegocioEnLista(f: FilaEnLista): NegocioEnLista {
+  return {
+    negocio: {
+      id: f.id,
+      slug: f.slug,
+      nombre: f.name,
+      activo: f.status === 'ACTIVO',
+      zonaHoraria: esZonaHorariaValida(f.timezone) ? f.timezone : ZONA_HORARIA_POR_OMISION,
+      prefijoCodigo: esPrefijoCodigo(f.codePrefix) ? f.codePrefix : 'WL',
+      marca: leerMarca(f.brand),
+      ajustes: leerAjustes(f.settings),
+    },
+    creado: f.createdAt,
+    sucursales: f._count.branchs,
+    tarjetas: f._count.loyaltyCards,
+    usuarios: f._count.userAccounts,
+  };
+}
+
 /** Todos los negocios, activos y suspendidos, con sus tamaños. */
 export async function listarNegocios(): Promise<NegocioEnLista[]> {
   const filas = await clienteDuenio().tenant.findMany({
     orderBy: { createdAt: 'desc' },
-    select: {
-      slug: true,
-      createdAt: true,
-      _count: { select: { branchs: true, loyaltyCards: true, userAccounts: true } },
-    },
+    select: SELECCION_EN_LISTA,
   });
-  const salida: NegocioEnLista[] = [];
-  for (const f of filas) {
-    const negocio = await negocioPorSlug(f.slug);
-    if (negocio)
-      salida.push({
-        negocio,
-        creado: f.createdAt,
-        sucursales: f._count.branchs,
-        tarjetas: f._count.loyaltyCards,
-        usuarios: f._count.userAccounts,
-      });
-  }
-  return salida;
+  return filas.map(aNegocioEnLista);
+}
+
+/** Un negocio de la lista por su dirección, con una sola consulta. */
+export async function obtenerNegocioEnLista(slug: string): Promise<NegocioEnLista | null> {
+  const fila = await clienteDuenio().tenant.findUnique({
+    where: { slug: slug.trim().toLowerCase() },
+    select: SELECCION_EN_LISTA,
+  });
+  return fila ? aNegocioEnLista(fila) : null;
 }
 
 /** Cambia la modalidad contratada. Solo plataforma: el negocio no puede. */
@@ -311,14 +363,18 @@ export function altasRecientesDesde(red: string, horas = 24): Promise<number> {
 
 /** Primera dirección libre a partir de `base`: "barberia-leon", "barberia-leon-2"… */
 export async function direccionLibre(base: string): Promise<string | null> {
-  const bd = clienteDuenio();
+  const candidatos: string[] = [];
   for (let i = 1; i <= 20; i += 1) {
     const slug = i === 1 ? base : `${base.slice(0, 56)}-${i}`;
-    if (!esSlugDeNegocio(slug)) continue;
-    const ocupado = await bd.tenant.findUnique({ where: { slug }, select: { id: true } });
-    if (!ocupado) return slug;
+    if (esSlugDeNegocio(slug)) candidatos.push(slug);
   }
-  return null;
+  if (candidatos.length === 0) return null;
+  const ocupados = await clienteDuenio().tenant.findMany({
+    where: { slug: { in: candidatos } },
+    select: { slug: true },
+  });
+  const usados = new Set(ocupados.map((o) => o.slug));
+  return candidatos.find((s) => !usados.has(s)) ?? null;
 }
 
 export async function mezclarAjustes(id: string, cambios: Record<string, unknown>): Promise<void> {
@@ -381,9 +437,12 @@ export interface ClubEnPausa {
 }
 
 /** Clubes en pausa (prueba o pago vencido), del que más tiempo lleva al que menos. */
-export async function clubesEnPausa(ahora: Date = new Date()): Promise<ClubEnPausa[]> {
+export async function clubesEnPausa(
+  ahora: Date = new Date(),
+  lista?: readonly NegocioEnLista[],
+): Promise<ClubEnPausa[]> {
   const salida: ClubEnPausa[] = [];
-  for (const f of await listarNegocios()) {
+  for (const f of lista ?? (await listarNegocios())) {
     const { pruebaVence, pagadoHasta } = f.negocio.ajustes;
     const borrarDesde = fechaDeBorrado(pruebaVence, pagadoHasta, ahora);
     if (!borrarDesde) continue;

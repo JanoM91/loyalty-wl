@@ -38,7 +38,17 @@ export async function programaVigente(): Promise<ProgramaLealtad> {
 
   // Si la base falla, falla la operación: acreditar con un programa que no es
   // el del negocio regalaría o negaría premios.
-  const fila = await prisma.loyaltyProgram.findFirst({ where: { isActive: true } });
+  const fila = await prisma.loyaltyProgram.findFirst({
+    where: { isActive: true },
+    select: {
+      version: true,
+      positions: true,
+      mode: true,
+      milestones: true,
+      tiers: true,
+      contingencyWindowDays: true,
+    },
+  });
   let programa: ProgramaLealtad = PROGRAMA_BASE;
 
   if (fila) {

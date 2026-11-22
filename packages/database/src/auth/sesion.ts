@@ -72,7 +72,10 @@ export async function iniciarSesion(
     };
   }
 
-  const usuario = await prisma.userAccount.findFirst({ where: { email } });
+  const usuario = await prisma.userAccount.findFirst({
+    where: { email },
+    select: DATOS_SESION_CON_CLAVE,
+  });
 
   // La contraseña se comprueba aunque el usuario no exista, contra un hash de
   // relleno. Si se saliera antes, la respuesta llegaría notablemente más
@@ -169,7 +172,13 @@ export async function leerSesion(token: string | undefined): Promise<Sesion | nu
 
   const registro = await prisma.adminSession.findUnique({
     where: { tokenHash: hashToken(token) },
-    include: { user: true },
+    select: {
+      id: true,
+      expiresAt: true,
+      user: {
+        select: { id: true, name: true, email: true, role: true, branchId: true, isActive: true },
+      },
+    },
   });
 
   if (!registro) return null;
@@ -215,7 +224,17 @@ export async function purgarSesionesVencidas(): Promise<number> {
   return count;
 }
 
-function aSesion(u: UserAccount): Sesion {
+const DATOS_SESION_CON_CLAVE = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  branchId: true,
+  isActive: true,
+  passwordHash: true,
+} as const;
+
+function aSesion(u: Pick<UserAccount, 'id' | 'name' | 'email' | 'role' | 'branchId'>): Sesion {
   return {
     userId: u.id,
     nombre: u.name,

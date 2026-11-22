@@ -92,8 +92,30 @@ export function describirPremioGanado(
 export async function vistaCaja(codigo: string, sucursalId: string): Promise<VistaCaja | null> {
   const t = await prisma.loyaltyCard.findFirst({
     where: { publicCode: codigo },
-    include: {
-      rewards: { where: { status: 'DISPONIBLE' }, orderBy: { createdAt: 'asc' } },
+    select: {
+      id: true,
+      publicCode: true,
+      name: true,
+      email: true,
+      phone: true,
+      emailVerifiedAt: true,
+      phoneVerifiedAt: true,
+      stamps: true,
+      cycle: true,
+      isActive: true,
+      physicalMigratedAt: true,
+      rewards: {
+        where: { status: 'DISPONIBLE' },
+        orderBy: { createdAt: 'asc' },
+        select: {
+          id: true,
+          kind: true,
+          title: true,
+          milestone: true,
+          cycle: true,
+          createdAt: true,
+        },
+      },
     },
   });
   if (!t || !t.isActive) return null;
