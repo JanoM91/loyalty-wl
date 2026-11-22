@@ -1,12 +1,15 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 import {
+  AVISOS_POR_OMISION,
   ZONA_HORARIA_POR_OMISION,
   estadoComercial,
   esPrefijoCodigo,
   type EstadoComercial,
   esZonaHorariaValida,
+  leerAvisos,
   leerPermisosArcade,
+  type AvisosDelClub,
   type ColoresMarca,
   type PermisosArcade,
 } from '@wl/domain';
@@ -129,6 +132,8 @@ export interface AjustesNegocio {
    * Solo lo cambia la plataforma.
    */
   readonly mensajes: AjustesMensajes | null;
+  /** Correos al dueño que ya salieron (fin de prueba, pausa, resumen) y si quiere el resumen. */
+  readonly avisos: AvisosDelClub;
 }
 
 export interface AjustesMensajes {
@@ -183,6 +188,7 @@ export const AJUSTES_POR_OMISION: AjustesNegocio = {
   alta: null,
   arcade: null,
   mensajes: null,
+  avisos: AVISOS_POR_OMISION,
 };
 
 type Desconocido = Record<string, unknown>;
@@ -256,6 +262,7 @@ export function leerAjustes(json: unknown): AjustesNegocio {
     alta,
     arcade: leerPermisosArcade(a.arcade),
     mensajes: leerAjustesMensajes(a.mensajes),
+    avisos: leerAvisos(a.avisos),
   };
 }
 

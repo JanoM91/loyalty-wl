@@ -35,7 +35,7 @@ const MESES = [
 ];
 
 const CAMPO =
-  'min-h-[48px] w-full rounded-sm border-[1.5px] border-rule bg-white px-3 text-base focus:border-ink focus:outline-none';
+  'min-h-[48px] w-full rounded-sm border-[1.5px] border-rule bg-white px-3 text-[#1d1d1f] placeholder:text-[#8a8a8e] text-base focus:border-ink focus:outline-none';
 
 function Boton({ texto, enviando }: { texto: string; enviando: string }) {
   const { pending } = useFormStatus();
