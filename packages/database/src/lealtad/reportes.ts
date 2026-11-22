@@ -344,10 +344,11 @@ export interface Pendiente {
   readonly registro: string | null;
 }
 
-export async function listarPendientes(): Promise<Pendiente[]> {
+export async function listarPendientes(limite = 200): Promise<Pendiente[]> {
   const filas = await prisma.loyaltyAccrual.findMany({
     where: { status: 'PENDIENTE' },
     orderBy: { createdAt: 'asc' },
+    take: limite,
     include: {
       branch: { select: { name: true } },
       card: { select: { publicCode: true, name: true } },
