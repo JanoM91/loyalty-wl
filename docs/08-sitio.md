@@ -30,7 +30,8 @@ Jano eligió el logo **«Tarjeta negra»**: una tarjeta negra de sellos con filo
 
 - Paleta (`sitio.css`): noche `#120A2A`, lima `#C6FF3D`, coral `#FF5B3A`, violeta `#6C3BFF` para botones, crema `#FFF6EA` de fondo. `--acc` es el acento de trazos y figuras: coral sobre fondo claro y lima dentro de `.dk`, porque la lima no se ve sobre crema.
 - Tipografía: Fredoka para logotipo y títulos (`@fontsource-variable/fredoka`, se carga solo en el sitio desde `Marco.tsx`), Onest para texto.
-- Logo en encabezado y pie: `Isotipo` y `Logo` en `Marco.tsx`.
+- Logo: `IsotipoClub` y `LogotipoClub` en `components/ClubLealtad.tsx`. Lo usan el encabezado y pie del sitio (`Marco.tsx`), la 404 fuera de un negocio, la plataforma (`/plataforma`, con la misma paleta del panel) y el pie «Funciona con» del menú del panel y de «Más».
+- Correos sin negocio: el encabezado dice «club▪lealtad» con el píxel lima en texto (sin imágenes).
 - Favicon, ícono de iPhone e imagen al compartir: archivos `club-lealtad-*` en `apps/web/public`, declarados en `metadatosDelSitio()` (`lib/sitio.ts`). Solo las páginas del sitio los llevan; tarjetas y paneles siguen con la marca de cada negocio.
 - Los correos del sitio (sin negocio) usan noche y crema (`lib/correo.ts`).
 - Panel del dueño (`ESTILO_PANEL` en `lib/admin/panel.ts`): mismos colores y títulos en Fredoka. La lima va en rellenos con texto noche y sobre fondos oscuros; donde el acento va solo sobre crema (barras, progreso, bordes de aviso) se usa `realce` (coral, `--wl-realce`). Fuera del panel, `realce` es el acento del negocio. Los sellos de la caja llevan contorno noche.

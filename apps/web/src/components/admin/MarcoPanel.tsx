@@ -12,6 +12,7 @@ import {
   type GrupoSeccion,
 } from '@/lib/admin/panel';
 import { salir } from '@/app/admin/entrar/acciones';
+import { LogotipoClub } from '@/components/ClubLealtad';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
 
 import { AvisoClub } from './AvisoClub';
@@ -243,6 +244,9 @@ export async function MarcoPanel({
             </li>
           </ul>
         </nav>
+        <p className="flex items-center gap-2 px-3 text-[12px] text-[#5A4F63]">
+          Funciona con <LogotipoClub tam={13} />
+        </p>
       </aside>
 
       <div className="min-w-0 flex-1">

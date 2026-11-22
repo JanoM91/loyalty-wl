@@ -9,6 +9,7 @@ import { TITULOS_GRUPO, seccionesDelPanel, type GrupoSeccion } from '@/lib/admin
 import { exigirSesion } from '@/lib/admin/sesion';
 import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
+import { LogotipoClub } from '@/components/ClubLealtad';
 
 export const metadata: Metadata = { title: 'Más' };
 export const dynamic = 'force-dynamic';
@@ -91,6 +92,9 @@ export default async function MasPage() {
             </section>
           );
         })}
+        <p className="flex items-center justify-center gap-2 pt-2 text-[12px] text-[#5A4F63]">
+          Funciona con <LogotipoClub tam={13} />
+        </p>
       </div>
     </MarcoPanel>
   );

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 
+import { IsotipoClub } from '@/components/ClubLealtad';
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 
 import { Burbuja, IconoSitio, iconoPara, type NombreIconoSitio } from './Iconos';
@@ -30,47 +31,10 @@ export function enlaceWhatsApp(): string {
 
 export { minimo };
 
-/**
- * Isotipo de club-lealtad («Tarjeta negra», versión reducida para tamaños
- * chicos): tarjeta negra con filo lima, tres sellos y el premio en coral,
- * con otra tarjeta coral detrás. Los archivos de la marca están en `marca/`.
- */
-export function Isotipo({ tam = 36, oscuro = false }: { tam?: number; oscuro?: boolean }) {
-  return (
-    <svg className="iso" width={tam} height={tam} viewBox="0 0 100 100" aria-hidden="true">
-      <rect
-        x="20"
-        y="18"
-        width="64"
-        height="44"
-        rx="10"
-        fill="#FF5B3A"
-        transform="rotate(10 52 40)"
-      />
-      <g transform="rotate(-7 49 56)">
-        <rect
-          x="12.9"
-          y="30.9"
-          width="72.2"
-          height="50.2"
-          rx="10.2"
-          fill={oscuro ? '#1E1440' : '#120A2A'}
-          stroke="#C6FF3D"
-          strokeWidth="1.8"
-        />
-        <rect x="29" y="36" width="17" height="17" rx="4.5" fill="#C6FF3D" />
-        <rect x="52" y="36" width="17" height="17" rx="4.5" fill="#C6FF3D" />
-        <rect x="29" y="59" width="17" height="17" rx="4.5" fill="#C6FF3D" />
-        <rect className="pr" x="52" y="59" width="17" height="17" rx="4.5" fill="#FF5B3A" />
-      </g>
-    </svg>
-  );
-}
-
 function Logo({ enlace, oscuro = false }: { enlace: boolean; oscuro?: boolean }) {
   const contenido = (
     <>
-      <Isotipo oscuro={oscuro} />
+      <IsotipoClub oscuro={oscuro} />
       <span className="wm" aria-hidden="true">
         club
         <span className="px" />
