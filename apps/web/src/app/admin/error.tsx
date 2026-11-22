@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function AdminError({
   error,
@@ -12,6 +12,15 @@ export default function AdminError({
   useEffect(() => {
     console.error('[admin] Error en segmento:', error);
   }, [error]);
+
+  // En la instalación compartida el panel vive en /<club>/admin: se toma el
+  // tramo del club de la dirección actual. En la privada queda /admin.
+  const [panel, setPanel] = useState('/admin');
+  useEffect(() => {
+    const ruta = window.location.pathname;
+    const i = ruta.indexOf('/admin');
+    if (i > 0) setPanel(`${ruta.slice(0, i)}/admin`);
+  }, []);
 
   return (
     <div className="mx-auto grid max-w-md gap-4 rounded-lg border border-rule bg-cream p-6 text-center text-ink">
@@ -29,7 +38,7 @@ export default function AdminError({
           Reintentar
         </button>
         <a
-          href="/admin"
+          href={panel}
           className="rounded-md border border-rule px-4 py-2 text-sm font-medium text-ink transition hover:bg-crumb"
         >
           Volver al panel
