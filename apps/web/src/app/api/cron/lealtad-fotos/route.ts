@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { del, list } from '@vercel/blob';
 import {
@@ -57,9 +58,18 @@ async function limpiar(negocio: Negocio): Promise<{ borradas: number; huerfanas:
   });
 }
 
-export async function GET(req: Request) {
+function autorizado(req: Request): boolean {
   const secreto = process.env.CRON_SECRET;
-  if (!secreto || req.headers.get('authorization') !== `Bearer ${secreto}`) {
+  if (!secreto) return false;
+  const esperado = createHash('sha256').update(`Bearer ${secreto}`).digest();
+  const recibido = createHash('sha256')
+    .update(req.headers.get('authorization') ?? '')
+    .digest();
+  return timingSafeEqual(esperado, recibido);
+}
+
+export async function GET(req: Request) {
+  if (!autorizado(req)) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
   if (!process.env.BLOB_READ_WRITE_TOKEN) {

@@ -10,7 +10,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  */
 
 function secreto(): string | null {
-  const s = process.env.WL_SECRETO_ENLACES ?? process.env.CRON_SECRET ?? '';
+  const s = process.env.WL_SECRETO_ENLACES?.trim() ?? '';
   return s.length >= 16 ? s : null;
 }
 

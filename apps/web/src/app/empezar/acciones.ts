@@ -54,8 +54,8 @@ const TOPE_POR_RED = 3;
  * revertir probando direcciones.
  */
 function huellaDeRed(ip: string | null): string | null {
-  if (!ip) return null;
-  const sal = process.env.WL_SAL_RED ?? process.env.CRON_SECRET ?? '';
+  const sal = process.env.WL_SAL_RED?.trim() ?? '';
+  if (!ip || sal.length < 16) return null;
   return createHash('sha256').update(`${sal}:${ip}`).digest('hex').slice(0, 20);
 }
 
