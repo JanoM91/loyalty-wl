@@ -53,7 +53,7 @@ export default async function CartelPage({ params }: { params: Promise<{ slug: s
         </a>
         <div>
           <h1 className="text-[clamp(1.75rem,5vw,2.25rem)] text-ink">Pon tu QR donde cobras</h1>
-          <p className="mt-1 text-[15px] text-[#3C5A51]">
+          <p className="mt-1 text-[15px] text-[#5A4F63]">
             Tus clientes lo escanean y sacan su tarjeta solos. Imprímelo en tamaño carta o
             compártelo por WhatsApp.
           </p>

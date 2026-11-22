@@ -126,7 +126,7 @@ export function Paleta({
           aria-label="Buscar cliente o acción"
           className={
             claseBoton ??
-            'inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-[#CDE8DC] bg-white text-ink transition-shadow hover:shadow-[0_10px_24px_-16px_rgba(6,35,28,.6)] lg:w-[320px] lg:justify-start lg:pr-2 lg:pl-3.5 lg:text-[15px] lg:text-[#3C5A51]'
+            'inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-[#E8D8C6] bg-white text-ink transition-shadow hover:shadow-[0_10px_24px_-16px_rgba(6,35,28,.6)] lg:w-[320px] lg:justify-start lg:pr-2 lg:pl-3.5 lg:text-[15px] lg:text-[#5A4F63]'
           }
         >
           <svg
@@ -166,7 +166,7 @@ export function Paleta({
 
       {abierta && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-[#06231C]/20 px-4 pt-[12vh]"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-[#120A2A]/20 px-4 pt-[12vh]"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) cerrar();
           }}
@@ -224,7 +224,7 @@ export function Paleta({
                     tabIndex={-1}
                     onMouseEnter={() => setActivo(i)}
                     onClick={() => ejecutar(c)}
-                    className={`flex min-h-[48px] w-full items-center justify-between gap-3 rounded-xl px-3 text-left text-[15px] text-ink ${i === activo ? 'bg-[#E4F6EE]' : ''}`}
+                    className={`flex min-h-[48px] w-full items-center justify-between gap-3 rounded-xl px-3 text-left text-[15px] text-ink ${i === activo ? 'bg-[#ECFFBF]' : ''}`}
                   >
                     <span>{c.texto}</span>
                     <span className="text-[12px] text-muted">{c.grupo}</span>

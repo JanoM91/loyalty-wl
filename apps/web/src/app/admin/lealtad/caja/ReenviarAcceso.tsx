@@ -82,7 +82,7 @@ export function ReenviarAcceso({
   return (
     <section
       className={`grid gap-3 rounded-lg bg-cream p-4 ${
-        pendiente ? 'border-[1.5px] border-crust' : 'border border-rule'
+        pendiente ? 'border-[1.5px] border-realce' : 'border border-rule'
       }`}
     >
       <div className="grid gap-1">

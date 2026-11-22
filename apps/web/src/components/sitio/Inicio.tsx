@@ -88,7 +88,7 @@ export async function Inicio() {
                 ] as const
               ).map(([icono, texto]) => (
                 <li key={texto} className="row" style={{ gap: 8, fontWeight: 600 }}>
-                  <IconoSitio nombre={icono} tam={22} style={{ color: 'var(--pri)' }} />
+                  <IconoSitio nombre={icono} tam={22} style={{ color: 'var(--acc)' }} />
                   {texto}
                 </li>
               ))}

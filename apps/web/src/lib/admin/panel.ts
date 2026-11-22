@@ -12,13 +12,21 @@ type Rol = UserRole;
  * ve siempre con los colores y la tipografía del servicio. La marca de cada
  * negocio aparece solo donde muestra lo que ven sus clientes (la tarjeta).
  * Estas variables reemplazan las de la marca dentro del panel.
+ *
+ * Marca «Tarjeta negra» (ver `marca/LEEME.md`): noche, crema y lima; el
+ * realce coral es el acento sobre fondo claro, donde la lima no se ve.
+ * Títulos en Fredoka, como el sitio.
  */
 export const ESTILO_PANEL = {
-  '--wl-fondo': '#06231C',
-  '--wl-sobre': '#F1FBF6',
-  '--wl-acento': '#00C389',
-  '--wl-papel': '#F1FBF6',
-  '--wl-tinta': '#06231C',
+  '--wl-fondo': '#120A2A',
+  '--wl-sobre': '#FFF6EA',
+  '--wl-acento': '#C6FF3D',
+  '--wl-realce': '#FF5B3A',
+  '--wl-papel': '#FFF6EA',
+  '--wl-tinta': '#120A2A',
+  '--wl-fuente-titulos': "'Fredoka Variable', ui-sans-serif, system-ui, sans-serif",
+  '--wl-peso-titulos': '600',
+  '--wl-apretado': '-0.01em',
 } as CSSProperties;
 
 export interface ComandoPanel {

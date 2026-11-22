@@ -172,19 +172,27 @@ function escapar(s: string): string {
 
 const COLOR = /^#[0-9a-f]{6}$/i;
 
+/**
+ * Logotipo de club-lealtad para el encabezado de los correos sin negocio
+ * (sobre noche): texto con el píxel lima en lugar del guion. Sin imágenes, por
+ * la misma razón que la plantilla.
+ */
+const LOGOTIPO_CORREO =
+  'club<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#C6FF3D;margin:0 3px;vertical-align:2px"></span>lealtad';
+
 /** Pone el nombre y los colores del negocio en un correo armado con la plantilla. */
 async function vestirCorreo(html: string): Promise<string> {
   const negocio = await negocioDeLaPeticion();
   const nombre = negocio?.nombre ?? process.env.RESEND_FROM_NAME ?? 'club-lealtad';
   // Sin negocio (correos del sitio, como la bienvenida): colores de club-lealtad.
   const fondo =
-    negocio && COLOR.test(negocio.marca.colores.fondo) ? negocio.marca.colores.fondo : '#06231C';
+    negocio && COLOR.test(negocio.marca.colores.fondo) ? negocio.marca.colores.fondo : '#120A2A';
   const sobre =
     negocio && COLOR.test(negocio.marca.colores.sobreFondo)
       ? negocio.marca.colores.sobreFondo
-      : '#F1FBF6';
+      : '#FFF6EA';
   return html
-    .replaceAll(HUECO_NOMBRE, escapar(nombre))
+    .replaceAll(HUECO_NOMBRE, negocio ? escapar(nombre) : LOGOTIPO_CORREO)
     .replaceAll(HUECO_FONDO, fondo)
     .replaceAll(HUECO_SOBRE, sobre)
     .replaceAll(

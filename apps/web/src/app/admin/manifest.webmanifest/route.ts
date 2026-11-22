@@ -31,7 +31,7 @@ export async function GET() {
     display: 'standalone',
     orientation: 'portrait',
     background_color: c.fondo,
-    theme_color: '#F1FBF6',
+    theme_color: '#FFF6EA',
     lang: 'es-MX',
     icons: [
       { src: iconos.chico, sizes: '192x192', type: 'image/png', purpose: 'any' },

@@ -43,11 +43,11 @@ export default async function LealtadLayout({ children }: { children: ReactNode 
       {/* Quien tiene sesión en el panel de este club ve su tarjeta como la verá
           su cliente, con un regreso a su panel. Los clientes no la ven. */}
       {panel ? (
-        <div className="flex items-center justify-between gap-3 bg-[#06231C] py-2 pr-2.5 pl-4 text-[13px] text-[#F1FBF6]">
+        <div className="flex items-center justify-between gap-3 bg-[#120A2A] py-2 pr-2.5 pl-4 text-[13px] text-[#FFF6EA]">
           <span>Así lo verá tu cliente</span>
           <a
             href={`${base}/admin`}
-            className="inline-flex min-h-[40px] items-center rounded-[11px] bg-[#00C389] px-3 font-bold text-[#06231C]"
+            className="inline-flex min-h-[40px] items-center rounded-[11px] bg-[#C6FF3D] px-3 font-bold text-[#120A2A]"
           >
             Volver a mi panel
           </a>
