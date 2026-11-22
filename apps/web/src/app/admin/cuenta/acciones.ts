@@ -3,6 +3,7 @@
 import {
   cambiarContrasenaPropia,
   cuentaParaConfirmar,
+  marcarAvisos,
   puedeMandarConfirmacion,
 } from '@wl/database';
 
@@ -71,4 +72,28 @@ export async function mandarmeConfirmacion(
   if (!url) return { error: 'No pudimos armar el enlace. Avísanos.', enviado: false };
   const r = await mandarConfirmacionCorreo({ email: cuenta.email, nombre: cuenta.nombre, url });
   return r.ok ? { error: null, enviado: true } : { error: r.error, enviado: false };
+}
+
+export interface EstadoResumen {
+  readonly error: string | null;
+  readonly aviso: string | null;
+}
+
+/** Enciende o apaga el resumen semanal por correo del club (dueño o administración). */
+export async function cambiarResumenSemanal(
+  _previo: EstadoResumen,
+  form: FormData,
+): Promise<EstadoResumen> {
+  const sesion = await exigirSesion();
+  if (sesion.rol !== 'DUENO' && sesion.rol !== 'ADMIN')
+    return { error: 'Solo el dueño puede cambiar esto.', aviso: null };
+  const negocio = await exigirNegocio();
+  const encendido = form.get('resumen') === 'on';
+  await marcarAvisos(negocio.id, { resumenSemanal: encendido });
+  return {
+    error: null,
+    aviso: encendido
+      ? 'Listo. Cada lunes te llega el resumen de la semana.'
+      : 'Listo. Ya no te mandaremos el resumen semanal.',
+  };
 }

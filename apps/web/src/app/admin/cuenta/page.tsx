@@ -3,8 +3,10 @@ import { ETIQUETA_ROL, LONGITUD_MINIMA_CONTRASENA, leerUsuario } from '@wl/datab
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { exigirSesion } from '@/lib/admin/sesion';
+import { exigirNegocio } from '@/lib/negocio';
 import { ConfirmarCorreo } from './ConfirmarCorreo';
 import { FormularioCuenta } from './FormularioCuenta';
+import { ResumenSemanal } from './ResumenSemanal';
 
 export const metadata: Metadata = { title: 'Mi cuenta' };
 export const dynamic = 'force-dynamic';
@@ -12,7 +14,11 @@ export const dynamic = 'force-dynamic';
 /** Datos de la cuenta propia y cambio de contraseña. Cualquier rol entra. */
 export default async function CuentaPage() {
   const sesion = await exigirSesion();
-  const yo = await leerUsuario(sesion.userId);
+  const [yo, negocio] = await Promise.all([leerUsuario(sesion.userId), exigirNegocio()]);
+  // El resumen semanal llega a los dueños de clubes del asistente o que pagan.
+  const conResumen =
+    (sesion.rol === 'DUENO' || sesion.rol === 'ADMIN') &&
+    (negocio.ajustes.alta !== null || negocio.ajustes.pagadoHasta !== null);
 
   return (
     <MarcoPanel
@@ -34,6 +40,8 @@ export default async function CuentaPage() {
       </dl>
 
       {yo && !yo.correoVerificado && <ConfirmarCorreo email={sesion.email} />}
+
+      {conResumen && <ResumenSemanal encendido={negocio.ajustes.avisos.resumenSemanal} />}
 
       <h2 className="mb-3 font-display text-lg text-ink">Cambiar contraseña</h2>
       <FormularioCuenta email={sesion.email} minimo={LONGITUD_MINIMA_CONTRASENA} />
