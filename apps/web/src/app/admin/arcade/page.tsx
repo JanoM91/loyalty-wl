@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: 'Juega y gana' };
 export const dynamic = 'force-dynamic';
 
 const TARJETA =
-  'rounded-[22px] border-[1.5px] border-[#CDE8DC] bg-white p-5 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
+  'rounded-[22px] border-[1.5px] border-[#E8D8C6] bg-white p-5 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
 
 const fecha = (iso: string) =>
   new Date(iso).toLocaleDateString('es-MX', {
@@ -55,7 +55,7 @@ export default async function ArcadePage() {
         <div className="flex max-w-2xl flex-col gap-4">
           <section className={`${TARJETA} wl-entra grid gap-3`}>
             <h2 className="text-[24px]">Un arcade con tus productos dentro de su tarjeta</h2>
-            <ul className="grid list-disc gap-1.5 pl-5 text-[15px] text-[#3C5A51]">
+            <ul className="grid list-disc gap-1.5 pl-5 text-[15px] text-[#5A4F63]">
               <li>
                 Seis juegos sencillos para el celular (atrapa, memorama, sopa de letras y más), con
                 tus colores, tu inicial y tus productos.
@@ -94,19 +94,19 @@ export default async function ArcadePage() {
       <div className="grid gap-8">
         <section className={`${TARJETA} grid max-w-3xl gap-3`}>
           {vigente ? (
-            <p className="text-[15px] text-[#3C5A51]">
+            <p className="text-[15px] text-[#5A4F63]">
               <b className="text-ink">Activo</b>
               {permisos.pagadoHasta ? ` · pagado hasta el ${fecha(permisos.pagadoHasta)}` : ''}. Tus
               clientes lo ven en su tarjeta, en «Juega y gana».
             </p>
           ) : (
             <div className="grid gap-2">
-              <p className="text-[15px] text-[#3C5A51]">
+              <p className="text-[15px] text-[#5A4F63]">
                 <b className="text-ink">Vencido</b>
                 {permisos.pagadoHasta ? ` el ${fecha(permisos.pagadoHasta)}` : ''}. Tus clientes ya
                 no ven los juegos; las promociones que ganaron se pueden cobrar hasta que venzan.
               </p>
-              <p className="text-[14px] text-[#3C5A51]">{precioTexto}</p>
+              <p className="text-[14px] text-[#5A4F63]">{precioTexto}</p>
               <a
                 href={pedir('Hola, quiero renovar «Juega y gana» en mi club')}
                 className="inline-flex min-h-[48px] items-center justify-center justify-self-start rounded-[16px] bg-ink px-6 font-semibold text-cream"
@@ -125,14 +125,14 @@ export default async function ArcadePage() {
               ] as const
             ).map(([t, v]) => (
               <div key={t} className="grid gap-0.5">
-                <dt className="text-[13px] text-[#3C5A51]">{t}</dt>
+                <dt className="text-[13px] text-[#5A4F63]">{t}</dt>
                 <dd className="font-display text-[28px] leading-none font-extrabold tabular-nums">
                   {v.toLocaleString('es-MX')}
                 </dd>
               </div>
             ))}
           </dl>
-          <p className="text-[13px] text-[#3C5A51]">Esta semana, desde el lunes.</p>
+          <p className="text-[13px] text-[#5A4F63]">Esta semana, desde el lunes.</p>
         </section>
 
         <FormularioArcade permisos={permisos} config={config} tema={tema} />

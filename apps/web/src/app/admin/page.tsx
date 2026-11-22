@@ -22,8 +22,8 @@ export const metadata: Metadata = { title: 'Inicio' };
 export const dynamic = 'force-dynamic';
 
 const TARJETA =
-  'rounded-[22px] border-[1.5px] border-[#CDE8DC] bg-white shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
-const SUAVE = 'text-[#3C5A51]';
+  'rounded-[22px] border-[1.5px] border-[#E8D8C6] bg-white shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
+const SUAVE = 'text-[#5A4F63]';
 const DIAS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
 const fechaDia = (d: Date) =>
@@ -193,7 +193,7 @@ export default async function AdminInicioPage() {
             {administra && (
               <a
                 href={`${base}/admin/plan`}
-                className="inline-flex min-h-[40px] flex-none items-center rounded-[11px] bg-[#00C389] px-3 font-bold text-ink"
+                className="inline-flex min-h-[40px] flex-none items-center rounded-[11px] bg-[#C6FF3D] px-3 font-bold text-ink"
               >
                 {estado.boton}
                 {comercial === 'PRUEBA' && liteMes !== null && (
@@ -216,9 +216,9 @@ export default async function AdminInicioPage() {
                     {hechos} de {pasos.length}
                   </span>
                 </div>
-                <div aria-hidden="true" className="mt-3 h-1.5 rounded-full bg-[#CDE8DC]">
+                <div aria-hidden="true" className="mt-3 h-1.5 rounded-full bg-[#E8D8C6]">
                   <div
-                    className="h-1.5 rounded-full bg-[#00C389] transition-[width] duration-500"
+                    className="h-1.5 rounded-full bg-realce transition-[width] duration-500"
                     style={{ width: `${Math.max(4, (hechos / pasos.length) * 100)}%` }}
                   />
                 </div>
@@ -228,13 +228,13 @@ export default async function AdminInicioPage() {
                     return (
                       <li key={p.titulo} className="flex items-start gap-3">
                         {p.hecho ? (
-                          <span className="grid size-8 flex-none place-items-center rounded-full bg-[#00C389] text-ink">
+                          <span className="grid size-8 flex-none place-items-center rounded-full bg-[#C6FF3D] text-ink">
                             <Icono nombre="check" tam={18} grosor={2.4} />
                             <span className="sr-only">Hecho:</span>
                           </span>
                         ) : (
                           <span
-                            className={`grid size-8 flex-none place-items-center rounded-full font-bold ${ahoraToca ? 'wl-late bg-ink text-cream' : `border-[1.5px] border-[#CDE8DC] bg-crumb ${SUAVE}`}`}
+                            className={`grid size-8 flex-none place-items-center rounded-full font-bold ${ahoraToca ? 'wl-late bg-ink text-cream' : `border-[1.5px] border-[#E8D8C6] bg-crumb ${SUAVE}`}`}
                           >
                             {i + 1}
                           </span>
@@ -261,8 +261,8 @@ export default async function AdminInicioPage() {
                 </ol>
               </section>
             ) : pasos && administra && faltan.length > 0 ? (
-              <div className="wl-entra flex items-center gap-3 rounded-[18px] bg-[#DDF6EC] px-4 py-3">
-                <span className="grid size-8 flex-none place-items-center rounded-full bg-[#00C389] text-ink">
+              <div className="wl-entra flex items-center gap-3 rounded-[18px] bg-[#ECFFBF] px-4 py-3">
+                <span className="grid size-8 flex-none place-items-center rounded-full bg-[#C6FF3D] text-ink">
                   <Icono nombre="check" tam={18} grosor={2.4} />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -275,7 +275,7 @@ export default async function AdminInicioPage() {
                       ? `${base}/admin/marca#logotipo`
                       : `${base}/admin/datos`
                   }
-                  className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-[#5B2EFF] underline underline-offset-4"
+                  className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-[#6C3BFF] underline underline-offset-4"
                 >
                   Completar
                 </a>
@@ -312,7 +312,7 @@ export default async function AdminInicioPage() {
                 <h2 className="text-[17px] font-semibold">Sellos esta semana</h2>
                 <a
                   href={`${base}/admin/lealtad/analitica`}
-                  className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-[#5B2EFF]"
+                  className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-[#6C3BFF]"
                 >
                   Ver números
                 </a>
@@ -325,7 +325,7 @@ export default async function AdminInicioPage() {
                 {r.porDia.map((d, i) => (
                   <div key={d.fecha} className="flex flex-1 flex-col items-center gap-1">
                     <div
-                      className={`wl-entra w-full rounded-[6px] ${i === r.porDia.length - 1 ? 'bg-ink' : 'bg-[#00C389]'}`}
+                      className={`wl-entra w-full rounded-[6px] ${i === r.porDia.length - 1 ? 'bg-ink' : 'bg-realce'}`}
                       style={{
                         height: `${Math.max(4, Math.round((d.visitas / maximo) * 84))}px`,
                         animationDelay: `${i * 40}ms`,
@@ -346,7 +346,7 @@ export default async function AdminInicioPage() {
                 href={`${base}/admin/arcade`}
                 className={`${TARJETA} flex min-h-[64px] items-center gap-3 px-4 py-3 text-ink`}
               >
-                <span className="grid size-9 flex-none place-items-center rounded-[12px] bg-[#D8F5E9] text-[#06231C]">
+                <span className="grid size-9 flex-none place-items-center rounded-[12px] bg-[#ECFFBF] text-[#120A2A]">
                   <Icono nombre="juegos" tam={20} />
                 </span>
                 <span className="flex-1 text-[15px]">
@@ -388,7 +388,7 @@ export default async function AdminInicioPage() {
                   {movimientos.map((m, i) => (
                     <li
                       key={`${m.cuando.toISOString()}-${i}`}
-                      className="flex items-center gap-3 border-t-[1.5px] border-[#CDE8DC] py-2.5"
+                      className="flex items-center gap-3 border-t-[1.5px] border-[#E8D8C6] py-2.5"
                     >
                       <div className="min-w-0 flex-1">
                         <b className="block text-[15px]">{m.accion}</b>

@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { SesionPlataforma } from '@wl/database';
 
+import { LogotipoClub } from '@/components/ClubLealtad';
+
 import { salir } from './acciones';
 
 /** Marco del panel de plataforma: quién eres, a dónde vas y salir. */
@@ -20,8 +22,15 @@ export function MarcoPlataforma({
   return (
     <div className="mx-auto max-w-5xl px-5 pb-16">
       <header className="flex flex-wrap items-center gap-x-6 gap-y-3 py-5">
-        <a href="/plataforma" className="font-display text-[19px] font-bold text-ink">
-          Plataforma
+        <a
+          href="/plataforma"
+          aria-label="club-lealtad, Plataforma"
+          className="flex min-h-[44px] items-center gap-2.5 text-ink"
+        >
+          <LogotipoClub tam={19} />
+          <span className="rounded-full bg-[#C6FF3D] px-2.5 py-1 text-[12px] font-bold text-[#120A2A]">
+            Plataforma
+          </span>
         </a>
         <nav aria-label="Secciones" className="flex gap-1 text-[15px]">
           <a href="/plataforma" className="rounded-full px-4 py-2 text-muted hover:text-ink">

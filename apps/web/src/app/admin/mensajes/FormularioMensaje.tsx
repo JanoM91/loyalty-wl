@@ -9,7 +9,7 @@ import { enviarMensaje, probarMensaje, type EstadoMensaje } from './acciones';
 const INICIAL: EstadoMensaje = { error: null, aviso: null };
 
 const CAMPO =
-  'mt-1.5 w-full rounded-[14px] border-[1.5px] border-[#CDE8DC] bg-white px-3.5 text-[15px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
+  'mt-1.5 w-full rounded-[14px] border-[1.5px] border-[#E8D8C6] bg-white px-3.5 text-[15px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 
 /**
  * Redactor del mensaje: asunto y texto, prueba al propio correo y envío con
@@ -88,7 +88,7 @@ export function FormularioMensaje({
               type="submit"
               formAction={enviar}
               disabled={enviando}
-              className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-[#5B2EFF] px-5 text-[15px] font-semibold text-white disabled:opacity-50"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-[#6C3BFF] px-5 text-[15px] font-semibold text-white disabled:opacity-50"
             >
               {enviando ? 'Enviando…' : `Sí, enviar a ${clientes}`}
             </button>

@@ -12,6 +12,7 @@ import {
   type GrupoSeccion,
 } from '@/lib/admin/panel';
 import { salir } from '@/app/admin/entrar/acciones';
+import { LogotipoClub } from '@/components/ClubLealtad';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
 
 import { AvisoClub } from './AvisoClub';
@@ -149,7 +150,7 @@ export async function MarcoPanel({
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-[clamp(1.6rem,4vw,2rem)] text-ink">{titulo}</h1>
-              {descripcion && <p className="mt-1 text-[15px] text-[#3C5A51]">{descripcion}</p>}
+              {descripcion && <p className="mt-1 text-[15px] text-[#5A4F63]">{descripcion}</p>}
             </div>
             {acciones}
           </div>
@@ -180,7 +181,7 @@ export async function MarcoPanel({
           <Icono nombre={s.icono} tam={20} />
           <span className="min-w-0 flex-1 truncate">{s.texto}</span>
           {n ? (
-            <span className="grid h-[22px] min-w-[22px] place-items-center rounded-full bg-[#5B2EFF] px-1.5 text-[12px] font-bold text-white">
+            <span className="grid h-[22px] min-w-[22px] place-items-center rounded-full bg-[#6C3BFF] px-1.5 text-[12px] font-bold text-white">
               {n}
             </span>
           ) : null}
@@ -198,7 +199,7 @@ export async function MarcoPanel({
         Saltar al contenido
       </a>
 
-      <aside className="sticky top-0 hidden h-screen w-[264px] flex-none flex-col gap-5 overflow-y-auto border-r-[1.5px] border-[#CDE8DC] bg-white px-3.5 py-5 lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-[264px] flex-none flex-col gap-5 overflow-y-auto border-r-[1.5px] border-[#E8D8C6] bg-white px-3.5 py-5 lg:flex">
         <div className="flex items-center gap-3 px-1.5">
           <Inicial
             nombre={negocio.nombre}
@@ -208,7 +209,7 @@ export async function MarcoPanel({
           />
           <div className="flex min-w-0 flex-col">
             <b className="truncate font-display text-[17px]">{negocio.nombre}</b>
-            <span className="text-[13px] text-[#3C5A51]">Panel de tu club</span>
+            <span className="text-[13px] text-[#5A4F63]">Panel de tu club</span>
           </div>
         </div>
         <nav aria-label="Secciones del panel" className="flex flex-1 flex-col gap-4">
@@ -218,7 +219,7 @@ export async function MarcoPanel({
             return (
               <div key={g} className="flex flex-col gap-1">
                 {g !== 'principal' && (
-                  <span className="px-3 text-[12px] font-bold tracking-[.04em] text-[#3C5A51] uppercase">
+                  <span className="px-3 text-[12px] font-bold tracking-[.04em] text-[#5A4F63] uppercase">
                     {TITULOS_GRUPO[g]}
                   </span>
                 )}
@@ -226,7 +227,7 @@ export async function MarcoPanel({
               </div>
             );
           })}
-          <ul className="mt-auto flex flex-col gap-0.5 border-t-[1.5px] border-[#CDE8DC] pt-3">
+          <ul className="mt-auto flex flex-col gap-0.5 border-t-[1.5px] border-[#E8D8C6] pt-3">
             {secciones.filter((s) => s.grupo === 'cuenta').map(enlaceMenu)}
             <li>
               {/* Cerrar sesión cambia el estado del servidor: va en un
@@ -243,6 +244,9 @@ export async function MarcoPanel({
             </li>
           </ul>
         </nav>
+        <p className="flex items-center gap-2 px-3 text-[12px] text-[#5A4F63]">
+          Funciona con <LogotipoClub tam={13} />
+        </p>
       </aside>
 
       <div className="min-w-0 flex-1">
@@ -280,7 +284,7 @@ export async function MarcoPanel({
             <div className={tituloOculto ? 'sr-only lg:not-sr-only' : 'min-w-0'}>
               <h1 className="text-[clamp(1.75rem,5vw,2.5rem)] text-ink">{titulo}</h1>
               {descripcion && (
-                <p className="mt-1.5 max-w-prose text-[15px] text-[#3C5A51]">{descripcion}</p>
+                <p className="mt-1.5 max-w-prose text-[15px] text-[#5A4F63]">{descripcion}</p>
               )}
             </div>
             {acciones}
@@ -291,7 +295,7 @@ export async function MarcoPanel({
 
       <nav
         aria-label="Secciones"
-        className="fixed inset-x-0 bottom-0 z-30 flex gap-1 border-t-[1.5px] border-[#CDE8DC] bg-white px-2.5 pt-1.5 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex gap-1 border-t-[1.5px] border-[#E8D8C6] bg-white px-2.5 pt-1.5 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden"
       >
         {pestanas.map((t) => {
           // Lo que vive en «Más» marca «Más»: así se sabe dónde se está.
@@ -303,16 +307,16 @@ export async function MarcoPanel({
               key={t.id}
               href={`${base}${t.ruta}`}
               aria-current={on ? 'page' : undefined}
-              className={`relative flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 text-[12px] ${on ? 'font-bold text-ink' : 'text-[#3C5A51]'}`}
+              className={`relative flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 text-[12px] ${on ? 'font-bold text-ink' : 'text-[#5A4F63]'}`}
             >
               <span
-                className={`grid h-[30px] w-[52px] place-items-center rounded-full transition-colors ${on ? 'bg-[#00C389] text-ink' : ''}`}
+                className={`grid h-[30px] w-[52px] place-items-center rounded-full transition-colors ${on ? 'bg-[#C6FF3D] text-ink' : ''}`}
               >
                 <Icono nombre={t.icono} tam={21} />
               </span>
               {t.texto}
               {n ? (
-                <span className="absolute top-1 right-[calc(50%-24px)] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#5B2EFF] px-1 text-[11px] font-bold text-white">
+                <span className="absolute top-1 right-[calc(50%-24px)] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#6C3BFF] px-1 text-[11px] font-bold text-white">
                   {n}
                 </span>
               ) : null}

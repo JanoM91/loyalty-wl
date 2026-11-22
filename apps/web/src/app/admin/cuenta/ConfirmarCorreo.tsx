@@ -20,7 +20,7 @@ export function ConfirmarCorreo({ email }: { email: string }) {
   return (
     <form
       action={accion}
-      className="mb-8 grid max-w-md gap-3 rounded-[16px] border-[1.5px] border-[#CDE8DC] bg-white p-4"
+      className="mb-8 grid max-w-md gap-3 rounded-[16px] border-[1.5px] border-[#E8D8C6] bg-white p-4"
     >
       <b className="text-[15px] text-ink">Confirma tu correo</b>
       <p className="text-[14px] text-ink-soft">
