@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "next dev --port 3200",
     "build": "next build",
-    "vercel-build": "pnpm --filter @wl/database generate && pnpm --filter @wl/database migrate:deploy && next build",
+    "vercel-build": "pnpm --filter @wl/database generate && pnpm --filter @wl/database migrate:si-toca && next build",
     "start": "next start --port 3200",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
@@ -27,6 +28,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/qrcode": "1.5.5",
     "@types/react": "^19.0.1",

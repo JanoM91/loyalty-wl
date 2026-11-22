@@ -21,7 +21,8 @@
     "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist .turbo",
     "invitar": "tsx --env-file-if-exists=../../.env.local scripts/invitar.ts",
-    "plataforma:usuario": "tsx --env-file-if-exists=../../.env.local scripts/plataforma-usuario.ts"
+    "plataforma:usuario": "tsx --env-file-if-exists=../../.env.local scripts/plataforma-usuario.ts",
+    "migrate:si-toca": "node scripts/migrar-si-toca.mjs"
   },
   "prisma": {
     "seed": "tsx --env-file-if-exists=../../.env.local prisma/seed.ts"
