@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
+import '@fontsource-variable/fredoka';
+
 import { ESTILO_PANEL } from '@/lib/admin/panel';
 import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
@@ -25,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { themeColor: '#F1FBF6' };
+export const viewport: Viewport = { themeColor: '#FFF6EA' };
 
 /**
  * Contenedor del panel.

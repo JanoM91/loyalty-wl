@@ -9,14 +9,15 @@ import { TITULOS_GRUPO, seccionesDelPanel, type GrupoSeccion } from '@/lib/admin
 import { exigirSesion } from '@/lib/admin/sesion';
 import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
+import { LogotipoClub } from '@/components/ClubLealtad';
 
 export const metadata: Metadata = { title: 'Más' };
 export const dynamic = 'force-dynamic';
 
 const TARJETA =
-  'overflow-hidden rounded-[22px] border-[1.5px] border-[#CDE8DC] bg-white shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
+  'overflow-hidden rounded-[22px] border-[1.5px] border-[#E8D8C6] bg-white shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]';
 const FILA =
-  'flex min-h-[60px] w-full items-center gap-3 border-t-[1.5px] border-[#CDE8DC] px-4 py-2 text-left text-ink transition-colors hover:bg-crumb';
+  'flex min-h-[60px] w-full items-center gap-3 border-t-[1.5px] border-[#E8D8C6] px-4 py-2 text-left text-ink transition-colors hover:bg-crumb';
 
 /**
  * «Más» de la barra inferior del celular: todas las secciones del panel en
@@ -46,7 +47,7 @@ export default async function MasPage() {
             <section key={g} aria-labelledby={`mas-${g}`} className={TARJETA}>
               <h2
                 id={`mas-${g}`}
-                className="px-4 pt-3 pb-2 font-sans text-[13px] font-bold tracking-[.04em] text-[#3C5A51] uppercase"
+                className="px-4 pt-3 pb-2 font-sans text-[13px] font-bold tracking-[.04em] text-[#5A4F63] uppercase"
               >
                 {TITULOS_GRUPO[g]}
               </h2>
@@ -59,10 +60,10 @@ export default async function MasPage() {
                       </span>
                       <span className="flex min-w-0 flex-1 flex-col">
                         <b className="text-[15px]">{s.texto}</b>
-                        <span className="text-[13px] text-[#3C5A51]">{s.descripcion}</span>
+                        <span className="text-[13px] text-[#5A4F63]">{s.descripcion}</span>
                       </span>
                       {s.id === 'pendientes' && pendientes > 0 ? (
-                        <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#5B2EFF] px-1.5 text-[13px] font-bold text-white">
+                        <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#6C3BFF] px-1.5 text-[13px] font-bold text-white">
                           {pendientes}
                         </span>
                       ) : null}
@@ -79,7 +80,7 @@ export default async function MasPage() {
                         </span>
                         <span className="flex min-w-0 flex-1 flex-col">
                           <b className="text-[15px]">Salir</b>
-                          <span className="text-[13px] text-[#3C5A51]">
+                          <span className="text-[13px] text-[#5A4F63]">
                             Cerrar sesión en este dispositivo
                           </span>
                         </span>
@@ -91,6 +92,9 @@ export default async function MasPage() {
             </section>
           );
         })}
+        <p className="flex items-center justify-center gap-2 pt-2 text-[12px] text-[#5A4F63]">
+          Funciona con <LogotipoClub tam={13} />
+        </p>
       </div>
     </MarcoPanel>
   );

@@ -352,7 +352,7 @@ function Barras({
           <span className="text-ink">{f.k}</span>
           <span className="h-3.5 overflow-hidden rounded-sm bg-rule">
             <span
-              className={`block h-full rounded-sm ${f.malo ? 'bg-danger' : f.acento ? 'bg-ink' : 'bg-crust'}`}
+              className={`block h-full rounded-sm ${f.malo ? 'bg-danger' : f.acento ? 'bg-ink' : 'bg-realce'}`}
               style={{ width: `${Math.min(100, (f.v / max) * 100)}%` }}
             />
           </span>

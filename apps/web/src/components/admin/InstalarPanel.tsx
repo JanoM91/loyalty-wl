@@ -56,7 +56,7 @@ export function InstalarPanel({ icono }: { icono: string }) {
   return (
     <section
       aria-labelledby="instalar-panel"
-      className="flex items-start gap-3 rounded-[22px] border-[1.5px] border-[#CDE8DC] bg-white p-4 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]"
+      className="flex items-start gap-3 rounded-[22px] border-[1.5px] border-[#E8D8C6] bg-white p-4 shadow-[0_18px_40px_-30px_rgba(6,35,28,.5)]"
     >
       <img
         src={icono}
@@ -70,18 +70,18 @@ export function InstalarPanel({ icono }: { icono: string }) {
           {instalada ? 'Listo: ya está en tu pantalla de inicio' : 'Ten tu panel como app'}
         </h2>
         {instalada ? (
-          <p className="mt-0.5 text-[13px] text-[#3C5A51]">
+          <p className="mt-0.5 text-[13px] text-[#5A4F63]">
             Ábrelo desde el ícono «Mi panel». La primera vez te pide tu contraseña.
           </p>
         ) : plataforma === 'ios' ? (
-          <p className="mt-0.5 text-[13px] text-[#3C5A51]">
+          <p className="mt-0.5 text-[13px] text-[#5A4F63]">
             En Safari toca <b className="text-ink">Compartir</b> (el cuadro con la flecha) y luego{' '}
             <b className="text-ink">Agregar a pantalla de inicio</b>. La primera vez que lo abras te
             pide tu contraseña.
           </p>
         ) : evento ? (
           <>
-            <p className="mt-0.5 text-[13px] text-[#3C5A51]">
+            <p className="mt-0.5 text-[13px] text-[#5A4F63]">
               Un toque y queda junto a tus apps, para cobrar más rápido.
             </p>
             <button
@@ -93,13 +93,13 @@ export function InstalarPanel({ icono }: { icono: string }) {
             </button>
           </>
         ) : plataforma === 'android' ? (
-          <p className="mt-0.5 text-[13px] text-[#3C5A51]">
+          <p className="mt-0.5 text-[13px] text-[#5A4F63]">
             En Chrome toca el menú <b className="text-ink">⋮</b> y luego{' '}
             <b className="text-ink">Instalar app</b> o{' '}
             <b className="text-ink">Agregar a la pantalla principal</b>.
           </p>
         ) : (
-          <p className="mt-0.5 text-[13px] text-[#3C5A51]">
+          <p className="mt-0.5 text-[13px] text-[#5A4F63]">
             Ábrelo desde tu celular y agrégalo a la pantalla de inicio: queda junto a tus apps, para
             cobrar más rápido.
           </p>
