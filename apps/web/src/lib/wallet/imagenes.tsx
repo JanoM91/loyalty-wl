@@ -52,7 +52,11 @@ const MAX_EN_MEMORIA = 400;
 function recordar(clave: string, dibujar: () => Promise<Buffer>): Promise<Buffer> {
   let p = memoria.get(clave);
   if (!p) {
-    if (memoria.size >= MAX_EN_MEMORIA) memoria.clear();
+    while (memoria.size >= MAX_EN_MEMORIA) {
+      const primera = memoria.keys().next().value;
+      if (primera === undefined) break;
+      memoria.delete(primera);
+    }
     p = dibujar();
     memoria.set(clave, p);
     // Un dibujo fallido no debe quedarse guardado.

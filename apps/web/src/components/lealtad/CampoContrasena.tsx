@@ -43,7 +43,7 @@ export function CampoContrasena({
           maxLength={128}
           autoFocus={autoFocus}
           aria-describedby={ayuda ? `${id}-ayuda` : undefined}
-          className="min-h-[48px] w-full min-w-0 rounded-sm border-[1.5px] border-rule bg-white px-3 text-base focus:border-ink focus:outline-none"
+          className="min-h-[48px] w-full min-w-0 rounded-sm border-[1.5px] border-rule bg-white px-3 text-[#1d1d1f] placeholder:text-[#8a8a8e] text-base focus:border-ink focus:outline-none"
         />
         <button
           type="button"
