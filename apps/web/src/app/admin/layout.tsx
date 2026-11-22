@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import '@fontsource-variable/fredoka';
 
+import { CargandoAlNavegar } from '@/components/CargandoAlNavegar';
 import { ESTILO_PANEL } from '@/lib/admin/panel';
 import { iconosDeApp } from '@/lib/iconos-app';
 import { exigirNegocio, rutaBase } from '@/lib/negocio';
@@ -45,6 +46,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <div data-plantilla="aire" style={ESTILO_PANEL} className="min-h-screen bg-crumb text-ink">
       {children}
+      <CargandoAlNavegar />
     </div>
   );
 }

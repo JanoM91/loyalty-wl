@@ -1,6 +1,7 @@
 import type { Negocio } from '@wl/database';
 import type { ProgramaLealtad } from '@wl/domain';
 
+import { CargandoAlNavegar } from '@/components/CargandoAlNavegar';
 import { LogoMarca } from '@/components/Marca';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
 
@@ -30,6 +31,7 @@ export function InicioNegocio({
 
   return (
     <div className="mx-auto max-w-5xl px-5 pb-20">
+      <CargandoAlNavegar variante="negocio" />
       <header className="flex items-center justify-between gap-4 py-5">
         <LogoMarca sobre="claro" className="h-9 text-[21px]" />
         <a
