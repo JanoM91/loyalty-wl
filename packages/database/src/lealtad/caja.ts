@@ -4,6 +4,7 @@ import {
   describirPremio,
   claveTicket,
   decidirAcreditacion,
+  diaConMes,
   enmascararContacto,
   esFechaValida,
   estampasAOtorgar,
@@ -21,6 +22,7 @@ import {
 import { prisma, transaccion, negocioActual, esErrorUnico, camposDelError } from '../index';
 import { estadoComercialDe } from '../negocio';
 import { programaVigente } from './programa';
+import { nombreDeRegalo, regalosDeTarjeta } from '../regalos';
 
 /**
  * Operación del programa en el mostrador: buscar la tarjeta, acreditar la
@@ -59,7 +61,15 @@ export interface PremioCaja {
   readonly posicion: number;
   readonly ciclo: number;
   readonly generado: Date;
+  /**
+   * Regalo automático del club («Te extrañamos» o cumpleaños), no un premio
+   * de sellos. Su id lleva el prefijo `regalo:`.
+   */
+  readonly regalo?: boolean;
 }
+
+/** Prefijo del id de un regalo en la lista de premios de la caja. */
+export const PREFIJO_REGALO = 'regalo:';
 
 export interface VistaCaja {
   readonly codigo: string;
@@ -130,7 +140,7 @@ export async function vistaCaja(codigo: string, sucursalId: string): Promise<Vis
     select: { id: true, status: true },
   });
 
-  const programa = await programaVigente();
+  const [programa, regalos] = await Promise.all([programaVigente(), regalosDeTarjeta(t.id)]);
   const p = proximoPremio(t.stamps, programa);
 
   return {
@@ -141,14 +151,27 @@ export async function vistaCaja(codigo: string, sucursalId: string): Promise<Vis
     estampas: t.stamps,
     ciclo: t.cycle,
     posiciones: programa.posiciones,
-    premiosDisponibles: t.rewards.map((r) => ({
-      id: r.id,
-      tipo: r.kind,
-      ...describirPremioGanado(programa, r),
-      posicion: r.milestone,
-      ciclo: r.cycle,
-      generado: r.createdAt,
-    })),
+    premiosDisponibles: t.rewards
+      .map((r) => ({
+        id: r.id,
+        tipo: r.kind,
+        ...describirPremioGanado(programa, r),
+        posicion: r.milestone,
+        ciclo: r.cycle,
+        generado: r.createdAt,
+      }))
+      .concat(
+        regalos.map((g) => ({
+          id: `${PREFIJO_REGALO}${g.id}`,
+          tipo: `REGALO_${g.tipo}`,
+          nombre: nombreDeRegalo(g.tipo, g.titulo),
+          incluye: `Vale hasta el ${diaConMes(g.ultimoDia)}.`,
+          posicion: 0,
+          ciclo: 0,
+          generado: g.dado,
+          regalo: true,
+        })),
+      ),
     acumuloHoyAqui: Boolean(hoy && hoy.status !== 'RECHAZADA'),
     proximo: p ? { faltan: p.faltan, premio: describirPremio(programa, p.premio).nombre } : null,
     migradaFisica: t.physicalMigratedAt !== null,

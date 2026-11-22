@@ -72,6 +72,7 @@ model Tenant {
   arcadePlays ArcadePlay[]
   arcadeCoupons ArcadeCoupon[]
   clubMessages ClubMessage[]
+  clubGifts ClubGift[]
 
   @@map("tenant")
 }
@@ -155,6 +156,7 @@ model Branch {
   loyaltyAccruals   LoyaltyAccrual[]
   loyaltyRedemptions LoyaltyReward[] @relation("RedeemedAt")
   arcadeRedemptions ArcadeCoupon[] @relation("ArcadeRedeemedAt")
+  giftRedemptions   ClubGift[]     @relation("GiftRedeemedAt")
   loyaltyAccessRequests LoyaltyAccessRequest[]
 
 
@@ -203,6 +205,7 @@ model UserAccount {
   loyaltyReviews     LoyaltyAccrual[] @relation("ReviewedBy")
   loyaltyRedemptions LoyaltyReward[]  @relation("RedeemedBy")
   arcadeRedemptions  ArcadeCoupon[]   @relation("ArcadeRedeemedBy")
+  giftRedemptions    ClubGift[]       @relation("GiftRedeemedBy")
   arcadeConfigs      ArcadeConfig[]   @relation("ArcadeConfigBy")
   loyaltyPrograms    LoyaltyProgram[] @relation("ProgramCreatedBy")
   loyaltyEnrollments LoyaltyCard[]    @relation("EnrolledBy")
@@ -433,6 +436,7 @@ model LoyaltyCard {
   accessRequests      LoyaltyAccessRequest[]
   arcadePlays         ArcadePlay[]
   arcadeCoupons       ArcadeCoupon[]
+  gifts               ClubGift[]
 
   @@index([enrolledBranchId])
   @@index([createdAt])
@@ -878,4 +882,40 @@ model ClubMessage {
 
   @@index([tenantId, createdAt(sort: Desc)])
   @@map("club_message")
+}
+
+/// Regalo automático del club: «Te extrañamos» (cliente que dejó de venir) o
+/// cumpleaños. Lo que el dueño configuró vive en `settings.regalos`. Se
+/// entrega en caja una sola vez, con la tarjeta verificada, y vence.
+model ClubGift {
+  id               String       @id @default(uuid()) @db.Uuid
+  tenantId         String       @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cardId           String       @map("card_id") @db.Uuid
+  card             LoyaltyCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  /// REGRESO o CUMPLE.
+  kind             String       @db.VarChar(10)
+  /// "2026" para el cumpleaños, "2026-11-22" para «Te extrañamos»: un regalo por tipo y periodo.
+  period           String       @db.VarChar(10)
+  /// El regalo tal como se prometió al darlo.
+  title            String       @db.VarChar(80)
+  /// DISPONIBLE o ENTREGADO. Vencido = DISPONIBLE con `expires_at` pasado.
+  status           String       @default("DISPONIBLE") @db.VarChar(12)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt        DateTime     @map("expires_at") @db.Timestamptz
+  /// Cuándo salió el correo que lo avisa. Null: no se le pudo avisar (no
+  /// acepta promociones o no había correos disponibles). Cuenta para el tope
+  /// mensual de «Mensajes a clientes».
+  emailedAt        DateTime?    @map("emailed_at") @db.Timestamptz
+  redeemedAt       DateTime?    @map("redeemed_at") @db.Timestamptz
+  redeemedBranchId String?      @map("redeemed_branch_id") @db.Uuid
+  redeemedBranch   Branch?      @relation("GiftRedeemedAt", fields: [redeemedBranchId], references: [id], onDelete: SetNull)
+  redeemedById     String?      @map("redeemed_by_id") @db.Uuid
+  redeemedBy       UserAccount? @relation("GiftRedeemedBy", fields: [redeemedById], references: [id], onDelete: SetNull)
+
+  @@unique([cardId, kind, period])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, emailedAt])
+  @@index([cardId, status])
+  @@map("club_gift")
 }

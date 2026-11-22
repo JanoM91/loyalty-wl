@@ -8,6 +8,7 @@ export * from './loyalty/contacto';
 export * from './loyalty/sin-tarjeta';
 export * from './loyalty/acceso';
 export * from './loyalty/reenvio';
+export * from './loyalty/regalos';
 export * from './marca/color';
 export * from './marca/combinaciones';
 export * from './marca/direccion';

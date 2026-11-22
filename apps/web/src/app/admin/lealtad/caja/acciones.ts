@@ -4,8 +4,10 @@ import { put } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 import {
+  PREFIJO_REGALO,
   acreditarVisita,
   entregarPremio,
+  entregarRegalo,
   reportarIncidencia,
   vistaCaja,
   type ResultadoCaja,
@@ -143,12 +145,21 @@ export async function entregar(
   const { sesion, sucursal } = await contexto(sucursalSlug);
   if (!sucursal) return { ok: false, error: 'Elige la sucursal en la que estás atendiendo.' };
 
-  const r = await entregarPremio({
-    premioId,
-    codigo,
-    sucursalId: sucursal.id,
-    usuarioId: sesion.userId,
-  });
+  // Los regalos automáticos («Te extrañamos», cumpleaños) viajan en la misma
+  // lista que los premios, con su prefijo.
+  const r = premioId.startsWith(PREFIJO_REGALO)
+    ? await entregarRegalo({
+        regaloId: premioId.slice(PREFIJO_REGALO.length),
+        codigo,
+        sucursalId: sucursal.id,
+        usuarioId: sesion.userId,
+      })
+    : await entregarPremio({
+        premioId,
+        codigo,
+        sucursalId: sucursal.id,
+        usuarioId: sesion.userId,
+      });
   revalidatePath('/admin/lealtad/caja');
   if (!r.ok) return r;
   after(() => avisarCambioPorCodigo(codigo));

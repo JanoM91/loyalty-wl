@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from './index';
 import { negocioActual } from './negocio';
 import { mezclarAjustes } from './plataforma';
+import { correosDeRegalosDesde } from './regalos';
 
 /**
  * «Mensajes a tus clientes»: el negocio escribe un correo y le llega a quien
@@ -55,13 +56,20 @@ export function inicioDelMes(ahora = new Date()): Date {
   return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1, 6, 0, 0));
 }
 
-/** Correos ya usados este mes (cada destinatario cuenta uno). */
+/**
+ * Correos ya usados este mes (cada destinatario cuenta uno): los mensajes del
+ * dueño y los de los regalos automáticos que sí salieron.
+ */
 export async function usoMensajesDelMes(ahora = new Date()): Promise<number> {
-  const r = await prisma.clubMessage.aggregate({
-    where: { createdAt: { gte: inicioDelMes(ahora) } },
-    _sum: { recipients: true },
-  });
-  return r._sum.recipients ?? 0;
+  const desde = inicioDelMes(ahora);
+  const [r, regalos] = await Promise.all([
+    prisma.clubMessage.aggregate({
+      where: { createdAt: { gte: desde } },
+      _sum: { recipients: true },
+    }),
+    correosDeRegalosDesde(desde),
+  ]);
+  return (r._sum.recipients ?? 0) + regalos;
 }
 
 /** Cuándo se puede mandar el siguiente mensaje; null si ya se puede. */

@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/avisos-dueno",
       "schedule": "20 14 * * *"
+    },
+    {
+      "path": "/api/cron/regalos",
+      "schedule": "10 16 * * *"
     }
   ]
 }

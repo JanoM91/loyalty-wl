@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 import {
   AVISOS_POR_OMISION,
+  REGALOS_POR_OMISION,
   ZONA_HORARIA_POR_OMISION,
   estadoComercial,
   esPrefijoCodigo,
@@ -9,6 +10,8 @@ import {
   esZonaHorariaValida,
   leerAvisos,
   leerPermisosArcade,
+  leerRegalos,
+  type AjustesRegalos,
   type AvisosDelClub,
   type ColoresMarca,
   type PermisosArcade,
@@ -134,6 +137,8 @@ export interface AjustesNegocio {
   readonly mensajes: AjustesMensajes | null;
   /** Correos al dueño que ya salieron (fin de prueba, pausa, resumen) y si quiere el resumen. */
   readonly avisos: AvisosDelClub;
+  /** Regalos automáticos («Te extrañamos» y cumpleaños). Los elige el dueño. */
+  readonly regalos: AjustesRegalos;
 }
 
 export interface AjustesMensajes {
@@ -189,6 +194,7 @@ export const AJUSTES_POR_OMISION: AjustesNegocio = {
   arcade: null,
   mensajes: null,
   avisos: AVISOS_POR_OMISION,
+  regalos: REGALOS_POR_OMISION,
 };
 
 type Desconocido = Record<string, unknown>;
@@ -263,6 +269,7 @@ export function leerAjustes(json: unknown): AjustesNegocio {
     arcade: leerPermisosArcade(a.arcade),
     mensajes: leerAjustesMensajes(a.mensajes),
     avisos: leerAvisos(a.avisos),
+    regalos: leerRegalos(a.regalos),
   };
 }
 
@@ -407,6 +414,14 @@ export class SinNegocioError extends Error {
     );
     this.name = 'SinNegocioError';
   }
+}
+
+/**
+ * El negocio fijado con `conNegocio`, sin consultar al resolutor: una tarea
+ * sin petición pregunta así sin arriesgar el 404 del resolutor de la web.
+ */
+export function negocioFijado(): Negocio | null {
+  return almacen.getStore() ?? null;
 }
 
 /** El negocio en contexto, o null. */

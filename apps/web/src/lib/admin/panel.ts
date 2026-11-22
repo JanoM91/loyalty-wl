@@ -139,6 +139,15 @@ const SECCIONES: readonly SeccionPanel[] = [
     roles: ADMINISTRA,
   },
   {
+    id: 'regalos',
+    texto: 'Regalos automáticos',
+    descripcion: 'Te extrañamos y cumpleaños, cada mañana',
+    ruta: '/admin/regalos',
+    icono: 'regalo',
+    grupo: 'clientes',
+    roles: ADMINISTRA,
+  },
+  {
     id: 'numeros',
     texto: 'Números',
     descripcion: 'Quién vuelve y cuánto',
@@ -360,6 +369,14 @@ export function comandosDelPanel(rol: Rol): ComandoPanel[] {
       grupo: 'Mensajes',
       ruta: '/admin/mensajes',
       claves: 'mensaje correo promoción campaña avisar escribir',
+      roles: ADMINISTRA,
+    },
+    {
+      id: 'regalos',
+      texto: 'Regalos de cumpleaños y Te extrañamos',
+      grupo: 'Regalos',
+      ruta: '/admin/regalos',
+      claves: 'regalo cumpleaños te extrañamos regresar volver inactivos automático',
       roles: ADMINISTRA,
     },
     {
