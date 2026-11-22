@@ -54,7 +54,7 @@ export function FormularioAlta({ sucursal }: { sucursal: string | null }) {
                 setTipo(t);
                 setContacto('');
               }}
-              className={`flex min-h-[42px] items-center justify-center gap-2 rounded-sm text-sm font-semibold ${tipo === t ? 'bg-white text-ink shadow-sm' : 'text-muted'}`}
+              className={`flex min-h-[42px] items-center justify-center gap-2 rounded-sm text-sm font-semibold ${tipo === t ? 'bg-white text-[#1d1d1f] shadow-sm' : 'text-muted'}`}
             >
               <Icono nombre={t === 'correo' ? 'correo' : 'tarjeta'} width={16} height={16} />
               {t === 'correo' ? 'Correo' : 'Celular'}
@@ -76,7 +76,7 @@ export function FormularioAlta({ sucursal }: { sucursal: string | null }) {
           inputMode={tipo === 'correo' ? 'email' : 'tel'}
           autoComplete={tipo === 'correo' ? 'email' : 'tel'}
           placeholder={tipo === 'correo' ? 'nombre@correo.com' : '228 000 0000'}
-          className="min-h-[48px] w-full rounded-sm border-[1.5px] border-rule bg-white px-3 text-base focus:border-ink focus:outline-none"
+          className="min-h-[48px] w-full rounded-sm border-[1.5px] border-rule bg-white px-3 text-[#1d1d1f] placeholder:text-[#8a8a8e] text-base focus:border-ink focus:outline-none"
         />
         <p className="text-xs text-muted">
           {tipo === 'correo'

@@ -37,7 +37,7 @@ export function FormularioRecuperar() {
         autoCapitalize="none"
         required
         placeholder="nombre@correo.com o 228 123 4567"
-        className="min-h-[48px] w-full rounded-sm border-[1.5px] border-rule bg-white px-3 text-base focus:border-ink focus:outline-none"
+        className="min-h-[48px] w-full rounded-sm border-[1.5px] border-rule bg-white px-3 text-[#1d1d1f] placeholder:text-[#8a8a8e] text-base focus:border-ink focus:outline-none"
       />
       {estado.error && <Aviso tono="error">{estado.error}</Aviso>}
       {estado.ok && estado.aviso && <Aviso tono="ok">{estado.aviso}</Aviso>}
