@@ -84,3 +84,9 @@ En `/admin/marca` el dueño sube tres archivos (PNG, JPG o WebP, hasta 1 MB): lo
 - `/plataforma/avisos/<id>`: cada destinatario con su estado (Enviado, Entregado, Abierto, Rebotó…) y botón de WhatsApp con el aviso escrito. «Actualizar estados» lee `GET /emails` de Resend: necesita una llave con acceso completo; con una que solo envía, lo dice.
 - Cada aviso deja una copia en el buzón del club (`club_notice`, con RLS): el dueño lo ve en `/admin/avisos` («Avisos de club-lealtad», con contador de no leídos en el menú). La aplicación solo puede leerlo y marcar `read_at`.
 - Arreglo: «Enviar aviso» ya no redirige a la misma página con `?enviados=` (a veces no se veía el resultado); ahora abre el detalle del aviso.
+
+## Descargas del dueño (24 nov 2026)
+
+- «Clientes» → **Descargar (Excel)**: tarjetas activas con contacto, verificación, promociones, sellos, visitas, premios, cumpleaños, sucursal y alta.
+- «Números» → **Descargar visitas** (30, 90, 365 días o todas): fecha, sucursal, tarjeta, nombre, estado, folio, sellos, total y quién registró. Sin celular ni correo.
+- Solo para quien administra el club (dueño); cada descarga queda en su bitácora («Descargó la lista de clientes»). Tope de 50,000 renglones por archivo. CSV con BOM para que Excel respete acentos, y sin fórmulas ejecutables.

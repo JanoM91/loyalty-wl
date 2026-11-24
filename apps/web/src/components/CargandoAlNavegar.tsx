@@ -72,6 +72,8 @@ export function CargandoAlNavegar({ variante = 'club' }: { variante?: 'club' | '
       const f = e.target;
       if (!(f instanceof HTMLFormElement)) return;
       if (f.target && f.target !== '_self') return;
+      // Un formulario que descarga un archivo no cambia de página.
+      if (f.hasAttribute('data-descarga')) return;
       mostrar();
     };
 

@@ -211,4 +211,5 @@ export * from './lealtad/enlace-personal';
 export * from './lealtad/reportes';
 export * from './lealtad/analitica';
 export * from './lealtad/mantenimiento';
+export * from './lealtad/exportar';
 export * from './lealtad/wallet';

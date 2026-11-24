@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
-import { analiticaLealtad, type AnaliticaLealtad } from '@wl/database';
+import { ROLES_USUARIOS, analiticaLealtad, type AnaliticaLealtad } from '@wl/database';
 
+import { DescargarVisitas } from '@/components/admin/Descargas';
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil } from '@/lib/lealtad/formato';
+import { rutaBase } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Números' };
 export const dynamic = 'force-dynamic';
@@ -25,7 +27,8 @@ const diaMes = (iso: string) => fecha(iso).split(' ').slice(0, 2).join(' ');
  */
 export default async function AnaliticaPage() {
   const sesion = await exigirRol(ROLES_PROGRAMA);
-  const a = await analiticaLealtad();
+  const [a, base] = await Promise.all([analiticaLealtad(), rutaBase()]);
+  const administra = ROLES_USUARIOS.includes(sesion.rol);
   const r = a.resumen;
   const sinVerificar = r.tarjetas - r.verificadas;
   const deltaVisitas = r.visitas7d - r.visitas7dPrev;
@@ -36,6 +39,7 @@ export default async function AnaliticaPage() {
       actual="/admin/lealtad"
       titulo="Números"
       descripcion={`Datos al ${fecha(r.hoy)} (hora del negocio). Solo compras identificadas con tarjeta; no son las ventas totales.`}
+      acciones={administra ? <DescargarVisitas base={base} /> : undefined}
     >
       <p className="mb-5 max-w-3xl text-sm text-ink-soft">
         <b className="font-semibold text-ink">
