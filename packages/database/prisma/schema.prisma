@@ -74,6 +74,8 @@ model Tenant {
   clubMessages ClubMessage[]
   clubGifts ClubGift[]
   platformPayments PlatformPayment[]
+  noticeRecipients PlatformNoticeRecipient[]
+  clubNotices ClubNotice[]
 
   @@map("tenant")
 }
@@ -876,14 +878,77 @@ model PlatformNotice {
   body      String   @db.Text
   /// A quién se mandó, en palabras: «Todos los clubes», «En prueba», el nombre de un club.
   audience  String   @db.VarChar(160)
-  clubs     Int
-  sent      Int
+  /// La audiencia como viaja en el formulario («prueba», «club:tacos»): un
+  /// aviso programado calcula a quién va en el momento de salir.
+  audienceValue String? @map("audience_value") @db.VarChar(100)
+  /// PROGRAMADO → ENVIANDO → ENVIADO; o CANCELADO antes de salir.
+  status    String   @default("ENVIADO") @db.VarChar(12)
+  scheduledAt DateTime? @map("scheduled_at") @db.Timestamptz
+  sentAt    DateTime? @map("sent_at") @db.Timestamptz
+  clubs     Int      @default(0)
+  sent      Int      @default(0)
   failed    Int      @default(0)
   sentBy    String   @map("sent_by") @db.VarChar(160)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
+  recipients PlatformNoticeRecipient[]
+
   @@index([createdAt])
+  @@index([status, scheduledAt])
   @@map("platform_notice")
+}
+
+/// A quién le salió cada aviso y qué pasó con su correo (según Resend).
+model PlatformNoticeRecipient {
+  id         String         @id @default(uuid()) @db.Uuid
+  noticeId   String         @map("notice_id") @db.Uuid
+  notice     PlatformNotice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  tenantId   String?        @map("tenant_id") @db.Uuid
+  tenant     Tenant?        @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantName String         @map("tenant_name") @db.VarChar(160)
+  email      String         @db.VarChar(255)
+  ownerName  String         @default("") @map("owner_name") @db.VarChar(160)
+  /// Id del correo en Resend, para preguntar si se entregó.
+  resendId   String?        @map("resend_id") @db.VarChar(64)
+  /// FALLIDO (no salió), ENVIADO (Resend lo aceptó) o el último evento de Resend
+  /// en mayúsculas: ENTREGADO, REBOTADO, QUEJA, ABIERTO, CLIC, RETRASADO.
+  status     String         @db.VarChar(20)
+  updatedAt  DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([noticeId])
+  @@index([resendId])
+  @@map("platform_notice_recipient")
+}
+
+/// Plantillas de avisos para no escribir dos veces lo mismo.
+model PlatformNoticeTemplate {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(80)
+  subject   String   @db.VarChar(160)
+  body      String   @db.Text
+  updatedBy String   @map("updated_by") @db.VarChar(160)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("platform_notice_template")
+}
+
+/// Buzón del dueño: copia de cada aviso de la plataforma que recibió su club.
+/// Tabla de negocio (RLS): el panel la lee y solo puede marcar `read_at`.
+model ClubNotice {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @default(dbgenerated("(NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid")) @map("tenant_id") @db.Uuid
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  noticeId  String    @map("notice_id") @db.Uuid
+  subject   String    @db.VarChar(160)
+  body      String    @db.Text
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  readAt    DateTime? @map("read_at") @db.Timestamptz
+
+  @@unique([tenantId, noticeId])
+  @@index([tenantId, createdAt])
+  @@map("club_notice")
 }
 
 // -----------------------------------------------------------------------------

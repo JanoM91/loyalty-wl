@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { correoDeAviso, parrafosDe, revisarAviso } from '../src/lib/avisos-plataforma';
+import {
+  correoDeAviso,
+  instanteDeMexico,
+  parrafosDe,
+  revisarAviso,
+} from '../src/lib/avisos-plataforma';
 
 describe('avisos de la plataforma a los dueños', () => {
   it('arma el correo con el nombre del dueño, el mensaje y el botón a su panel', () => {
@@ -36,5 +41,18 @@ describe('avisos de la plataforma a los dueños', () => {
     expect(revisarAviso('', 'Un mensaje suficiente')).toBe('Escribe el asunto.');
     expect(revisarAviso('Asunto', 'corto')).toBe('Escribe el mensaje.');
     expect(revisarAviso('Asunto', 'Un mensaje suficiente')).toBeNull();
+  });
+});
+
+describe('instanteDeMexico: la hora del formulario es la del centro de México', () => {
+  it('9:30 en México son las 15:30 UTC (sin horario de verano)', () => {
+    expect(instanteDeMexico('2026-11-25T09:30')?.toISOString()).toBe('2026-11-25T15:30:00.000Z');
+    expect(instanteDeMexico('2027-07-01T00:00')?.toISOString()).toBe('2027-07-01T06:00:00.000Z');
+  });
+
+  it('rechaza lo que no es fecha y hora', () => {
+    expect(instanteDeMexico('')).toBeNull();
+    expect(instanteDeMexico('mañana')).toBeNull();
+    expect(instanteDeMexico('2026-11-25')).toBeNull();
   });
 });

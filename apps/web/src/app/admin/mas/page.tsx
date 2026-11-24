@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ROLES_DIRECCION, prisma } from '@wl/database';
+import { ROLES_DIRECCION, ROLES_USUARIOS, avisosSinLeer, prisma } from '@wl/database';
 
 import { Icono } from '@/components/admin/Icono';
 import { InstalarPanel } from '@/components/admin/InstalarPanel';
@@ -31,9 +31,14 @@ export default async function MasPage() {
     (s) =>
       s.id !== 'inicio' && s.id !== 'caja' && (s.id !== 'plan' || Boolean(negocio.ajustes.alta)),
   );
-  const pendientes = ROLES_DIRECCION.includes(sesion.rol)
-    ? await prisma.loyaltyAccrual.count({ where: { status: 'PENDIENTE' } })
-    : 0;
+  const [pendientes, avisos] = await Promise.all([
+    ROLES_DIRECCION.includes(sesion.rol)
+      ? prisma.loyaltyAccrual.count({ where: { status: 'PENDIENTE' } })
+      : 0,
+    ROLES_USUARIOS.includes(sesion.rol) ? avisosSinLeer() : 0,
+  ]);
+  const insignia = (id: string) =>
+    id === 'pendientes' ? pendientes : id === 'avisos' ? avisos : 0;
   const grupos: GrupoSeccion[] = ['programa', 'clientes', 'negocio', 'cuenta'];
 
   return (
@@ -62,9 +67,9 @@ export default async function MasPage() {
                         <b className="text-[15px]">{s.texto}</b>
                         <span className="text-[13px] text-[#5A4F63]">{s.descripcion}</span>
                       </span>
-                      {s.id === 'pendientes' && pendientes > 0 ? (
+                      {insignia(s.id) > 0 ? (
                         <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#6C3BFF] px-1.5 text-[13px] font-bold text-white">
-                          {pendientes}
+                          {insignia(s.id)}
                         </span>
                       ) : null}
                       <Icono nombre="chevron" tam={18} />
