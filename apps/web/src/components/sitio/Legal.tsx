@@ -23,12 +23,16 @@ export const TITULAR = {
 
 /**
  * Fecha de la versión vigente de términos y aviso. Con el pixel de Meta
- * encendido el aviso cambia (apartados 3, 5 y 8), así que la versión también:
- * al encenderlo, poner aquí la fecha real.
+ * encendido el aviso cambia (apartados 3, 5 y 8), así que la versión también.
+ * `FECHA_MEDICION` es el día en que se encendió: si el texto de la medición
+ * cambia, se actualiza aquí.
  */
+const FECHA_BASE = '21 de noviembre de 2026';
+const FECHA_MEDICION = '23 de noviembre de 2026';
+
 export const VERSION_LEGAL = MEDICION_ACTIVA
-  ? '21 de noviembre de 2026, con medición de Meta'
-  : '21 de noviembre de 2026';
+  ? `${FECHA_MEDICION}, con medición de Meta`
+  : FECHA_BASE;
 
 export function Documento({
   titulo,
