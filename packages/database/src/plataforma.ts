@@ -31,9 +31,15 @@ import { prisma } from './index';
  * Operaciones de plataforma: lo que hace Exkalibur, no un negocio.
  *
  * Crear, suspender o borrar un negocio toca la tabla `tenant`, que el rol de
- * la aplicación solo puede leer. Por eso estas funciones se conectan con el
- * rol dueño (`DIRECT_URL`). Las usan la siembra, las pruebas y el panel de
- * plataforma (`/plataforma`), que por eso necesita `DIRECT_URL` en el servidor.
+ * la aplicación solo puede leer, y el panel cruza datos de todos los clubes.
+ * Por eso estas funciones usan otra conexión:
+ *
+ * - `DATABASE_URL_PLATAFORMA`, si existe: un usuario miembro de
+ *   `wl_plataforma` (migración `rol_plataforma`), que lee y escribe datos
+ *   pero no puede cambiar la estructura, el aislamiento ni los permisos.
+ * - Si no, `DIRECT_URL` (el rol dueño), como antes.
+ *
+ * Las usan la siembra, las pruebas y el panel de plataforma (`/plataforma`).
  */
 
 /** En desarrollo, Next recarga módulos: el singleton vive en `globalThis` para no fugar conexiones. */
@@ -41,9 +47,22 @@ const global = globalThis as unknown as { wlPrismaDuenio?: PrismaClient };
 
 let duenio: PrismaClient | null = global.wlPrismaDuenio ?? null;
 
+/** Conexión de plataforma: el rol `wl_plataforma` si está configurado; si no, el dueño. */
+export function urlDePlataforma(): string | undefined {
+  return process.env.DATABASE_URL_PLATAFORMA?.trim() || process.env.DIRECT_URL;
+}
+
+/**
+ * Cliente de plataforma (sin RLS de negocio). Conserva el nombre de cuando
+ * solo existía el rol dueño; ver `urlDePlataforma`.
+ */
 export function clienteDuenio(): PrismaClient {
-  const url = process.env.DIRECT_URL;
-  if (!url) throw new Error('Falta DIRECT_URL: las operaciones de plataforma usan el rol dueño.');
+  const url = urlDePlataforma();
+  if (!url) {
+    throw new Error(
+      'Falta DATABASE_URL_PLATAFORMA o DIRECT_URL: las operaciones de plataforma no tienen conexión.',
+    );
+  }
   duenio ??= crearCliente(url);
   if (process.env.NODE_ENV !== 'production') global.wlPrismaDuenio = duenio;
   return duenio;
