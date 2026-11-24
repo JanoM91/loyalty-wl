@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { estadoComercialDe } from '@wl/database';
+import { estadoComercialDe, solicitudPrivada } from '@wl/database';
 import {
   ahorroAnual,
   arcadeVigente,
@@ -13,7 +13,10 @@ import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { enlaceWhatsAppServicio } from '@/lib/contacto';
 import { exigirRol } from '@/lib/admin/sesion';
 import { exigirNegocio, ruta, rutaBase, sitioDeLaPeticion } from '@/lib/negocio';
+import { PRIVADA } from '@/lib/planes';
 import { precios } from '@/lib/precios';
+
+import { PedirPrivada, SolicitudRecibida } from './PedirPrivada';
 
 export const metadata: Metadata = { title: 'Mi plan' };
 export const dynamic = 'force-dynamic';
@@ -27,14 +30,16 @@ const fecha = (d: Date) =>
 /**
  * Mi plan: en qué va el club (prueba, pausa o pagado) y cómo activarlo. El
  * cobro se hace por WhatsApp con un enlace de pago; la activación la hace
- * club-lealtad desde /plataforma.
+ * club-lealtad desde /plataforma. Abajo, Privada: el dueño puede pedir el
+ * cambio (queda la solicitud; el plan lo cambia la plataforma tras la demo).
  */
 export default async function PlanPage() {
   const sesion = await exigirRol(['ADMIN', 'DUENO']);
-  const [negocio, sitio, { lite, arcade }] = await Promise.all([
+  const [negocio, sitio, { lite, arcade }, solicitud] = await Promise.all([
     exigirNegocio(),
     sitioDeLaPeticion(),
     precios(),
+    solicitudPrivada(),
   ]);
   const base = await rutaBase();
   const ahorro = ahorroAnual(lite);
@@ -48,6 +53,10 @@ export default async function PlanPage() {
     enlaceWhatsAppServicio(
       `Hola, quiero activar el club de ${negocio.nombre} (${sitio}/${negocio.slug}) con el pago ${plan}.`,
     );
+
+  const mensajePrivada = enlaceWhatsAppServicio(
+    `Hola, quiero pasar el club de ${negocio.nombre} (${sitio}/${negocio.slug}) a Privada.`,
+  );
 
   let titulo = 'Tu club está activo';
   let texto = 'Tu club funciona sin límites.';
@@ -119,6 +128,36 @@ export default async function PlanPage() {
             Ver Juega y gana
           </a>
         </section>
+
+        {negocio.ajustes.plan !== 'PRIVADA' && (
+          <section id="privada" className={`${TARJETA} grid scroll-mt-24 gap-3`}>
+            <span className="text-[14px] font-semibold text-[#5A4F63]">Cuando tu marca crezca</span>
+            <h2 className="text-[22px]">Privada</h2>
+            <p className="text-[15px] text-[#5A4F63]">
+              {PRIVADA.frase} {PRIVADA.precio}: {PRIVADA.nota.charAt(0).toLowerCase()}
+              {PRIVADA.nota.slice(1)}
+            </p>
+            <ul className="grid gap-1.5 text-[15px] text-ink">
+              {PRIVADA.incluye.map((x) => (
+                <li key={x} className="flex gap-2">
+                  <span aria-hidden className="font-bold">
+                    ✓
+                  </span>
+                  {x}
+                </li>
+              ))}
+            </ul>
+            <p className="text-[15px] text-[#5A4F63]">{PRIVADA.migracion}</p>
+            {solicitud ? (
+              <SolicitudRecibida
+                fechaIso={solicitud.fecha.toISOString()}
+                whatsapp={mensajePrivada}
+              />
+            ) : (
+              <PedirPrivada whatsapp={mensajePrivada} />
+            )}
+          </section>
+        )}
 
         <p className="text-[14px] text-[#5A4F63]">
           Te escribimos por WhatsApp con el enlace de pago y activamos tu club en cuanto se

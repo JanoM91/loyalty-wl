@@ -63,3 +63,36 @@ export function correoDeRecuperacion(d: {
     ),
   };
 }
+
+/** Aviso al equipo: un club pidió pasar a Privada. Responder le escribe al club. */
+export function correoSolicitudPrivada(d: {
+  readonly para: string;
+  readonly club: string;
+  readonly slug: string;
+  readonly quien: string;
+  readonly correo: string;
+  readonly whatsapp: string | null;
+  readonly nota: string | null;
+}): Correo {
+  const url = `${origenDelServicio()}/plataforma/${encodeURIComponent(d.slug)}`;
+  const asunto = `${d.club} quiere pasar a Privada`;
+  const parrafos = [
+    `${d.quien} (${d.correo}) pidió desde «Mi plan» pasar ${d.club} a Privada.`,
+    ...(d.nota ? [`Nota: «${d.nota}»`] : []),
+    d.whatsapp
+      ? `WhatsApp del alta: +${d.whatsapp}. El siguiente paso es agendar la demo y cotizar.`
+      : 'El siguiente paso es agendar la demo y cotizar.',
+    'La solicitud también aparece en la ficha del club y en el inicio de la plataforma hasta que el club pase a Privada.',
+  ];
+  return {
+    para: d.para,
+    asunto,
+    texto: [...parrafos, `Ficha del club: ${url}`].join('\n\n'),
+    html: plantillaCorreo(
+      asunto,
+      parrafos,
+      { texto: 'Abrir la ficha del club', url },
+      'club-lealtad. Te llega porque tienes cuenta en la plataforma.',
+    ),
+  };
+}

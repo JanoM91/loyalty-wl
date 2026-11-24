@@ -9,6 +9,7 @@ import {
   obtenerNegocioEnLista,
   plantillaArcade,
   preciosDelServicio,
+  solicitudesPrivadaPendientes,
   usoDeClubes,
 } from '@wl/database';
 import {
@@ -83,12 +84,13 @@ export default async function NegocioPage({
   const conFechas = Boolean(alta || pruebaVence || pagadoHasta);
   const enPausa = diasEnPausa(pruebaVence, pagadoHasta);
   const borrarDesde = fechaDeBorrado(pruebaVence, pagadoHasta);
-  const [precios, plantilla, pagos, uso, movimientos] = await Promise.all([
+  const [precios, plantilla, pagos, uso, movimientos, [solicitud]] = await Promise.all([
     preciosDelServicio(),
     plantillaArcade(),
     listarPagos({ clubId: negocio.id, limite: 20 }),
     usoDeClubes([negocio.id]),
     listarBitacoraPlataforma({ clubId: negocio.id, limite: 8 }),
+    solicitudesPrivadaPendientes([negocio.id]),
   ]);
   const usoClub = uso.get(negocio.id);
   const motivo = usoClub ? motivoDeLlamada(usoClub) : null;
@@ -359,6 +361,17 @@ export default async function NegocioPage({
 
         <section className="grid gap-3">
           <h2 className="text-xl text-ink">Modalidad y estado</h2>
+          {solicitud && (
+            <p
+              role="status"
+              className="max-w-prose rounded-[14px] border-[1.5px] border-[#E0B45C] bg-[#FFF8E6] px-4 py-3 text-[15px] text-ink"
+            >
+              <b className="font-semibold">Pidió pasar a Privada</b> el {fecha(solicitud.fecha)}
+              {solicitud.quien ? ` (${solicitud.quien})` : ''}.
+              {solicitud.nota ? ` Nota: «${solicitud.nota}».` : ''} Después de la demo y el acuerdo,
+              usa «Pasar a Privada».
+            </p>
+          )}
           <div className="flex flex-wrap gap-3">
             <form action={modalidad}>
               <input type="hidden" name="slug" value={negocio.slug} />
