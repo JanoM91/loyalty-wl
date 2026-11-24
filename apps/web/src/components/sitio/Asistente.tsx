@@ -18,6 +18,21 @@ import { medir } from '@/lib/medicion';
 
 const INICIAL: EstadoAlta = { error: null, paso: null };
 
+/**
+ * Crea el club y, si salió bien, abre la pantalla final con una carga
+ * completa en cuanto llega la respuesta.
+ *
+ * Por qué así: al abrir la sesión, la acción le pide a Next que vuelva a
+ * pintar esta página, y a veces el navegador se quedaba esperando ese repintado
+ * para siempre: el club ya existía, pero el dueño seguía viendo «Creando tu
+ * club…». Ir a la página final aquí mismo no depende de ese repintado.
+ */
+async function crearYAbrir(previo: EstadoAlta, form: FormData): Promise<EstadoAlta> {
+  const estado = await crearClub(previo, form);
+  if (estado.listo) window.location.assign(estado.listo);
+  return estado;
+}
+
 /** Mínimo de la contraseña; debe coincidir con `LONGITUD_MINIMA_CONTRASENA`. */
 const MINIMO_CLAVE = 10;
 
@@ -37,7 +52,7 @@ const nombreDeLogo = (b: Blob) => (b.type === 'image/png' ? 'logo.png' : 'logo.j
  */
 export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string }) {
   const giros = useMemo(() => girosOrdenados(grupo), [grupo]);
-  const [estado, enviar, enviando] = useActionState(crearClub, INICIAL);
+  const [estado, enviar, enviando] = useActionState(crearYAbrir, INICIAL);
 
   const [paso, setPaso] = useState<1 | 2 | 3>(1);
   const [aviso, setAviso] = useState('');
@@ -87,6 +102,8 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
     setCorrigio(false);
   }, [estado]);
   const ofrecerEntrar = Boolean(estado.yaTieneClub) && !corrigio;
+  // Con el club creado, el botón sigue en «Creando…» mientras abre la página final.
+  const creando = enviando || Boolean(estado.listo);
 
   // Al cambiar de paso, el foco va a su título: el lector de pantalla lo anuncia.
   useEffect(() => {
@@ -591,8 +608,8 @@ export function Asistente({ grupo, origen }: { grupo?: GrupoGiro; origen: string
           Siguiente
         </button>
       ) : (
-        <button type="submit" className="btn" disabled={enviando}>
-          {enviando ? 'Creando tu club…' : 'Crear mi club gratis'}
+        <button type="submit" className="btn" disabled={creando}>
+          {creando ? 'Creando tu club…' : 'Crear mi club gratis'}
         </button>
       )}
       {ofrecerEntrar ? null : <span className="sm2">7 días gratis. Sin tarjeta bancaria.</span>}

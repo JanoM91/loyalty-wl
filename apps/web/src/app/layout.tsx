@@ -4,6 +4,7 @@ import '@fontsource-variable/bricolage-grotesque';
 import '@fontsource-variable/onest';
 import './globals.css';
 
+import { Analytics } from '@vercel/analytics/next';
 import { negocioDeLaPeticion } from '@/lib/negocio';
 import { ProveedorMarca } from '@/components/Marca';
 import { estiloDeMarca, marcaVisible } from '@/lib/marca';
@@ -31,6 +32,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     >
       <body>
         <ProveedorMarca marca={negocio ? marcaVisible(negocio) : null}>{children}</ProveedorMarca>
+        <Analytics />
       </body>
     </html>
   );
