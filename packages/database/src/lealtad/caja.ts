@@ -99,7 +99,11 @@ export function describirPremioGanado(
   return { nombre: r.title ?? d.nombre, incluye: d.incluye };
 }
 
-export async function vistaCaja(codigo: string, sucursalId: string): Promise<VistaCaja | null> {
+export async function vistaCaja(
+  codigo: string,
+  sucursalId: string,
+  ahora: Date = new Date(),
+): Promise<VistaCaja | null> {
   const t = await prisma.loyaltyCard.findFirst({
     where: { publicCode: codigo },
     select: {
@@ -140,7 +144,7 @@ export async function vistaCaja(codigo: string, sucursalId: string): Promise<Vis
     select: { id: true, status: true },
   });
 
-  const [programa, regalos] = await Promise.all([programaVigente(), regalosDeTarjeta(t.id)]);
+  const [programa, regalos] = await Promise.all([programaVigente(), regalosDeTarjeta(t.id, ahora)]);
   const p = proximoPremio(t.stamps, programa);
 
   return {

@@ -49,7 +49,7 @@ No hay: verificación de que el WhatsApp o el correo sean de quien los escribe, 
 - **Aviso por cada alta**: se manda por correo a `WL_AVISOS_CORREO` cuando el correo esté configurado; mientras, el club aparece en `/plataforma`.
 - **Aviso al dueño dentro de su panel** de cuántos días de prueba le quedan.
 - **Términos y aviso de privacidad del servicio**, con Jano como titular; faltan su domicilio y un correo de privacidad. Deben publicarse antes de pautar.
-- **Medición**: pixel de Meta y eventos del embudo.
+- **Medición**: el pixel de Meta y los eventos del embudo ya están en el código, apagados. Se encienden poniendo `NEXT_PUBLIC_META_PIXEL_ID` (conjunto de datos «club-lealtad web») en las variables de Vercel de Producción y volviendo a publicar; el aviso de privacidad y `VERSION_LEGAL` cambian solos. Eventos: `PageView` (cada página del sitio), `ViewContent` (páginas de alta como `/belleza`), `AsistentePaso2`, `AsistentePaso3`, `Lead` (se envía el asistente), `CompleteRegistration` y `StartTrial` (club creado, una vez por club). Nunca en tarjetas ni paneles de clubes.
 - **Variables en Vercel** (21 nov: solo hay `DATABASE_URL`, `DIRECT_URL` y `CRON_SECRET`): faltan las de Apple Wallet, Google Wallet, Resend y el almacén de archivos. Pasos en `07-wallet.md`.
 - Cuenta de cobro (Mercado Pago o Stripe) y activos de Meta (página, Instagram, cuenta publicitaria).
 - Guion del video, creativos y plantillas de WhatsApp.
