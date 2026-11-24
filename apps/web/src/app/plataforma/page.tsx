@@ -71,13 +71,23 @@ export default async function PlataformaPage({
         titulo="Clubes"
         descripcion={`${plural(negocios.length, 'programa', 'programas')} de lealtad.`}
         acciones={
-          <a
-            href="/plataforma/nuevo"
-            className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-ink px-6 text-[15px] font-semibold text-cream"
-          >
-            <Icono nombre="nuevo" tam={18} />
-            Nuevo club
-          </a>
+          <span className="flex flex-wrap gap-2">
+            <a
+              href="/plataforma/exportar"
+              download
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-full border-[1.5px] border-ink px-5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-cream"
+            >
+              <Icono nombre="descargar" tam={18} />
+              Descargar
+            </a>
+            <a
+              href="/plataforma/nuevo"
+              className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-ink px-6 text-[15px] font-semibold text-cream"
+            >
+              <Icono nombre="nuevo" tam={18} />
+              Nuevo club
+            </a>
+          </span>
         }
       >
         {aviso}
@@ -208,17 +218,16 @@ export default async function PlataformaPage({
           }
         />
         <TarjetaAcceso
-          href="/plataforma/ajustes"
-          icono="plan"
-          titulo="Precios y Arcade"
-          linea="Lo que se cobra y la plantilla"
+          href="/plataforma/actividad"
+          icono="pulso"
+          titulo="Actividad"
+          linea="Uso de cada club y a quién llamar"
         />
         <TarjetaAcceso
-          externa
-          href="/"
-          icono="externo"
-          titulo="Sitio público"
-          linea="Lo que ve un negocio antes de abrir su club"
+          href="/plataforma/ingresos"
+          icono="dinero"
+          titulo="Ingresos"
+          linea="Pagos, el mes y renovaciones"
         />
       </div>
 

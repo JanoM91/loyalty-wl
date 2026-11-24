@@ -4,35 +4,39 @@ import { notFound } from 'next/navigation';
 import {
   TOPE_MENSAJES_POR_OMISION,
   estadoComercialDe,
+  listarBitacoraPlataforma,
+  listarPagos,
   obtenerNegocioEnLista,
   plantillaArcade,
   preciosDelServicio,
+  usoDeClubes,
 } from '@wl/database';
 import {
+  TEXTO_MOTIVO,
   arcadeVigente,
   diasEnPausa,
   diasRestantesDePrueba,
   fechaDeBorrado,
-  pesos,
+  motivoDeLlamada,
+  ultimaActividad,
 } from '@wl/domain';
 
 import { RUTA_CLUBES } from '@/lib/plataforma/panel';
+import { textoDeAccion } from '@/lib/plataforma/bitacora';
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
 import { CamposPermisos } from '../FormPermisos';
+import { BorrarClub, FormularioPago, InvitarDuenio } from '../FormulariosFicha';
 import { MarcoPlataforma } from '../Marco';
 import {
   arcadeActivo,
-  arcadePago,
   arcadePermisos,
-  borrar,
   mensajesAjustes,
   modalidad,
-  pago,
   prueba,
-  reinvitar,
   suspender,
 } from '../acciones';
+import { AvisoDeAccion, ListaPagos, hace } from '../piezas';
 
 export const metadata: Metadata = { title: 'Club' };
 export const dynamic = 'force-dynamic';
@@ -48,16 +52,23 @@ const fecha = (iso: string | Date | null) =>
       })
     : '';
 
+const fechaHora = (d: Date) =>
+  d.toLocaleString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
 /** Ficha de un negocio: sus direcciones, su estado y la invitación de su dueño. */
 export default async function NegocioPage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ enlace?: string; borrar?: string }>;
+  searchParams: Promise<{ enlace?: string; aviso?: string }>;
 }) {
   const sesion = await exigirPlataforma();
-  const [{ slug }, { enlace, borrar: borrarError }] = await Promise.all([params, searchParams]);
+  const [{ slug }, { enlace, aviso }] = await Promise.all([params, searchParams]);
   const fila = await obtenerNegocioEnLista(slug);
   if (!fila) notFound();
   const { negocio } = fila;
@@ -72,7 +83,16 @@ export default async function NegocioPage({
   const conFechas = Boolean(alta || pruebaVence || pagadoHasta);
   const enPausa = diasEnPausa(pruebaVence, pagadoHasta);
   const borrarDesde = fechaDeBorrado(pruebaVence, pagadoHasta);
-  const [precios, plantilla] = await Promise.all([preciosDelServicio(), plantillaArcade()]);
+  const [precios, plantilla, pagos, uso, movimientos] = await Promise.all([
+    preciosDelServicio(),
+    plantillaArcade(),
+    listarPagos({ clubId: negocio.id, limite: 20 }),
+    usoDeClubes([negocio.id]),
+    listarBitacoraPlataforma({ clubId: negocio.id, limite: 8 }),
+  ]);
+  const usoClub = uso.get(negocio.id);
+  const motivo = usoClub ? motivoDeLlamada(usoClub) : null;
+  const ultima = usoClub ? ultimaActividad(usoClub) : null;
   const arcade = negocio.ajustes.arcade;
   const arcadeVence = arcade?.pagadoHasta ?? null;
   const arcadeAlDia = arcadeVigente(arcade);
@@ -96,6 +116,7 @@ export default async function NegocioPage({
       descripcion={`${privada ? 'Privada' : 'Lite'}${negocio.activo ? '' : ', suspendido'}. ${fila.sucursales} ${fila.sucursales === 1 ? 'sucursal' : 'sucursales'}, ${fila.tarjetas} ${fila.tarjetas === 1 ? 'tarjeta' : 'tarjetas'}, ${fila.usuarios} ${fila.usuarios === 1 ? 'cuenta' : 'cuentas'} de panel.`}
     >
       <div className="grid max-w-3xl gap-10">
+        <AvisoDeAccion aviso={aviso} />
         {enlace && (
           <section className="grid gap-3 rounded-xl bg-ink p-6 text-cream">
             <h2 className="text-2xl">Enlace para el dueño</h2>
@@ -134,29 +155,81 @@ export default async function NegocioPage({
                 {alta.legal ? ` · aceptó términos del ${alta.legal}` : ''}
               </p>
             )}
-            <div className="flex flex-wrap gap-3">
-              {(['MES', 'ANIO'] as const).map((periodo) => (
-                <form key={periodo} action={pago}>
-                  <input type="hidden" name="slug" value={negocio.slug} />
-                  <input type="hidden" name="periodo" value={periodo} />
-                  <button type="submit" className={BOTON}>
-                    {periodo === 'MES' ? 'Registrar pago de un mes' : 'Registrar pago de un año'}
-                  </button>
-                </form>
-              ))}
-              <form action={prueba}>
-                <input type="hidden" name="slug" value={negocio.slug} />
-                <button type="submit" className={BOTON}>
-                  Dar 7 días de prueba desde hoy
-                </button>
-              </form>
-            </div>
+            <FormularioPago slug={negocio.slug} concepto="LITE" precios={precios.lite} />
+            <form action={prueba}>
+              <input type="hidden" name="slug" value={negocio.slug} />
+              <button type="submit" className={BOTON}>
+                Dar 7 días de prueba desde hoy
+              </button>
+            </form>
             <p className="max-w-prose text-[13px] text-muted">
               Cada pago suma un mes o un año a partir del fin del periodo pagado (o de hoy, si ya
-              venció). Dar 7 días quita el periodo pagado y deja el club en prueba.
+              venció) y queda en Ingresos. Dar 7 días quita el periodo pagado y deja el club en
+              prueba.
             </p>
           </section>
         )}
+
+        {!conFechas && (
+          <details className="grid gap-3 rounded-xl border border-rule p-6">
+            <summary className="min-h-[44px] cursor-pointer py-2 text-[15px] font-semibold text-ink">
+              Registrar un pago de Lite
+            </summary>
+            <p className="mt-2 mb-3 max-w-prose text-[14px] text-ink">
+              Este club está activo sin límite (lo dio de alta Exkalibur). Al registrar un pago
+              queda pagado hasta el fin del periodo y, si no renueva, se pausa como los demás.
+            </p>
+            <FormularioPago slug={negocio.slug} concepto="LITE" precios={precios.lite} />
+          </details>
+        )}
+
+        <section id="pagos" className="grid gap-3">
+          <h2 className="text-xl text-ink">Pagos registrados</h2>
+          <ListaPagos pagos={pagos} conClub={false} />
+        </section>
+
+        <section id="actividad" className="grid gap-3">
+          <h2 className="text-xl text-ink">Actividad</h2>
+          {usoClub ? (
+            <>
+              {motivo && (
+                <p className="rounded-[14px] border-[1.5px] border-[#E0B45C] bg-[#FFF8E6] px-4 py-3 text-[15px] text-[#5B3B00]">
+                  <b>Para llamar:</b> {TEXTO_MOTIVO[motivo]}.
+                  {alta?.whatsapp && (
+                    <>
+                      {' '}
+                      <a
+                        href={`https://wa.me/${alta.whatsapp}`}
+                        className="font-semibold text-ink underline underline-offset-4"
+                      >
+                        Escribirle por WhatsApp
+                      </a>
+                    </>
+                  )}
+                </p>
+              )}
+              <dl className="grid grid-cols-2 gap-3 text-[15px] sm:grid-cols-4">
+                {[
+                  ['Visitas 7 días', usoClub.visitas7.toLocaleString('es-MX')],
+                  ['Visitas 30 días', usoClub.visitas30.toLocaleString('es-MX')],
+                  ['Tarjetas nuevas 30 días', usoClub.tarjetas30.toLocaleString('es-MX')],
+                  ['Premios entregados 30 días', usoClub.premios30.toLocaleString('es-MX')],
+                  ['Última visita', hace(usoClub.ultimaVisita)],
+                  ['Última tarjeta', hace(usoClub.ultimaTarjeta)],
+                  ['Último acceso al panel', hace(usoClub.ultimoAcceso)],
+                  ['Última actividad', hace(ultima)],
+                ].map(([etiqueta, valor]) => (
+                  <div key={etiqueta} className="grid gap-0.5 border-t border-rule pt-2">
+                    <dt className="text-[13px] text-muted">{etiqueta}</dt>
+                    <dd className="font-semibold text-ink tabular-nums">{valor}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          ) : (
+            <p className="text-[15px] text-muted">Sin datos de uso.</p>
+          )}
+        </section>
 
         {conFechas && comercial !== 'ACTIVO' && (
           <section className="grid gap-3 rounded-xl border border-agotado/40 p-6">
@@ -168,29 +241,7 @@ export default async function NegocioPage({
                 ? ` Ojo: lleva ${enPausa} ${enPausa === 1 ? 'día' : 'días'} en pausa; los términos prometen conservarlo 30.`
                 : ''}
             </p>
-            {borrarError && (
-              <p className="text-[15px] font-semibold text-agotado">
-                No se borró: escribe la dirección exacta del club.
-              </p>
-            )}
-            <form action={borrar} className="flex flex-wrap items-end gap-3">
-              <input type="hidden" name="slug" value={negocio.slug} />
-              <label className="grid gap-1.5 text-[14px] text-muted">
-                Para confirmar, escribe «{negocio.slug}»
-                <input
-                  name="confirmacion"
-                  required
-                  autoComplete="off"
-                  className="min-h-[44px] border border-rule bg-cream px-3.5 text-[15px] text-ink"
-                />
-              </label>
-              <button
-                type="submit"
-                className="min-h-[44px] rounded-full bg-agotado px-5 text-[15px] font-semibold text-cream"
-              >
-                Borrar para siempre
-              </button>
-            </form>
+            <BorrarClub slug={negocio.slug} />
           </section>
         )}
 
@@ -204,20 +255,8 @@ export default async function NegocioPage({
             )}
           </div>
           <p className="text-[15px] text-ink">{arcadeEstado}</p>
+          <FormularioPago slug={negocio.slug} concepto="ARCADE" precios={precios.arcade} />
           <div className="flex flex-wrap gap-3">
-            {(['MES', 'ANIO'] as const).map((periodo) => {
-              const precio = periodo === 'MES' ? precios.arcade.mes : precios.arcade.anio;
-              return (
-                <form key={periodo} action={arcadePago}>
-                  <input type="hidden" name="slug" value={negocio.slug} />
-                  <input type="hidden" name="periodo" value={periodo} />
-                  <button type="submit" className={BOTON}>
-                    {periodo === 'MES' ? 'Registrar un mes' : 'Registrar un año'}
-                    {precio !== null ? ` (${pesos(precio)})` : ''}
-                  </button>
-                </form>
-              );
-            })}
             {arcade && (
               <form action={arcadeActivo}>
                 <input type="hidden" name="slug" value={negocio.slug} />
@@ -311,21 +350,7 @@ export default async function NegocioPage({
 
         <section className="grid gap-3">
           <h2 className="text-xl text-ink">Invitar al dueño</h2>
-          <form action={reinvitar} className="flex flex-wrap items-end gap-3">
-            <input type="hidden" name="slug" value={negocio.slug} />
-            <label className="grid gap-1.5 text-[14px] text-muted">
-              Correo
-              <input
-                name="email"
-                type="email"
-                required
-                className="min-h-[44px] border border-rule bg-cream px-3.5 text-[15px] text-ink"
-              />
-            </label>
-            <button type="submit" className={BOTON}>
-              Generar enlace
-            </button>
-          </form>
+          <InvitarDuenio slug={negocio.slug} />
           <p className="text-[13px] text-muted">
             Si el correo ya tiene cuenta en este negocio, el enlace le sirve para elegir una
             contraseña nueva.
@@ -353,6 +378,32 @@ export default async function NegocioPage({
           <p className="max-w-prose text-[13px] text-muted">
             Suspender cierra su programa y su panel sin borrar nada; reactivar lo deja como estaba.
           </p>
+        </section>
+
+        <section className="grid gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl text-ink">Movimientos en este club</h2>
+            <a
+              href={`/plataforma/bitacora?club=${negocio.id}`}
+              className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-ink underline underline-offset-4"
+            >
+              Ver todos
+            </a>
+          </div>
+          {movimientos.length === 0 ? (
+            <p className="text-[15px] text-muted">Nadie del equipo ha hecho cambios aquí.</p>
+          ) : (
+            <ul className="grid text-[15px]">
+              {movimientos.map((m) => (
+                <li key={m.id} className="grid gap-0.5 border-t border-rule py-2.5">
+                  <span className="text-ink">{textoDeAccion(m.accion)}</span>
+                  <span className="text-[13px] text-muted">
+                    {m.actor} · {fechaHora(m.fecha)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
     </MarcoPlataforma>

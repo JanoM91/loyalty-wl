@@ -1,6 +1,6 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -20,8 +20,9 @@ import {
   guardarPlantillaArcade,
   guardarPreciosDelServicio,
   plantillaArcade,
-  registrarPago,
-  registrarPagoArcade,
+  anularPagoDeClub,
+  leerSesionPlataforma,
+  registrarPagoDeClub,
   salirPlataforma,
   TOPE_MENSAJES_POR_OMISION,
 } from '@wl/database';
@@ -36,6 +37,7 @@ import {
   type PermisosArcade,
 } from '@wl/domain';
 
+import { anotar } from '@/lib/plataforma/bitacora';
 import { exigirPlataforma, guardarSesionPlataforma } from '@/lib/plataforma/sesion';
 
 export interface EstadoFormulario {
@@ -51,12 +53,17 @@ export async function entrar(_previo: EstadoFormulario, form: FormData): Promise
   );
   if (!r.ok) return { error: r.error, email: String(form.get('email') ?? '').slice(0, 160) };
   await guardarSesionPlataforma(r.token, r.expira);
+  const sesion = await leerSesionPlataforma(r.token);
+  if (sesion) await anotar(sesion, 'sesion.entrar');
   redirect('/plataforma');
 }
 
 export async function salir(): Promise<void> {
   const galletas = await cookies();
-  await salirPlataforma(galletas.get(NOMBRE_COOKIE_PLATAFORMA)?.value);
+  const token = galletas.get(NOMBRE_COOKIE_PLATAFORMA)?.value;
+  const sesion = await leerSesionPlataforma(token);
+  if (sesion) await anotar(sesion, 'sesion.salir');
+  await salirPlataforma(token);
   galletas.delete({ name: NOMBRE_COOKIE_PLATAFORMA, path: '/plataforma' });
   redirect('/plataforma/entrar');
 }
@@ -78,7 +85,7 @@ function aSlug(texto: string): string {
  * enlace de un solo uso para que el dueño fije su contraseña.
  */
 export async function crear(_previo: EstadoFormulario, form: FormData): Promise<EstadoFormulario> {
-  await exigirPlataforma();
+  const sesion = await exigirPlataforma();
   const t = (k: string) => String(form.get(k) ?? '').trim();
 
   const nombre = t('nombre');
@@ -160,6 +167,10 @@ export async function crear(_previo: EstadoFormulario, form: FormData): Promise<
     email: emailDuenio,
     nombre: t('duenioNombre') || emailDuenio,
   });
+  await anotar(sesion, 'club.crear', {
+    club: r.negocio,
+    detalle: { nombre, plan: r.negocio.ajustes.plan, duenio: emailDuenio },
+  });
   revalidatePath('/plataforma');
   redirect(
     invitacion.ok
@@ -169,66 +180,166 @@ export async function crear(_previo: EstadoFormulario, form: FormData): Promise<
 }
 
 export async function suspender(form: FormData): Promise<void> {
-  await exigirPlataforma();
-  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
-  if (negocio) await cambiarEstadoNegocio(negocio.id, form.get('activo') === '1');
-  revalidatePath('/plataforma');
-  redirect(`/plataforma/${negocio?.slug ?? ''}`);
-}
-
-export async function modalidad(form: FormData): Promise<void> {
-  await exigirPlataforma();
-  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
-  if (negocio) await cambiarPlan(negocio.id, form.get('plan') === 'PRIVADA' ? 'PRIVADA' : 'LITE');
-  revalidatePath('/plataforma');
-  redirect(`/plataforma/${negocio?.slug ?? ''}`);
-}
-
-/** Enlace nuevo de un solo uso para el dueño (por si perdió el anterior). */
-export async function reinvitar(form: FormData): Promise<void> {
-  await exigirPlataforma();
-  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
-  const email = String(form.get('email') ?? '')
-    .trim()
-    .toLowerCase();
-  if (!negocio || !email) redirect('/plataforma');
-  const r = await invitarDuenio(negocio, {
-    email,
-    nombre: String(form.get('nombre') ?? '').trim() || email,
-  });
-  redirect(
-    r.ok
-      ? `/plataforma/${negocio.slug}?enlace=${encodeURIComponent(r.token)}`
-      : `/plataforma/${negocio.slug}`,
-  );
-}
-
-/** «extender»: siete días de prueba desde hoy (también sirve de gracia a quien no renovó). */
-export async function prueba(form: FormData): Promise<void> {
-  await exigirPlataforma();
-  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
-  if (negocio) await fijarFinDePrueba(negocio.id, vencimientoDePrueba());
-  revalidatePath('/plataforma');
-  redirect(`/plataforma/${negocio?.slug ?? ''}`);
-}
-
-/** Registra el pago de un mes o un año: el club queda activo hasta el fin del periodo. */
-export async function pago(form: FormData): Promise<void> {
   const sesion = await exigirPlataforma();
   const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
   if (negocio) {
-    const periodo = form.get('periodo') === 'ANIO' ? 'ANIO' : 'MES';
-    const hasta = await registrarPago(negocio, periodo);
-    console.warn(`[pago] ${negocio.slug}: ${periodo} hasta ${hasta} (registró ${sesion.email})`);
+    const activo = form.get('activo') === '1';
+    await cambiarEstadoNegocio(negocio.id, activo);
+    await anotar(sesion, activo ? 'club.reactivar' : 'club.suspender', { club: negocio });
   }
   revalidatePath('/plataforma');
   redirect(`/plataforma/${negocio?.slug ?? ''}`);
 }
 
+export async function modalidad(form: FormData): Promise<void> {
+  const sesion = await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (negocio) {
+    const plan = form.get('plan') === 'PRIVADA' ? 'PRIVADA' : 'LITE';
+    await cambiarPlan(negocio.id, plan);
+    await anotar(sesion, 'club.modalidad', { club: negocio, detalle: { plan } });
+  }
+  revalidatePath('/plataforma');
+  redirect(`/plataforma/${negocio?.slug ?? ''}`);
+}
+
+/** Resultado de un formulario de la ficha que se queda en la misma página. */
+export interface EstadoFicha {
+  readonly error: string | null;
+  readonly listo: string | null;
+  /** Enlace de un solo uso para mostrarlo una vez. */
+  readonly enlace?: string;
+  /**
+   * Dirección a la que el navegador va de inmediato (carga completa). Se usa
+   * en lugar de `revalidatePath`: repintar la página dentro de la respuesta de
+   * la acción a veces se queda colgado (ver la nota sobre `pago`).
+   */
+  readonly recargar?: string;
+}
+
+/**
+ * Enlace nuevo de un solo uso para el dueño (por si perdió el anterior). Se
+ * muestra ahí mismo: una acción que redirige a la misma página con otros
+ * parámetros deja la pantalla sin actualizar en Next 15.
+ */
+export async function reinvitar(_previo: EstadoFicha, form: FormData): Promise<EstadoFicha> {
+  const sesion = await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  const email = String(form.get('email') ?? '')
+    .trim()
+    .toLowerCase();
+  if (!negocio) return { error: 'No encontramos el club.', listo: null };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: 'Escribe el correo del dueño.', listo: null };
+  }
+  const r = await invitarDuenio(negocio, {
+    email,
+    nombre: String(form.get('nombre') ?? '').trim() || email,
+  });
+  if (!r.ok) return { error: r.error, listo: null };
+  await anotar(sesion, 'club.invitar_duenio', { club: negocio, detalle: { email } });
+  const origen = (await headers()).get('x-wl-origen') ?? '';
+  const base = process.env.WL_NEGOCIO_UNICO ? origen : `${origen}/${negocio.slug}`;
+  return {
+    error: null,
+    listo: `Enlace para ${email}. Mándaselo tú: sirve una sola vez y con él elige su contraseña.`,
+    enlace: `${base}/admin/contrasena/${r.token}`,
+  };
+}
+
+/** «extender»: siete días de prueba desde hoy (también sirve de gracia a quien no renovó). */
+export async function prueba(form: FormData): Promise<void> {
+  const sesion = await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (negocio) {
+    const vence = vencimientoDePrueba();
+    await fijarFinDePrueba(negocio.id, vence);
+    await anotar(sesion, 'club.prueba', {
+      club: negocio,
+      detalle: { vence, pagadoHastaAntes: negocio.ajustes.pagadoHasta },
+    });
+  }
+  revalidatePath('/plataforma');
+  redirect(`/plataforma/${negocio?.slug ?? ''}`);
+}
+
+/** Centavos de un campo en pesos («269», «$2,699.50»); null si no es un importe. */
+function centavosDelCampo(form: FormData, campo: string): number | null {
+  const t = String(form.get(campo) ?? '').replace(/[$,\s]/g, '');
+  if (!/^\d+(\.\d{1,2})?$/.test(t)) return null;
+  return Math.round(Number(t) * 100);
+}
+
+// Ojo: probado en local (Next 15.5, React 19.3), cuando una acción de servidor
+// repinta la misma página (con `redirect` a esa página con otros parámetros o
+// con `revalidatePath`), a veces la respuesta no termina de aplicarse: el botón
+// se queda en «Registrando…» o la pantalla no cambia, aunque el cambio sí se
+// guardó. Por eso estas acciones devuelven `recargar` y el formulario hace una
+// carga completa de la página, que siempre funciona.
+
+/**
+ * Registra un pago de Lite o del Arcade (un mes o un año) con lo cobrado. El
+ * club (o el Arcade) queda pagado hasta el fin del periodo.
+ */
+export async function pago(_previo: EstadoFicha, form: FormData): Promise<EstadoFicha> {
+  const sesion = await exigirPlataforma();
+  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
+  if (!negocio) return { error: 'No encontramos el club.', listo: null };
+  const concepto = form.get('concepto') === 'ARCADE' ? 'ARCADE' : 'LITE';
+  const periodo = form.get('periodo') === 'ANIO' ? 'ANIO' : 'MES';
+  const centavos = centavosDelCampo(form, 'importe');
+  if (centavos === null) {
+    return {
+      error: 'Escribe lo cobrado en pesos, por ejemplo 269 (0 si fue cortesía).',
+      listo: null,
+    };
+  }
+  const nota = String(form.get('nota') ?? '');
+  const r = await registrarPagoDeClub(negocio, { concepto, periodo, centavos, nota }, sesion.email);
+  if (!r.ok) return { error: r.error, listo: null };
+  await anotar(sesion, 'club.pago', {
+    club: negocio,
+    detalle: { concepto, periodo, centavos, hasta: r.hasta, pagoId: r.id },
+  });
+  return {
+    error: null,
+    listo: 'Pago registrado.',
+    recargar: `/plataforma/${negocio.slug}?aviso=${concepto === 'ARCADE' ? 'pago-arcade' : 'pago'}`,
+  };
+}
+
+/** Anula un pago registrado por error; si es el último, regresa la fecha de pago. */
+export async function anularPago(_previo: EstadoFicha, form: FormData): Promise<EstadoFicha> {
+  const sesion = await exigirPlataforma();
+  const r = await anularPagoDeClub(String(form.get('pago') ?? ''), sesion.email);
+  if (!r.ok) return { error: r.error, listo: null };
+  await anotar(sesion, 'club.pago_anulado', {
+    club: r.pago.clubId ? { id: r.pago.clubId, slug: r.pago.clubSlug } : null,
+    detalle: {
+      pagoId: r.pago.id,
+      concepto: r.pago.concepto,
+      centavos: r.pago.centavos,
+      revertido: r.revertido,
+    },
+  });
+  const aviso = r.revertido ? 'anulado' : 'anulado-solo';
+  const desde = String(form.get('desde') ?? '');
+  return {
+    error: null,
+    listo: 'Pago anulado.',
+    recargar:
+      desde === 'ingresos'
+        ? `/plataforma/ingresos?aviso=${aviso}`
+        : `/plataforma/${r.pago.clubSlug}?aviso=${aviso}`,
+  };
+}
+
 /** Enciende o apaga el borrado automático de clubes con 30 días en pausa. */
 export async function borradoAutomatico(form: FormData): Promise<void> {
   const sesion = await exigirPlataforma();
-  await fijarBorradoAutomatico(form.get('encender') === '1', sesion.email);
+  const encendido = form.get('encender') === '1';
+  await fijarBorradoAutomatico(encendido, sesion.email);
+  await anotar(sesion, 'plataforma.borrado_automatico', { detalle: { encendido } });
   revalidatePath('/plataforma');
   redirect('/plataforma');
 }
@@ -238,7 +349,7 @@ export async function borradoAutomatico(form: FormData): Promise<void> {
  * en pausa (nunca uno pagado o dado de alta por Exkalibur), y solo si quien lo
  * pide escribe su dirección para confirmar.
  */
-export async function borrar(form: FormData): Promise<void> {
+export async function borrar(_previo: EstadoFicha, form: FormData): Promise<EstadoFicha> {
   const sesion = await exigirPlataforma();
   const slug = String(form.get('slug') ?? '');
   const negocio = await negocioPorSlug(slug);
@@ -247,10 +358,15 @@ export async function borrar(form: FormData): Promise<void> {
     .trim()
     .toLowerCase();
   const estado = estadoComercialDe(negocio);
-  if (confirmacion !== negocio.slug || estado === 'ACTIVO') {
-    redirect(`/plataforma/${negocio.slug}?borrar=no`);
+  if (estado === 'ACTIVO') return { error: 'Un club pagado no se borra.', listo: null };
+  if (confirmacion !== negocio.slug) {
+    return { error: 'No se borró: escribe la dirección exacta del club.', listo: null };
   }
   await borrarNegocio(negocio.id);
+  await anotar(sesion, 'club.borrar', {
+    club: negocio,
+    detalle: { nombre: negocio.nombre, estado },
+  });
   console.warn(`[borrado] ${negocio.slug} (${estado}) borrado a mano por ${sesion.email}`);
   revalidatePath('/plataforma');
   revalidatePath('/negocios');
@@ -278,6 +394,12 @@ export async function guardarPrecios(form: FormData): Promise<void> {
     },
     sesion.email,
   );
+  await anotar(sesion, 'plataforma.precios', {
+    detalle: {
+      lite: { mes: pesosDelCampo(form, 'lite-mes'), anio: pesosDelCampo(form, 'lite-anio') },
+      arcade: { mes: pesosDelCampo(form, 'arcade-mes'), anio: pesosDelCampo(form, 'arcade-anio') },
+    },
+  });
   console.warn(`[precios] actualizados por ${sesion.email}`);
   revalidatePath('/', 'layout');
   redirect('/plataforma/ajustes?guardado=precios');
@@ -302,52 +424,48 @@ function permisosDelFormulario(form: FormData, base: PermisosArcade): PermisosAr
 export async function guardarPlantilla(form: FormData): Promise<void> {
   const sesion = await exigirPlataforma();
   await guardarPlantillaArcade(permisosDelFormulario(form, await plantillaArcade()), sesion.email);
+  await anotar(sesion, 'plataforma.plantilla_arcade');
   redirect('/plataforma/ajustes?guardado=plantilla');
 }
 
 export async function arcadePermisos(form: FormData): Promise<void> {
-  await exigirPlataforma();
+  const sesion = await exigirPlataforma();
   const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
   if (!negocio) redirect('/plataforma');
   const actual = negocio.ajustes.arcade ?? (await plantillaArcade());
   await fijarPermisosArcade(negocio.id, permisosDelFormulario(form, actual));
+  await anotar(sesion, 'club.arcade_permisos', { club: negocio });
   revalidatePath('/plataforma');
-  redirect(`/plataforma/${negocio.slug}#arcade`);
-}
-
-/** Registra el pago del Arcade (un mes o un año) y lo activa. */
-export async function arcadePago(form: FormData): Promise<void> {
-  const sesion = await exigirPlataforma();
-  const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
-  if (!negocio) redirect('/plataforma');
-  const periodo = form.get('periodo') === 'ANIO' ? 'ANIO' : 'MES';
-  const hasta = await registrarPagoArcade(negocio, periodo);
-  console.warn(`[arcade] ${negocio.slug}: ${periodo} hasta ${hasta} (registró ${sesion.email})`);
-  revalidatePath('/plataforma');
-  redirect(`/plataforma/${negocio.slug}#arcade`);
+  redirect(`/plataforma/${negocio.slug}`);
 }
 
 /** Enciende o apaga el Arcade sin tocar el periodo pagado. */
 export async function arcadeActivo(form: FormData): Promise<void> {
-  await exigirPlataforma();
+  const sesion = await exigirPlataforma();
   const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
   if (!negocio) redirect('/plataforma');
   const actual = negocio.ajustes.arcade ?? (await plantillaArcade());
   await fijarPermisosArcade(negocio.id, { ...actual, activo: form.get('activo') === '1' });
+  await anotar(sesion, 'club.arcade_activo', {
+    club: negocio,
+    detalle: { activo: form.get('activo') === '1' },
+  });
   revalidatePath('/plataforma');
-  redirect(`/plataforma/${negocio.slug}#arcade`);
+  redirect(`/plataforma/${negocio.slug}`);
 }
 
 /** «Mensajes a clientes»: encender o apagar y fijar el tope mensual del club. */
 export async function mensajesAjustes(form: FormData): Promise<void> {
-  await exigirPlataforma();
+  const sesion = await exigirPlataforma();
   const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
   if (!negocio) redirect('/plataforma');
   const tope = Number(String(form.get('tope') ?? '').replace(/[^\d]/g, ''));
-  await fijarAjustesMensajes(negocio.id, {
+  const mensajes = {
     activo: form.get('activo') === 'on',
     topeMensual: Number.isFinite(tope) ? tope : TOPE_MENSAJES_POR_OMISION,
-  });
+  };
+  await fijarAjustesMensajes(negocio.id, mensajes);
+  await anotar(sesion, 'club.mensajes', { club: negocio, detalle: mensajes });
   revalidatePath('/plataforma');
-  redirect(`/plataforma/${negocio.slug}#mensajes`);
+  redirect(`/plataforma/${negocio.slug}`);
 }

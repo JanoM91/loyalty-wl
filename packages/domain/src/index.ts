@@ -15,4 +15,5 @@ export * from './marca/direccion';
 export * from './alta/giros';
 export * from './alta/prueba';
 export * from './alta/avisos';
+export * from './alta/actividad';
 export * from './arcade/arcade';

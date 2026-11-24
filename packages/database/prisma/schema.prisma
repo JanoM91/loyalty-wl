@@ -73,6 +73,7 @@ model Tenant {
   arcadeCoupons ArcadeCoupon[]
   clubMessages ClubMessage[]
   clubGifts ClubGift[]
+  platformPayments PlatformPayment[]
 
   @@map("tenant")
 }
@@ -743,15 +744,21 @@ model PlatformUser {
   id             String    @id @default(uuid()) @db.Uuid
   email          String    @unique @db.VarChar(160)
   name           String    @db.VarChar(160)
-  passwordHash   String    @map("password_hash") @db.VarChar(255)
+  /// Null: la cuenta se creó por invitación y la persona todavía no fija su
+  /// contraseña con el enlace de un solo uso.
+  passwordHash   String?   @map("password_hash") @db.VarChar(255)
   isActive       Boolean   @default(true) @map("is_active")
   /// Intentos fallidos seguidos. Al quinto, la cuenta se bloquea 15 minutos.
   failedAttempts Int       @default(0) @map("failed_attempts")
   lockedUntil    DateTime? @map("locked_until") @db.Timestamptz
   lastLoginAt    DateTime? @map("last_login_at") @db.Timestamptz
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz
+  /// Correo de quien la invitó desde el panel; null si se creó en la terminal.
+  invitedBy      String?   @map("invited_by") @db.VarChar(160)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   sessions PlatformSession[]
+  tokens   PlatformPasswordToken[]
 
   @@map("platform_user")
 }
@@ -772,6 +779,85 @@ model PlatformSession {
 /// Ajustes de toda la plataforma (no de un negocio), como el borrado
 /// automático de clubes pausados. Como las tablas `platform_*`, el rol de la
 /// aplicación no tiene permisos sobre ella: solo el rol dueño la lee y escribe.
+/// Para qué se emitió un enlace de contraseña de plataforma.
+enum PlatformTokenPurpose {
+  /// Cuenta nueva o contraseña nueva que genera un compañero. Vence en 72 horas.
+  INVITACION
+  /// La pide la propia persona desde «¿Olvidaste tu contraseña?». Vence en una hora.
+  RECUPERACION
+}
+
+/// Enlace de un solo uso para fijar la contraseña de una cuenta de plataforma.
+model PlatformPasswordToken {
+  id        String               @id @default(uuid()) @db.Uuid
+  userId    String               @map("user_id") @db.Uuid
+  user      PlatformUser         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 del token; el token solo viaja en el enlace.
+  tokenHash String               @unique @map("token_hash") @db.VarChar(64)
+  purpose   PlatformTokenPurpose
+  expiresAt DateTime             @map("expires_at") @db.Timestamptz
+  usedAt    DateTime?            @map("used_at") @db.Timestamptz
+  createdBy String?              @map("created_by") @db.VarChar(160)
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([userId, createdAt])
+  @@map("platform_password_token")
+}
+
+/// Bitácora de lo que hace cada cuenta de plataforma. Solo se agrega.
+model PlatformAudit {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorEmail String   @map("actor_email") @db.VarChar(160)
+  action     String   @db.VarChar(80)
+  /// Club afectado, sin llave foránea: la fila sobrevive al borrado del club.
+  tenantId   String?  @map("tenant_id") @db.Uuid
+  tenantSlug String?  @map("tenant_slug") @db.VarChar(63)
+  detail     Json?
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([createdAt(sort: Desc)])
+  @@index([tenantId, createdAt])
+  @@map("platform_audit")
+}
+
+enum PlatformPaymentConcept {
+  LITE
+  ARCADE
+}
+
+enum PlatformPaymentPeriod {
+  MES
+  ANIO
+}
+
+/// Pago registrado a mano en la ficha de un club (hoy el cobro es por enlace
+/// de WhatsApp). Sobrevive al borrado del club con su nombre y dirección.
+model PlatformPayment {
+  id            String                 @id @default(uuid()) @db.Uuid
+  tenantId      String?                @map("tenant_id") @db.Uuid
+  tenant        Tenant?                @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantSlug    String                 @map("tenant_slug") @db.VarChar(63)
+  tenantName    String                 @map("tenant_name") @db.VarChar(160)
+  concept       PlatformPaymentConcept
+  period        PlatformPaymentPeriod
+  /// Lo cobrado, en centavos y con IVA. Cero: cortesía.
+  amountCents   Int                    @map("amount_cents")
+  /// Hasta cuándo quedó pagado el club (o el Arcade) con este pago.
+  paidUntil     DateTime               @map("paid_until") @db.Timestamptz
+  /// Hasta cuándo estaba pagado antes; sirve para anular el registro.
+  previousUntil DateTime?              @map("previous_until") @db.Timestamptz
+  note          String?                @db.VarChar(250)
+  registeredBy  String                 @map("registered_by") @db.VarChar(160)
+  voidedAt      DateTime?              @map("voided_at") @db.Timestamptz
+  voidedBy      String?                @map("voided_by") @db.VarChar(160)
+  createdAt     DateTime               @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([createdAt])
+  @@index([tenantId, createdAt])
+  @@map("platform_payment")
+}
+
 model PlatformSetting {
   key       String   @id @db.VarChar(60)
   value     Json

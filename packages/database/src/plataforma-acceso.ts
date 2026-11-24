@@ -6,8 +6,9 @@ import { clienteDuenio } from './plataforma';
 /**
  * Acceso al panel de plataforma (Exkalibur).
  *
- * Las cuentas se crean desde la terminal (`pnpm --filter @wl/database
- * plataforma:usuario`): no hay pantalla de registro. Cinco intentos fallidos
+ * Las cuentas se crean por invitación desde «Equipo» (ver
+ * plataforma-equipo.ts) o desde la terminal (`plataforma:usuario`, dentro de
+ * `packages/database`), por si nadie puede entrar. Cinco intentos fallidos
  * seguidos bloquean la cuenta 15 minutos; el conteo vive en la base.
  */
 
@@ -37,8 +38,15 @@ export async function crearUsuarioPlataforma(d: {
   const nombre = d.nombre.trim() || email;
   await clienteDuenio().platformUser.upsert({
     where: { email },
-    create: { email, name: nombre, passwordHash },
-    update: { name: nombre, passwordHash, isActive: true, failedAttempts: 0, lockedUntil: null },
+    create: { email, name: nombre, passwordHash, passwordChangedAt: new Date() },
+    update: {
+      name: nombre,
+      passwordHash,
+      passwordChangedAt: new Date(),
+      isActive: true,
+      failedAttempts: 0,
+      lockedUntil: null,
+    },
   });
   // Cambiar la contraseña cierra las sesiones abiertas.
   await clienteDuenio().platformSession.deleteMany({ where: { user: { email } } });
@@ -58,7 +66,8 @@ export async function entrarPlataforma(
   const bd = clienteDuenio();
   const email = emailCrudo.trim().toLowerCase();
   const u = await bd.platformUser.findUnique({ where: { email } });
-  if (!u || !u.isActive) {
+  // Sin contraseña: la invitación todavía no se usó. Se trata como si no existiera.
+  if (!u || !u.isActive || u.passwordHash === null) {
     // Mismo trabajo y mismo mensaje exista o no la cuenta.
     await hashContrasena(clave.slice(0, 200));
     return { ok: false, error: RECHAZO };
