@@ -37,6 +37,8 @@ export default async function AjustesPage({
   return (
     <MarcoPlataforma
       sesion={sesion}
+      actual="ajustes"
+      enTarjeta
       titulo="Precios y Arcade"
       descripcion="Lo que se cobra y lo que cada club puede usar del Arcade cuando se le activa."
     >

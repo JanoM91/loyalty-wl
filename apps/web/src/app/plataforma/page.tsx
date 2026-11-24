@@ -1,152 +1,352 @@
 import type { Metadata } from 'next';
-import {
-  borradoAutomaticoEncendido,
-  clubesEnPausa,
-  estadoComercialDe,
-  listarNegocios,
-} from '@wl/database';
-import { arcadeVigente, diasEnPausa } from '@wl/domain';
+import { borradoAutomaticoEncendido, clubesEnPausa, type NegocioEnLista } from '@wl/database';
+import { diasRestantesDePrueba } from '@wl/domain';
 
+import { Icono } from '@/components/admin/Icono';
+import {
+  RUTA_CLUBES,
+  estadoDelClub,
+  fechaDeHoy,
+  negociosDelPanel,
+  saludo,
+  type EstadoClub,
+} from '@/lib/plataforma/panel';
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
 import { MarcoPlataforma } from './Marco';
 import { borradoAutomatico } from './acciones';
+import { Cifra, Panel, RenglonClub, TarjetaAcceso } from './piezas';
 
-export const metadata: Metadata = { title: 'Negocios' };
+export const metadata: Metadata = { title: 'Inicio' };
 export const dynamic = 'force-dynamic';
 
-const BOTON =
-  'min-h-[44px] rounded-full border border-rule px-5 text-[15px] text-ink hover:border-ink';
+const DIA = 86_400_000;
+const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 
-export default async function NegociosPage({
+/** Sin acentos y en minúsculas, para buscar «cafe» y encontrar «Café». */
+const plano = (texto: string) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+const FILTROS: readonly { id: EstadoClub | 'todos'; texto: string }[] = [
+  { id: 'todos', texto: 'Todos' },
+  { id: 'activo', texto: 'Activos' },
+  { id: 'prueba', texto: 'En prueba' },
+  { id: 'pausa', texto: 'En pausa' },
+  { id: 'suspendido', texto: 'Suspendidos' },
+];
+
+export default async function PlataformaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ borrado?: string }>;
+  searchParams: Promise<{ borrado?: string; vista?: string; estado?: string; q?: string }>;
 }) {
   const sesion = await exigirPlataforma();
-  const [negocios, automatico, { borrado }] = await Promise.all([
-    listarNegocios(),
+  const [negocios, automatico, { borrado, vista, estado, q }] = await Promise.all([
+    negociosDelPanel(),
     borradoAutomaticoEncendido(),
     searchParams,
   ]);
-  const pausados = await clubesEnPausa(new Date(), negocios);
+  const ahora = new Date();
+  const por = (e: EstadoClub) => negocios.filter((f) => estadoDelClub(f, ahora) === e);
+  const aviso = borrado && (
+    <p role="status" className="mb-6 rounded-[14px] bg-ink px-4 py-3 text-[15px] text-cream">
+      Se borró /{borrado} con todos sus datos.
+    </p>
+  );
+
+  if (vista === 'clubes') {
+    const filtro = FILTROS.find((f) => f.id === estado)?.id ?? 'todos';
+    const texto = plano((q ?? '').trim());
+    const visibles = negocios.filter((f) => {
+      if (filtro !== 'todos' && estadoDelClub(f, ahora) !== filtro) return false;
+      if (!texto) return true;
+      const { nombre, slug, ajustes } = f.negocio;
+      return plano(`${nombre} ${slug} ${ajustes.alta?.correo ?? ''}`).includes(texto);
+    });
+    const enlace = (id: string) =>
+      `${RUTA_CLUBES}${id === 'todos' ? '' : `&estado=${id}`}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
+    return (
+      <MarcoPlataforma
+        sesion={sesion}
+        actual="clubes"
+        titulo="Clubes"
+        descripcion={`${plural(negocios.length, 'programa', 'programas')} de lealtad.`}
+        acciones={
+          <a
+            href="/plataforma/nuevo"
+            className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-ink px-6 text-[15px] font-semibold text-cream"
+          >
+            <Icono nombre="nuevo" tam={18} />
+            Nuevo club
+          </a>
+        }
+      >
+        {aviso}
+        <form action="/plataforma" className="flex flex-wrap gap-3">
+          <input type="hidden" name="vista" value="clubes" />
+          {filtro !== 'todos' && <input type="hidden" name="estado" value={filtro} />}
+          <label className="flex min-h-[52px] min-w-0 flex-1 items-center gap-3 rounded-[16px] border-[1.5px] border-[#E8D8C6] bg-white px-4 text-ink focus-within:border-ink">
+            <Icono nombre="buscar" tam={20} className="flex-none" />
+            <span className="sr-only">Filtrar por nombre, dirección o correo del dueño</span>
+            <input
+              name="q"
+              defaultValue={q ?? ''}
+              placeholder="Nombre, dirección o correo del dueño"
+              className="min-h-[48px] min-w-0 flex-1 border-0 bg-transparent text-[16px] outline-none placeholder:text-[#5A4F63]"
+            />
+          </label>
+          <button
+            type="submit"
+            className="min-h-[52px] rounded-[16px] border-[1.5px] border-ink px-5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-cream"
+          >
+            Filtrar
+          </button>
+        </form>
+
+        <nav aria-label="Filtrar por estado" className="mt-4 flex flex-wrap gap-2">
+          {FILTROS.map((f) => {
+            const n = f.id === 'todos' ? negocios.length : por(f.id).length;
+            const on = f.id === filtro;
+            return (
+              <a
+                key={f.id}
+                href={enlace(f.id)}
+                aria-current={on ? 'true' : undefined}
+                className={`inline-flex min-h-[44px] items-center gap-2 rounded-full border-[1.5px] px-4 text-[14px] font-semibold ${on ? 'border-ink bg-ink text-cream' : 'border-[#E8D8C6] bg-white text-ink hover:border-ink'}`}
+              >
+                {f.texto}
+                <span className={on ? 'text-cream/75' : 'text-[#5A4F63]'}>{n}</span>
+              </a>
+            );
+          })}
+        </nav>
+
+        <div className="mt-5 rounded-[20px] border-[1.5px] border-[#E8D8C6] bg-white p-3 sm:p-4">
+          {visibles.length === 0 ? (
+            <p className="px-2 py-6 text-[15px] text-[#5A4F63]">
+              {negocios.length === 0 ? (
+                <>
+                  Todavía no hay clubes.{' '}
+                  <a href="/plataforma/nuevo" className="text-ink underline underline-offset-4">
+                    Crea el primero.
+                  </a>
+                </>
+              ) : (
+                <>
+                  Ningún club con ese filtro.{' '}
+                  <a href={RUTA_CLUBES} className="text-ink underline underline-offset-4">
+                    Ver todos.
+                  </a>
+                </>
+              )}
+            </p>
+          ) : (
+            <ul>
+              {visibles.map((f) => (
+                <RenglonClub key={f.negocio.id} fila={f} />
+              ))}
+            </ul>
+          )}
+        </div>
+      </MarcoPlataforma>
+    );
+  }
+
+  const pausados = await clubesEnPausa(ahora, negocios);
   const listos = pausados.filter((c) => c.listo);
+  const enPrueba = por('prueba')
+    .map((f) => ({ fila: f, dias: diasRestantesDePrueba(f.negocio.ajustes.pruebaVence, ahora) }))
+    .sort((a, b) => a.dias - b.dias);
+  const porVencer = enPrueba.filter((p) => p.dias <= 3);
+  const activos = por('activo');
+  const nuevos = negocios.filter((f) => ahora.getTime() - f.creado.getTime() < 7 * DIA).length;
+  const tarjetas = negocios.reduce((suma, f) => suma + f.tarjetas, 0);
+  const recientes: NegocioEnLista[] = negocios.slice(0, 5);
+  const nombre = sesion.nombre.trim().split(/\s+/)[0] ?? '';
+
   return (
     <MarcoPlataforma
       sesion={sesion}
-      titulo="Negocios"
-      descripcion={
-        negocios.length === 1
-          ? '1 programa de lealtad.'
-          : `${negocios.length} programas de lealtad.`
-      }
-      acciones={
-        <a
-          href="/plataforma/nuevo"
-          className="inline-flex min-h-[48px] items-center rounded-full bg-ink px-6 text-[15px] font-semibold text-cream"
-        >
-          Nuevo negocio
-        </a>
-      }
+      actual="inicio"
+      antetitulo={fechaDeHoy(ahora)}
+      titulo={nombre ? `${saludo(ahora)}, ${nombre}` : saludo(ahora)}
+      buscadorGrande
     >
-      {borrado && (
-        <p className="mb-6 rounded-md bg-ink px-4 py-3 text-[15px] text-cream">
-          Se borró /{borrado} con todos sus datos.
-        </p>
-      )}
+      {aviso}
 
-      <section className="mb-10 grid gap-3 rounded-xl border border-rule p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl text-ink">Clubes en pausa</h2>
-          <form action={borradoAutomatico}>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
+        <TarjetaAcceso
+          principal
+          href="/plataforma/nuevo"
+          icono="nuevo"
+          titulo="Nuevo club"
+          linea="Darlo de alta en una pantalla"
+        />
+        <TarjetaAcceso
+          href={RUTA_CLUBES}
+          icono="tienda"
+          titulo="Clubes"
+          linea={`${plural(negocios.length, 'programa', 'programas')} de lealtad`}
+        />
+        <TarjetaAcceso
+          href={`${RUTA_CLUBES}&estado=prueba`}
+          icono="reloj"
+          titulo="En prueba"
+          linea={
+            enPrueba.length === 0
+              ? 'Ninguno por ahora'
+              : `${enPrueba.length} · ${porVencer.length} ${porVencer.length === 1 ? 'termina' : 'terminan'} en 3 días o menos`
+          }
+        />
+        <TarjetaAcceso
+          href={`${RUTA_CLUBES}&estado=pausa`}
+          icono="pausa"
+          titulo="En pausa"
+          linea={
+            pausados.length === 0
+              ? 'Ninguno por ahora'
+              : `${pausados.length} sin prueba ni pago vigente`
+          }
+        />
+        <TarjetaAcceso
+          href="/plataforma/ajustes"
+          icono="plan"
+          titulo="Precios y Arcade"
+          linea="Lo que se cobra y la plantilla"
+        />
+        <TarjetaAcceso
+          externa
+          href="/"
+          icono="externo"
+          titulo="Sitio público"
+          linea="Lo que ve un negocio antes de abrir su club"
+        />
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <Cifra
+          valor={negocios.length}
+          etiqueta="Clubes"
+          contexto={`${plural(nuevos, 'nuevo', 'nuevos')} en 7 días`}
+        />
+        <Cifra valor={activos.length} etiqueta="Activos" contexto="Al día, sin prueba" />
+        <Cifra
+          valor={enPrueba.length}
+          etiqueta="En prueba"
+          contexto={
+            porVencer.length === 0 ? 'Ninguna termina pronto' : `${porVencer.length} por terminar`
+          }
+        />
+        <Cifra valor={tarjetas} etiqueta="Tarjetas" contexto="De clientes, en todos los clubes" />
+      </div>
+
+      <div className="mt-6 grid gap-4 xl:grid-cols-2">
+        <Panel
+          icono="reloj"
+          titulo="Pruebas por terminar"
+          contador={enPrueba.length > 0 ? String(enPrueba.length) : undefined}
+        >
+          {enPrueba.length === 0 ? (
+            <p className="text-[15px] text-[#5A4F63]">Hoy no hay clubes en prueba.</p>
+          ) : (
+            <ul className="grid text-[15px]">
+              {enPrueba.slice(0, 6).map(({ fila, dias }) => (
+                <li key={fila.negocio.id} className="border-t border-[#EFE3D3] first:border-t-0">
+                  <a
+                    href={`/plataforma/${fila.negocio.slug}`}
+                    className="flex min-h-[48px] flex-wrap items-center justify-between gap-x-3 py-2"
+                  >
+                    <span className="font-semibold text-ink underline decoration-[#E8D8C6] underline-offset-4">
+                      {fila.negocio.nombre}
+                    </span>
+                    <span className={dias <= 3 ? 'font-semibold text-[#8C231B]' : 'text-[#5A4F63]'}>
+                      Termina en {plural(dias, 'día', 'días')} ·{' '}
+                      {plural(fila.tarjetas, 'tarjeta', 'tarjetas')}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+
+        <Panel
+          aviso={pausados.length > 0}
+          icono="pausa"
+          titulo="Clubes en pausa"
+          contador={pausados.length > 0 ? String(pausados.length) : undefined}
+        >
+          <p className="max-w-prose text-[14px] text-[#5A4F63]">
+            {automatico
+              ? 'Cada día a las 4:10 a. m. se borran solos los clubes con 30 días en pausa.'
+              : 'Nada se borra solo. Borra a mano desde la ficha de cada club.'}{' '}
+            {pausados.length === 0
+              ? 'Hoy no hay clubes en pausa.'
+              : `${listos.length} ya ${listos.length === 1 ? 'cumplió' : 'cumplieron'} 30 días.`}
+          </p>
+          {pausados.length > 0 && (
+            <ul className="mt-2 grid text-[15px]">
+              {pausados.slice(0, 6).map((c) => (
+                <li key={c.negocio.id} className="border-t border-[#EBD9A8]">
+                  <a
+                    href={`/plataforma/${c.negocio.slug}`}
+                    className="flex min-h-[48px] flex-wrap items-center justify-between gap-x-3 py-2"
+                  >
+                    <span className="font-semibold text-ink underline decoration-[#E0B45C] underline-offset-4">
+                      {c.negocio.nombre}
+                    </span>
+                    <span className={c.listo ? 'font-semibold text-[#8C231B]' : 'text-[#5B3B00]'}>
+                      {plural(c.diasEnPausa, 'día', 'días')} ·{' '}
+                      {plural(c.tarjetas, 'tarjeta', 'tarjetas')}
+                      {c.listo ? ' · listo para borrar' : ''}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form action={borradoAutomatico} className="mt-3">
             <input type="hidden" name="encender" value={automatico ? '0' : '1'} />
-            <button type="submit" className={BOTON} aria-pressed={automatico}>
+            <button
+              type="submit"
+              aria-pressed={automatico}
+              className="min-h-[44px] rounded-full border-[1.5px] border-[#E8D8C6] bg-white px-5 text-[14px] text-ink hover:border-ink"
+            >
               Borrado automático: <b>{automatico ? 'encendido' : 'apagado'}</b>
             </button>
           </form>
-        </div>
-        <p className="max-w-prose text-[14px] text-muted">
-          {automatico
-            ? 'Cada día a las 4:10 a. m. se borran solos los clubes con 30 días en pausa.'
-            : 'Apagado: nada se borra solo. Borra a mano desde la ficha de cada club.'}{' '}
-          {pausados.length === 0
-            ? 'Hoy no hay clubes en pausa.'
-            : `${pausados.length} en pausa; ${listos.length} ya ${listos.length === 1 ? 'cumplió' : 'cumplieron'} 30 días.`}
-        </p>
-        {pausados.length > 0 && (
-          <ul className="grid text-[15px]">
-            {pausados.map((c) => (
-              <li key={c.negocio.id} className="border-t border-rule">
-                <a
-                  href={`/plataforma/${c.negocio.slug}`}
-                  className="flex flex-wrap justify-between gap-3 py-2.5"
-                >
-                  <span className="text-ink">{c.negocio.nombre}</span>
-                  <span className={c.listo ? 'font-semibold text-agotado' : 'text-muted'}>
-                    {c.diasEnPausa} {c.diasEnPausa === 1 ? 'día' : 'días'} en pausa · {c.tarjetas}{' '}
-                    {c.tarjetas === 1 ? 'tarjeta' : 'tarjetas'}
-                    {c.listo ? ' · listo para borrar' : ''}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        </Panel>
+      </div>
 
-      {negocios.length === 0 ? (
-        <p className="text-muted">
-          Todavía no hay negocios.{' '}
-          <a href="/plataforma/nuevo" className="text-ink underline underline-offset-4">
-            Crea el primero.
-          </a>
-        </p>
-      ) : (
-        <ul className="grid">
-          {negocios.map(({ negocio, sucursales, tarjetas }) => (
-            <li key={negocio.id} className="border-t border-rule">
-              <a
-                href={`/plataforma/${negocio.slug}`}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-4"
-              >
-                <span className="grid gap-0.5">
-                  <b className="text-[18px] font-semibold text-ink">{negocio.nombre}</b>
-                  <span className="text-[14px] text-muted">
-                    /{negocio.slug}, {sucursales} {sucursales === 1 ? 'sucursal' : 'sucursales'},{' '}
-                    {tarjetas} {tarjetas === 1 ? 'tarjeta' : 'tarjetas'}
-                  </span>
-                </span>
-                <span className="flex items-center gap-2 text-[13px]">
-                  <span className="rounded-full border border-rule px-2.5 py-1 text-ink">
-                    {negocio.ajustes.plan === 'PRIVADA' ? 'Privada' : 'Lite'}
-                  </span>
-                  {estadoComercialDe(negocio) === 'PRUEBA' && (
-                    <span className="rounded-full border border-rule px-2.5 py-1 text-ink">
-                      En prueba
-                    </span>
-                  )}
-                  {estadoComercialDe(negocio) === 'PAUSADO' && (
-                    <span className="rounded-full bg-agotado/15 px-2.5 py-1 font-semibold text-agotado">
-                      En pausa ·{' '}
-                      {diasEnPausa(negocio.ajustes.pruebaVence, negocio.ajustes.pagadoHasta)} d
-                    </span>
-                  )}
-                  {arcadeVigente(negocio.ajustes.arcade) && (
-                    <span className="rounded-full border border-rule px-2.5 py-1 text-ink">
-                      Arcade
-                    </span>
-                  )}
-                  {!negocio.activo && (
-                    <span className="rounded-full bg-agotado/15 px-2.5 py-1 font-semibold text-agotado">
-                      Suspendido
-                    </span>
-                  )}
-                </span>
+      <div className="mt-6">
+        <Panel
+          icono="tienda"
+          titulo="Últimos clubes"
+          accion={
+            <a
+              href={RUTA_CLUBES}
+              className="inline-flex min-h-[44px] items-center gap-1 text-[14px] font-semibold text-ink"
+            >
+              Ver todos
+              <Icono nombre="chevron" tam={16} />
+            </a>
+          }
+        >
+          {recientes.length === 0 ? (
+            <p className="text-[15px] text-[#5A4F63]">
+              Todavía no hay clubes.{' '}
+              <a href="/plataforma/nuevo" className="text-ink underline underline-offset-4">
+                Crea el primero.
               </a>
-            </li>
-          ))}
-        </ul>
-      )}
+            </p>
+          ) : (
+            <ul>
+              {recientes.map((f) => (
+                <RenglonClub key={f.negocio.id} fila={f} />
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
     </MarcoPlataforma>
   );
 }

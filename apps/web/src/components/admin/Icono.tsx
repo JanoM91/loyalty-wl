@@ -39,6 +39,11 @@ const TRAZOS = {
   cerrar: 'M6 6l12 12M18 6L6 18',
   juegos:
     'M7.5 7.5h9a5 5 0 0 1 4.8 6.4l-.9 3a2.3 2.3 0 0 1-3.9.9L14.6 16H9.4l-1.9 1.8a2.3 2.3 0 0 1-3.9-.9l-.9-3a5 5 0 0 1 4.8-6.4zM8 10.5v3M6.5 12h3M15.5 11v.01M17.5 13v.01',
+  reloj: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M12 7.5V12l3 2',
+  pausa: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M10 9v6M14 9v6',
+  externo: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
+  nuevo: 'M12 5v14M5 12h14',
+  aviso: 'M12 4 3 20h18zM12 10v4.5M12 17.5h.01',
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;
