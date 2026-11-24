@@ -6,7 +6,7 @@ import type { NombreIcono } from '@/components/admin/Icono';
 /** Dirección de la lista de clubes. Vive en el inicio para no ocupar un slug. */
 export const RUTA_CLUBES = '/plataforma?vista=clubes';
 
-export type IdSeccionPlataforma = 'inicio' | 'clubes' | 'nuevo' | 'ajustes';
+export type IdSeccionPlataforma = 'inicio' | 'clubes' | 'nuevo' | 'avisos' | 'ajustes';
 
 export interface SeccionPlataforma {
   readonly id: IdSeccionPlataforma;
@@ -18,6 +18,8 @@ export interface SeccionPlataforma {
   readonly grupo: 'principal' | 'administracion';
   /** Palabras extra para encontrarla en la paleta. */
   readonly claves?: string;
+  /** Nombre corto para la barra inferior del celular; sin él, no va en la barra. */
+  readonly enBarra?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export const SECCIONES_PLATAFORMA: readonly SeccionPlataforma[] = [
     ruta: '/plataforma',
     icono: 'inicio',
     grupo: 'principal',
+    enBarra: 'Inicio',
   },
   {
     id: 'clubes',
@@ -42,6 +45,7 @@ export const SECCIONES_PLATAFORMA: readonly SeccionPlataforma[] = [
     icono: 'tienda',
     grupo: 'principal',
     claves: 'negocios lista',
+    enBarra: 'Clubes',
   },
   {
     id: 'nuevo',
@@ -53,6 +57,16 @@ export const SECCIONES_PLATAFORMA: readonly SeccionPlataforma[] = [
     claves: 'crear negocio alta',
   },
   {
+    id: 'avisos',
+    texto: 'Avisos a dueños',
+    descripcion: 'Escríbeles por correo a los dueños',
+    ruta: '/plataforma/avisos',
+    icono: 'chat',
+    grupo: 'administracion',
+    claves: 'correo mensaje comunicado comunicacion',
+    enBarra: 'Avisos',
+  },
+  {
     id: 'ajustes',
     texto: 'Precios y Arcade',
     descripcion: 'Lo que se cobra y la plantilla del Arcade',
@@ -60,6 +74,7 @@ export const SECCIONES_PLATAFORMA: readonly SeccionPlataforma[] = [
     icono: 'plan',
     grupo: 'administracion',
     claves: 'cobro juega y gana lite',
+    enBarra: 'Precios',
   },
 ];
 

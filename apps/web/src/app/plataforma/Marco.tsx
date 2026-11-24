@@ -137,19 +137,7 @@ export async function MarcoPlataforma({
             <span className="px-3.5 text-[12px] font-bold tracking-[.08em] text-[#FFF6EA]/60 uppercase">
               Administración
             </span>
-            <ul className="flex flex-col gap-1">
-              {administracion.map(enlaceMenu)}
-              <li
-                className="flex min-h-[46px] items-center gap-3 rounded-[13px] px-3.5 text-[15px] font-semibold text-[#FFF6EA]/55"
-                aria-disabled="true"
-              >
-                <Icono nombre="chat" tam={20} />
-                <span className="min-w-0 flex-1 truncate">Avisos a dueños</span>
-                <span className="rounded-full border border-[#FFF6EA]/30 px-2 py-0.5 text-[11px] font-semibold">
-                  Pronto
-                </span>
-              </li>
-            </ul>
+            <ul className="flex flex-col gap-1">{administracion.map(enlaceMenu)}</ul>
           </div>
 
           <div className="mt-auto flex flex-col gap-1 border-t border-white/15 pt-4">
@@ -237,8 +225,9 @@ export async function MarcoPlataforma({
         aria-label="Secciones"
         className="fixed inset-x-0 bottom-0 z-30 flex gap-1 border-t-[1.5px] border-[#E8D8C6] bg-white px-2.5 pt-1.5 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden"
       >
-        {SECCIONES_PLATAFORMA.map((s) => {
-          const on = s.id === actual;
+        {SECCIONES_PLATAFORMA.filter((s) => s.enBarra).map((s) => {
+          // «Nuevo club» no va en la barra: marca «Clubes».
+          const on = s.id === actual || (s.id === 'clubes' && actual === 'nuevo');
           const n = insignia(s.id);
           return (
             <a
@@ -252,7 +241,7 @@ export async function MarcoPlataforma({
               >
                 <Icono nombre={s.icono} tam={21} />
               </span>
-              {s.id === 'ajustes' ? 'Precios' : s.id === 'nuevo' ? 'Nuevo' : s.texto}
+              {s.enBarra}
               {n ? (
                 <span className="absolute top-1 right-[calc(50%-26px)] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#FF5B3A] px-1 text-[11px] font-bold text-white">
                   {n}

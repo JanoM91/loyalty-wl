@@ -32,6 +32,8 @@ export const SLUGS_RESERVADOS: ReadonlySet<string> = new Set([
   'belleza',
   'cafeterias',
   'nuevo',
+  'ajustes',
+  'avisos',
   'www',
   'app',
   'static',

@@ -187,6 +187,7 @@ export * from './plataforma-acceso';
 export * from './arcade';
 export * from './mensajes';
 export * from './avisos';
+export * from './avisos-plataforma';
 export * from './regalos';
 
 /** Acceso al panel del negocio: contraseñas, sesiones, roles y usuarios. */
