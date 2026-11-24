@@ -387,6 +387,8 @@ const ACCIONES: Record<string, string> = {
   'lealtad.rechazar': 'Pendiente rechazado',
   'lealtad.incidencia': 'Incidencia reportada',
   'lealtad.sucursal': 'Participación de sucursal',
+  'lealtad.exportar_clientes': 'Descargó la lista de clientes',
+  'lealtad.exportar_visitas': 'Descargó las visitas',
 };
 
 /** Últimos movimientos del programa en la bitácora inmutable. */
@@ -405,6 +407,7 @@ export async function bitacoraLealtad(limite = 30): Promise<EntradaBitacora[]> {
       m.motivo,
       m.sucursal,
       m.participa === undefined ? null : m.participa ? 'participa' : 'no participa',
+      typeof m.renglones === 'number' ? `${m.renglones} renglones` : null,
     ]
       .filter((x) => x !== null && x !== undefined && x !== '')
       .map(String);

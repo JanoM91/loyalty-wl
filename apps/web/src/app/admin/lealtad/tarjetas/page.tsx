@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
-import { listarTarjetas, programaVigente, type FiltroTarjetas } from '@wl/database';
+import { ROLES_USUARIOS, listarTarjetas, programaVigente, type FiltroTarjetas } from '@wl/database';
 
+import { DescargarClientes } from '@/components/admin/Descargas';
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { ROLES_PROGRAMA } from '@/lib/admin/lealtad';
 import { exigirRol } from '@/lib/admin/sesion';
 import { fechaCivil, fechaLarga } from '@/lib/lealtad/formato';
+import { rutaBase } from '@/lib/negocio';
 
 export const metadata: Metadata = { title: 'Clientes' };
 export const dynamic = 'force-dynamic';
@@ -25,10 +27,12 @@ export default async function TarjetasPage({
   const { q, filtro: f } = await searchParams;
   const filtro = (f && f in FILTROS ? f : 'todas') as FiltroTarjetas;
 
-  const [tarjetas, programa] = await Promise.all([
+  const [tarjetas, programa, base] = await Promise.all([
     listarTarjetas({ busqueda: q, filtro, limite: 200 }),
     programaVigente(),
+    rutaBase(),
   ]);
+  const administra = ROLES_USUARIOS.includes(sesion.rol);
 
   return (
     <MarcoPanel
@@ -36,6 +40,7 @@ export default async function TarjetasPage({
       actual="/admin/lealtad"
       titulo="Clientes"
       descripcion="Toca a un cliente para ver su tarjeta. Los contactos se muestran ocultos en parte."
+      acciones={administra ? <DescargarClientes base={base} /> : undefined}
     >
       <form className="mb-3 flex gap-2" role="search">
         {filtro !== 'todas' && <input type="hidden" name="filtro" value={filtro} />}
