@@ -1,7 +1,6 @@
 'use server';
 
 import { createHash } from 'node:crypto';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import {
   altasRecientes,
@@ -39,6 +38,8 @@ export interface EstadoAlta {
   readonly paso: 1 | 2 | 3 | null;
   /** El correo o el WhatsApp ya tienen club: se ofrece entrar en lugar de crear. */
   readonly yaTieneClub?: boolean;
+  /** Club creado: dirección de la pantalla final, que abre el navegador. */
+  readonly listo?: string;
 }
 
 const fallo = (error: string, paso: 1 | 2 | 3 = 3): EstadoAlta => ({ error, paso });
@@ -269,7 +270,14 @@ export async function crearClub(_previo: EstadoAlta, form: FormData): Promise<Es
   revalidatePath('/negocios');
   // Si la sesión no se pudo abrir, la pantalla final ofrece entrar con la
   // contraseña recién elegida.
-  redirect(
-    `/empezar/listo?n=${slug}${acceso ? '' : '&sin-sesion=1'}${logoGuardado ? '' : '&logo=0'}`,
-  );
+  //
+  // La dirección se devuelve y la abre el navegador en cuanto llega (ver
+  // `crearYAbrir` en el Asistente). Con `redirect()` aquí, a veces el
+  // navegador no terminaba de aplicar la respuesta: el club ya existía, pero
+  // el dueño se quedaba en «Creando tu club…».
+  return {
+    error: null,
+    paso: null,
+    listo: `/empezar/listo?n=${slug}${acceso ? '' : '&sin-sesion=1'}${logoGuardado ? '' : '&logo=0'}`,
+  };
 }
