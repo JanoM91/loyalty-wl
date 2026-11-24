@@ -60,3 +60,20 @@ En `/admin/marca` el dueño sube tres archivos (PNG, JPG o WebP, hasta 1 MB): lo
 - Editar desde plataforma los ajustes finos de un negocio (reglas de comprobante, zona horaria, prefijo) y agregar sucursales desde el panel del dueño.
 - Endurecer el acceso de plataforma (tercer rol de base, segundo factor).
 - Lo que sigue abierto en `03` y `04`: fotos privadas, fechas por zona horaria, E2E en CI, nombre y textos del sitio, herramienta lite → privada.
+
+## Equipo, bitácora, ingresos y actividad (24 nov 2026)
+
+| Pantalla | Para qué |
+| --- | --- |
+| `/plataforma/equipo` | Invitar a alguien (enlace de un solo uso, 72 h), generarle un enlace de contraseña, darlo de baja o reactivarlo |
+| `/plataforma/cuenta` | Cambiar la contraseña propia y cerrar las demás sesiones |
+| `/plataforma/entrar/recuperar` | «¿Olvidaste tu contraseña?»: enlace por correo (una hora, tres por hora) |
+| `/plataforma/bitacora` | Quién hizo qué, cuándo, desde qué IP y en qué club (tabla `platform_audit`) |
+| `/plataforma/ingresos` | Pagos registrados con importe, el mes, recurrente estimado y renovaciones en 30 días |
+| `/plataforma/actividad` | Visitas, tarjetas y último acceso por club, y «A quién llamar» con WhatsApp |
+| `/plataforma/exportar` | CSV para Excel de clubes y dueños (`?que=pagos` para los pagos) |
+
+- La terminal (`pnpm plataforma:usuario`, dentro de `packages/database`) sigue sirviendo por si nadie puede entrar.
+- Cada pago se registra con lo cobrado (tabla `platform_payment`) y se puede anular: si es el último, la fecha de pago regresa a la de antes. Los pagos anteriores al 24 nov no tienen importe.
+- Las tablas nuevas son de plataforma: el rol `wl_app` no tiene permisos sobre ellas.
+- Hallazgo: en Next 15.5, cuando una acción de servidor repinta la misma página (redirect a esa página con otros parámetros o `revalidatePath`), a veces la pantalla no cambia aunque el cambio sí se guardó. Pasa también en `main`. Los formularios nuevos hacen una carga completa de la página al terminar.

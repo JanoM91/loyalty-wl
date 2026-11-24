@@ -44,6 +44,12 @@ const TRAZOS = {
   externo: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
   nuevo: 'M12 5v14M5 12h14',
   aviso: 'M12 4 3 20h18zM12 10v4.5M12 17.5h.01',
+  pulso: 'M3 12h4l2.5-6 5 12 2.5-6h4',
+  dinero: 'M3 6h18v12H3zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M6.5 9.5h.01M17.5 14.5h.01',
+  bitacora: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01',
+  descargar: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+  llave:
+    'M14.5 13a4.5 4.5 0 1 0-4.24-3L3 17.25V21h3.75v-2.25H9V16.5h2.25l1.5-1.5a4.5 4.5 0 0 0 1.75-2',
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;

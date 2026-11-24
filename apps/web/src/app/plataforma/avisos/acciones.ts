@@ -6,6 +6,7 @@ import { dueniosDeClubes, listarNegocios, registrarAvisoPlataforma } from '@wl/d
 import { correoDeAviso, revisarAviso } from '@/lib/avisos-plataforma';
 import { CORREO_CONFIGURADO, enviarCorreo, enviarLote } from '@/lib/correo';
 import { audienciaDe } from '@/lib/plataforma/audiencia';
+import { anotar } from '@/lib/plataforma/bitacora';
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
 export interface EstadoAviso {
@@ -80,6 +81,10 @@ export async function enviarAviso(_previo: EstadoAviso, form: FormData): Promise
     enviados,
     fallidos,
     enviadoPor: sesion.email,
+  });
+  await anotar(sesion, 'aviso.enviar', {
+    club: audiencia.valor.startsWith('club:') ? audiencia.clubes[0]?.negocio : null,
+    detalle: { asunto, audiencia: audiencia.etiqueta, enviados, fallidos },
   });
   redirect(`/plataforma/avisos?enviados=${enviados}&fallidos=${fallidos}`);
 }

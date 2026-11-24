@@ -6,7 +6,18 @@ import type { NombreIcono } from '@/components/admin/Icono';
 /** Dirección de la lista de clubes. Vive en el inicio para no ocupar un slug. */
 export const RUTA_CLUBES = '/plataforma?vista=clubes';
 
-export type IdSeccionPlataforma = 'inicio' | 'clubes' | 'nuevo' | 'avisos' | 'ajustes';
+export type IdSeccionPlataforma =
+  | 'inicio'
+  | 'clubes'
+  | 'actividad'
+  | 'nuevo'
+  | 'ingresos'
+  | 'avisos'
+  | 'ajustes'
+  | 'equipo'
+  | 'bitacora'
+  | 'cuenta'
+  | 'mas';
 
 export interface SeccionPlataforma {
   readonly id: IdSeccionPlataforma;
@@ -48,6 +59,16 @@ export const SECCIONES_PLATAFORMA: readonly SeccionPlataforma[] = [
     enBarra: 'Clubes',
   },
   {
+    id: 'actividad',
+    texto: 'Actividad',
+    descripcion: 'Uso de cada club y a quién llamar',
+    ruta: '/plataforma/actividad',
+    icono: 'pulso',
+    grupo: 'principal',
+    claves: 'uso visitas llamar sin uso clubes dormidos',
+    enBarra: 'Actividad',
+  },
+  {
     id: 'nuevo',
     texto: 'Nuevo club',
     descripcion: 'Darlo de alta en una pantalla',
@@ -57,6 +78,16 @@ export const SECCIONES_PLATAFORMA: readonly SeccionPlataforma[] = [
     claves: 'crear negocio alta',
   },
   {
+    id: 'ingresos',
+    texto: 'Ingresos',
+    descripcion: 'Pagos registrados, el mes y renovaciones',
+    ruta: '/plataforma/ingresos',
+    icono: 'dinero',
+    grupo: 'administracion',
+    claves: 'pagos cobros dinero renovaciones mensualidad',
+    enBarra: 'Ingresos',
+  },
+  {
     id: 'avisos',
     texto: 'Avisos a dueños',
     descripcion: 'Escríbeles por correo a los dueños',
@@ -64,7 +95,6 @@ export const SECCIONES_PLATAFORMA: readonly SeccionPlataforma[] = [
     icono: 'chat',
     grupo: 'administracion',
     claves: 'correo mensaje comunicado comunicacion',
-    enBarra: 'Avisos',
   },
   {
     id: 'ajustes',
@@ -74,9 +104,40 @@ export const SECCIONES_PLATAFORMA: readonly SeccionPlataforma[] = [
     icono: 'plan',
     grupo: 'administracion',
     claves: 'cobro juega y gana lite',
-    enBarra: 'Precios',
+  },
+  {
+    id: 'equipo',
+    texto: 'Equipo',
+    descripcion: 'Quién entra a la plataforma',
+    ruta: '/plataforma/equipo',
+    icono: 'equipo',
+    grupo: 'administracion',
+    claves: 'usuarios cuentas invitar baja contraseña',
+  },
+  {
+    id: 'bitacora',
+    texto: 'Bitácora',
+    descripcion: 'Lo que hizo cada persona del equipo',
+    ruta: '/plataforma/bitacora',
+    icono: 'bitacora',
+    grupo: 'administracion',
+    claves: 'historial registro auditoria movimientos',
   },
 ];
+
+/** «Mi cuenta» va junto al nombre en el menú y en «Más»; no es una sección del menú. */
+export const SECCION_CUENTA: SeccionPlataforma = {
+  id: 'cuenta',
+  texto: 'Mi cuenta',
+  descripcion: 'Tu contraseña y tus sesiones',
+  ruta: '/plataforma/cuenta',
+  icono: 'cuenta',
+  grupo: 'administracion',
+  claves: 'contraseña sesiones cerrar',
+};
+
+/** Pestaña «Más» de la barra del celular: lleva a la lista completa. */
+export const PESTANA_MAS = { id: 'mas', texto: 'Más', ruta: '/plataforma/mas' } as const;
 
 /** Los negocios, una sola consulta por petición: la usan el marco y la página. */
 export const negociosDelPanel = cache((): Promise<NegocioEnLista[]> => listarNegocios());

@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
-import type { NegocioEnLista } from '@wl/database';
+import type { NegocioEnLista, PagoRegistrado } from '@wl/database';
 import { arcadeVigente, diasEnPausa, diasRestantesDePrueba } from '@wl/domain';
 
 import { Icono, type NombreIcono } from '@/components/admin/Icono';
 import { estadoDelClub } from '@/lib/plataforma/panel';
+
+import { AnularPago } from './FormulariosFicha';
 
 const TARJETA =
   'rounded-[20px] border-[1.5px] border-[#E8D8C6] bg-white transition-shadow hover:shadow-[0_18px_36px_-22px_rgba(18,10,42,.5)]';
@@ -201,5 +203,127 @@ export function RenglonClub({ fila }: { fila: NegocioEnLista }) {
         />
       </a>
     </li>
+  );
+}
+
+const DIA = 86_400_000;
+
+/** «Hoy», «Ayer», «Hace 5 días», «Hace 3 meses»; «Nunca» sin fecha. */
+export function hace(fecha: Date | null, ahora: Date = new Date()): string {
+  if (!fecha) return 'Nunca';
+  const dias = Math.floor((ahora.getTime() - fecha.getTime()) / DIA);
+  if (dias <= 0) return 'Hoy';
+  if (dias === 1) return 'Ayer';
+  if (dias < 60) return `Hace ${dias} días`;
+  return `Hace ${Math.floor(dias / 30)} meses`;
+}
+
+/** «$2,699» o «$269.50», a partir de centavos. */
+export function pesosDeCentavos(centavos: number): string {
+  return (centavos / 100).toLocaleString('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: centavos % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+const fechaCorta = (d: Date) =>
+  d.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'medium' });
+
+/**
+ * Historial de pagos registrados. Cada uno se puede anular (por si se registró
+ * por error); la confirmación va dentro de un desplegable.
+ */
+export function ListaPagos({
+  pagos,
+  conClub,
+}: {
+  pagos: readonly PagoRegistrado[];
+  /** Mostrar el club de cada pago (la página de Ingresos). */
+  conClub: boolean;
+}) {
+  if (pagos.length === 0) {
+    return (
+      <p className="text-[15px] text-[#5A4F63]">
+        Sin pagos registrados.{' '}
+        {conClub
+          ? 'Se registran desde la ficha de cada club.'
+          : 'Los anteriores a esta sección solo dejaron su fecha.'}
+      </p>
+    );
+  }
+  return (
+    <ul className="grid text-[15px]">
+      {pagos.map((p) => (
+        <li
+          key={p.id}
+          className={`grid gap-1 border-t border-[#EFE3D3] py-3 first:border-t-0 ${p.anulado ? 'opacity-60' : ''}`}
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <span className="font-semibold text-ink">
+              {conClub &&
+                (p.clubId ? (
+                  <a
+                    href={`/plataforma/${p.clubSlug}`}
+                    className="underline decoration-[#E8D8C6] underline-offset-4"
+                  >
+                    {p.clubNombre}
+                  </a>
+                ) : (
+                  `${p.clubNombre} (borrado)`
+                ))}
+              {conClub && ' · '}
+              {p.concepto === 'ARCADE' ? 'Juega y gana' : 'Lite'} ·{' '}
+              {p.periodo === 'ANIO' ? 'un año' : 'un mes'}
+            </span>
+            <span className={`font-semibold tabular-nums ${p.anulado ? 'line-through' : ''}`}>
+              {pesosDeCentavos(p.centavos)}
+            </span>
+          </div>
+          <p className="text-[13px] text-[#5A4F63]">
+            {fechaCorta(p.fecha)} · pagado hasta el {fechaCorta(p.hasta)} · {p.registro}
+            {p.nota ? ` · ${p.nota}` : ''}
+          </p>
+          {p.anulado ? (
+            <p className="text-[13px] font-semibold text-[#8C231B]">
+              Anulado el {fechaCorta(p.anulado.fecha)} por {p.anulado.quien}
+            </p>
+          ) : (
+            <AnularPago
+              desde={conClub ? 'ingresos' : 'ficha'}
+              pagoId={p.id}
+              antes={p.antes ? `al ${fechaCorta(p.antes)}` : 'a como estaba antes'}
+            />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Avisos que llegan en `?aviso=` tras una acción que recarga la página. */
+const AVISOS: Readonly<Record<string, { texto: string; error?: boolean }>> = {
+  pago: { texto: 'Pago registrado. Ya cuenta en Ingresos.' },
+  'pago-arcade': { texto: 'Pago de Juega y gana registrado: los clientes ya pueden jugar.' },
+  anulado: { texto: 'Pago anulado: la fecha de pago regresó a la de antes.' },
+  'anulado-solo': {
+    texto:
+      'Pago anulado. La fecha de pago no cambió porque hay un pago posterior o ya se había movido.',
+  },
+  alta: { texto: 'Cuenta reactivada.' },
+  baja: { texto: 'Cuenta dada de baja: ya no puede entrar.' },
+};
+
+export function AvisoDeAccion({ aviso }: { aviso: string | undefined }) {
+  const a = aviso ? AVISOS[aviso] : undefined;
+  if (!a) return null;
+  return (
+    <p
+      role="status"
+      className={`rounded-[14px] px-4 py-3 text-[15px] ${a.error ? 'bg-[#FBE0DC] text-[#8C231B]' : 'bg-ink text-cream'}`}
+    >
+      {a.texto}
+    </p>
   );
 }

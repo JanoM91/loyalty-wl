@@ -5,7 +5,9 @@ import { Icono } from '@/components/admin/Icono';
 import { Paleta } from '@/components/admin/Paleta';
 import { LogotipoClub } from '@/components/ClubLealtad';
 import {
+  PESTANA_MAS,
   SECCIONES_PLATAFORMA,
+  SECCION_CUENTA,
   estadoDelClub,
   negociosDelPanel,
   type IdSeccionPlataforma,
@@ -57,13 +59,20 @@ export async function MarcoPlataforma({
 
   // Verbos primero; después, cada club por su nombre, su dirección o su dueño.
   const comandos = [
-    ...SECCIONES_PLATAFORMA.map((s) => ({
+    ...[...SECCIONES_PLATAFORMA, SECCION_CUENTA].map((s) => ({
       id: `seccion-${s.id}`,
       texto: s.texto,
       grupo: 'Ir a',
       claves: `${s.descripcion} ${s.claves ?? ''}`,
       href: s.ruta,
     })),
+    {
+      id: 'exportar',
+      texto: 'Descargar clubes y dueños (Excel)',
+      grupo: 'Hacer',
+      claves: 'exportar csv excel lista correos whatsapp',
+      href: '/plataforma/exportar',
+    },
     ...negocios.map(({ negocio }) => ({
       id: `club-${negocio.id}`,
       texto: negocio.nombre,
@@ -141,7 +150,12 @@ export async function MarcoPlataforma({
           </div>
 
           <div className="mt-auto flex flex-col gap-1 border-t border-white/15 pt-4">
-            <div className="flex items-center gap-3 px-2 pb-2">
+            <a
+              href={SECCION_CUENTA.ruta}
+              aria-current={actual === 'cuenta' ? 'page' : undefined}
+              title="Mi cuenta"
+              className={`flex items-center gap-3 rounded-[13px] px-2 py-2 ${actual === 'cuenta' ? 'bg-white/15' : 'hover:bg-white/10'}`}
+            >
               <span
                 aria-hidden="true"
                 className="grid size-[38px] flex-none place-items-center rounded-full bg-white/10 font-display text-[16px] font-semibold"
@@ -150,9 +164,9 @@ export async function MarcoPlataforma({
               </span>
               <span className="flex min-w-0 flex-col">
                 <b className="truncate text-[14px] font-semibold">{sesion.nombre}</b>
-                <span className="truncate text-[12px] text-[#FFF6EA]/65">{sesion.email}</span>
+                <span className="truncate text-[12px] text-[#FFF6EA]/65">Mi cuenta</span>
               </span>
-            </div>
+            </a>
             {/* Cerrar sesión cambia el estado del servidor: va en un formulario. */}
             <form action={salir}>
               <button
@@ -225,10 +239,17 @@ export async function MarcoPlataforma({
         aria-label="Secciones"
         className="fixed inset-x-0 bottom-0 z-30 flex gap-1 border-t-[1.5px] border-[#E8D8C6] bg-white px-2.5 pt-1.5 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden"
       >
-        {SECCIONES_PLATAFORMA.filter((s) => s.enBarra).map((s) => {
-          // «Nuevo club» no va en la barra: marca «Clubes».
-          const on = s.id === actual || (s.id === 'clubes' && actual === 'nuevo');
-          const n = insignia(s.id);
+        {[
+          ...SECCIONES_PLATAFORMA.filter((s) => s.enBarra),
+          { ...PESTANA_MAS, icono: 'mas' as const, enBarra: PESTANA_MAS.texto },
+        ].map((s) => {
+          // «Nuevo club» no va en la barra: marca «Clubes». Lo que no está en la barra marca «Más».
+          const enLaBarra = SECCIONES_PLATAFORMA.some((x) => x.enBarra && x.id === actual);
+          const on =
+            s.id === actual ||
+            (s.id === 'clubes' && actual === 'nuevo') ||
+            (s.id === 'mas' && !enLaBarra && actual !== 'nuevo');
+          const n = s.id === 'mas' ? null : insignia(s.id as IdSeccionPlataforma);
           return (
             <a
               key={s.id}
