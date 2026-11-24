@@ -781,6 +781,25 @@ model PlatformSetting {
   @@map("platform_setting")
 }
 
+/// Avisos que Exkalibur mandó por correo a los dueños desde el panel de
+/// plataforma. Es el historial: qué se dijo, a quién y cuántos salieron. Como
+/// las demás tablas `platform_*`, solo el rol dueño la lee y escribe.
+model PlatformNotice {
+  id        String   @id @default(uuid()) @db.Uuid
+  subject   String   @db.VarChar(160)
+  body      String   @db.Text
+  /// A quién se mandó, en palabras: «Todos los clubes», «En prueba», el nombre de un club.
+  audience  String   @db.VarChar(160)
+  clubs     Int
+  sent      Int
+  failed    Int      @default(0)
+  sentBy    String   @map("sent_by") @db.VarChar(160)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([createdAt])
+  @@map("platform_notice")
+}
+
 // -----------------------------------------------------------------------------
 // Arcade del club (servicio adicional): juegos de habilidad que desbloquean
 // promociones. Qué puede usar cada club lo dice `settings.arcade` (plataforma);
