@@ -203,6 +203,15 @@ const SECCIONES: readonly SeccionPanel[] = [
     roles: ADMINISTRA,
   },
   {
+    id: 'avisos',
+    texto: 'Avisos de club-lealtad',
+    descripcion: 'Novedades y recordatorios del servicio',
+    ruta: '/admin/avisos',
+    icono: 'campana',
+    grupo: 'negocio',
+    roles: ADMINISTRA,
+  },
+  {
     id: 'ayuda',
     texto: 'Ayuda',
     descripcion: 'Cómo se usa, paso a paso',
@@ -369,6 +378,14 @@ export function comandosDelPanel(rol: Rol): ComandoPanel[] {
       grupo: 'Mensajes',
       ruta: '/admin/mensajes',
       claves: 'mensaje correo promoción campaña avisar escribir',
+      roles: ADMINISTRA,
+    },
+    {
+      id: 'avisos',
+      texto: 'Ver avisos de club-lealtad',
+      grupo: 'Tu negocio',
+      ruta: '/admin/avisos',
+      claves: 'avisos novedades club-lealtad noticias buzón mensajes del servicio',
       roles: ADMINISTRA,
     },
     {

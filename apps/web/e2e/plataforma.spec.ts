@@ -41,16 +41,16 @@ test('plataforma: pago → ingresos → anular → equipo → bitácora → desc
   await page.waitForLoadState('networkidle');
   const pago = page.locator('form:has(input[name=concepto][value=LITE])').first();
   await expect(pago.locator('input[name=importe]')).toHaveValue('269');
-  await pago.locator('input[name=nota]').fill('Transferencia E2E');
+  await pago.locator('input[name=nota]').fill(`Transferencia E2E ${n}`);
   await pago.getByRole('button', { name: 'Registrar pago' }).click();
   await expect(page.getByText('Pago registrado. Ya cuenta en Ingresos.')).toBeVisible();
-  await expect(page.getByText('Transferencia E2E')).toBeVisible();
+  await expect(page.getByText(`Transferencia E2E ${n}`)).toBeVisible();
 
   // 2. Ingresos lo cuenta y se puede anular.
   await page.goto('/plataforma/ingresos');
   await page.waitForLoadState('networkidle');
-  await expect(page.getByText('Transferencia E2E')).toBeVisible();
-  const renglon = page.locator('li', { hasText: 'Transferencia E2E' });
+  await expect(page.getByText(`Transferencia E2E ${n}`)).toBeVisible();
+  const renglon = page.locator('li', { hasText: `Transferencia E2E ${n}` });
   await renglon.getByText('Anular este pago').click();
   await renglon.getByRole('button', { name: 'Sí, anular' }).click();
   await expect(page.getByText(/^Pago anulado/)).toBeVisible();

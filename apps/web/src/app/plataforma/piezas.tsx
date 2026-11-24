@@ -312,6 +312,12 @@ const AVISOS: Readonly<Record<string, { texto: string; error?: boolean }>> = {
       'Pago anulado. La fecha de pago no cambió porque hay un pago posterior o ya se había movido.',
   },
   alta: { texto: 'Cuenta reactivada.' },
+  programado: {
+    texto: 'Aviso programado. Sale solo a la hora elegida (revisión cada 15 minutos).',
+  },
+  cancelado: { texto: 'Aviso cancelado: no saldrá.' },
+  'plantilla-borrada': { texto: 'Plantilla borrada.' },
+  estados: { texto: 'Estados de entrega actualizados con lo que reporta Resend.' },
   baja: { texto: 'Cuenta dada de baja: ya no puede entrar.' },
 };
 

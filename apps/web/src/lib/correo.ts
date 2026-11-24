@@ -77,16 +77,22 @@ export interface CorreoDeLote extends Correo {
  * Un lote rechazado (por ejemplo, por el límite diario del plan) cuenta
  * entero como fallido y se siguen intentando los demás.
  */
-export async function enviarLote(
-  correos: readonly CorreoDeLote[],
-): Promise<{ enviados: number; fallidos: number; error: string | null }> {
+export async function enviarLote(correos: readonly CorreoDeLote[]): Promise<{
+  enviados: number;
+  fallidos: number;
+  error: string | null;
+  /** Id de Resend de cada correo, en el mismo orden; null si no salió. */
+  ids: (string | null)[];
+}> {
   const clave = process.env.RESEND_API_KEY;
   const remitente = await remitenteDelNegocio();
+  const ids: (string | null)[] = correos.map(() => null);
   if (!clave || !remitente) {
     return {
       enviados: 0,
       fallidos: correos.length,
       error: 'El envío de correos todavía no está activo.',
+      ids,
     };
   }
   let enviados = 0;
@@ -113,6 +119,15 @@ export async function enviarLote(
       });
       if (r.ok) {
         enviados += parte.length;
+        // Resend responde `{ data: [{ id }] }` en el orden del lote.
+        const cuerpo = (await r.json().catch(() => null)) as {
+          data?: { id?: unknown }[];
+        } | null;
+        cuerpo?.data?.forEach((d, j) => {
+          // Sin id no hay cómo seguirlo, pero sí salió: se marca con un texto fijo.
+          ids[i + j] = typeof d?.id === 'string' ? d.id : 'sin-id';
+        });
+        for (let j = 0; j < parte.length; j += 1) ids[i + j] ??= 'sin-id';
       } else {
         fallidos += parte.length;
         const detalle = await r.text();
@@ -128,7 +143,42 @@ export async function enviarLote(
       error = 'Algunos correos no salieron. Inténtalo más tarde.';
     }
   }
-  return { enviados, fallidos, error };
+  return { enviados, fallidos, error, ids };
+}
+
+/**
+ * Último evento de los correos enviados más recientes (hasta `paginas` × 100),
+ * por id. Necesita una llave de Resend con acceso completo: con una que solo
+ * envía, Resend responde 401 o 403 y aquí se devuelve `permitido: false`.
+ */
+export async function eventosRecientes(
+  paginas = 3,
+): Promise<{ permitido: boolean; eventos: Map<string, string> }> {
+  const clave = process.env.RESEND_API_KEY;
+  const eventos = new Map<string, string>();
+  if (!clave) return { permitido: false, eventos };
+  let despues: string | null = null;
+  for (let p = 0; p < paginas; p += 1) {
+    const url = `${API}/emails?limit=100${despues ? `&after=${encodeURIComponent(despues)}` : ''}`;
+    try {
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${clave}` } });
+      if (r.status === 401 || r.status === 403) return { permitido: false, eventos };
+      if (!r.ok) break;
+      const cuerpo = (await r.json()) as {
+        data?: { id?: string; last_event?: string }[];
+        has_more?: boolean;
+      };
+      const datos = cuerpo.data ?? [];
+      for (const d of datos) if (d.id && d.last_event) eventos.set(d.id, d.last_event);
+      if (!cuerpo.has_more || datos.length === 0) break;
+      despues = datos.at(-1)?.id ?? null;
+      if (!despues) break;
+    } catch (e) {
+      console.error('No se pudo leer el estado de los correos en Resend', e);
+      break;
+    }
+  }
+  return { permitido: true, eventos };
 }
 
 export async function enviarCorreo(c: Correo): Promise<ResultadoCorreo> {

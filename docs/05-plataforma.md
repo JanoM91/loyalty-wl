@@ -77,3 +77,10 @@ En `/admin/marca` el dueño sube tres archivos (PNG, JPG o WebP, hasta 1 MB): lo
 - Cada pago se registra con lo cobrado (tabla `platform_payment`) y se puede anular: si es el último, la fecha de pago regresa a la de antes. Los pagos anteriores al 24 nov no tienen importe.
 - Las tablas nuevas son de plataforma: el rol `wl_app` no tiene permisos sobre ellas.
 - Hallazgo: en Next 15.5, cuando una acción de servidor repinta la misma página (redirect a esa página con otros parámetros o `revalidatePath`), a veces la pantalla no cambia aunque el cambio sí se guardó. Pasa también en `main`. Los formularios nuevos hacen una carga completa de la página al terminar.
+
+## Avisos completos y buzón del dueño (24 nov 2026)
+
+- `/plataforma/avisos`: plantillas (guardar y empezar desde una), enviar ahora o **programar** (hora del centro de México, hasta 60 días; se cancela mientras no sale). La tarea `/api/cron/avisos-plataforma` corre cada 15 minutos y calcula la audiencia al salir.
+- `/plataforma/avisos/<id>`: cada destinatario con su estado (Enviado, Entregado, Abierto, Rebotó…) y botón de WhatsApp con el aviso escrito. «Actualizar estados» lee `GET /emails` de Resend: necesita una llave con acceso completo; con una que solo envía, lo dice.
+- Cada aviso deja una copia en el buzón del club (`club_notice`, con RLS): el dueño lo ve en `/admin/avisos` («Avisos de club-lealtad», con contador de no leídos en el menú). La aplicación solo puede leerlo y marcar `read_at`.
+- Arreglo: «Enviar aviso» ya no redirige a la misma página con `?enviados=` (a veces no se veía el resultado); ahora abre el detalle del aviso.

@@ -35,6 +35,10 @@ export const ACCIONES: Readonly<Record<string, string>> = {
   'plataforma.plantilla_arcade': 'Cambió la plantilla del Arcade',
   'plataforma.exportar': 'Descargó la lista de clubes y dueños',
   'aviso.enviar': 'Mandó un aviso a dueños',
+  'aviso.programar': 'Programó un aviso a dueños',
+  'aviso.programado_salio': 'Salió un aviso programado',
+  'aviso.cancelar': 'Canceló un aviso programado',
+  'aviso.plantilla_borrar': 'Borró una plantilla de avisos',
 };
 
 /** El texto de una acción; si no está en la lista, la clave tal cual. */

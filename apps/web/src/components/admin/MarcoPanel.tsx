@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { headers } from 'next/headers';
-import { ROLES_DIRECCION, prisma } from '@wl/database';
+import { ROLES_DIRECCION, ROLES_USUARIOS, avisosSinLeer, prisma } from '@wl/database';
 
 import type { Sesion } from '@/lib/admin/sesion';
 import {
@@ -162,10 +162,16 @@ export async function MarcoPanel({
 
   const secciones = seccionesDelPanel(sesion.rol).filter((s) => s.id !== 'plan' || conPlan);
   const pestanas = barraInferior(sesion.rol);
-  const pendientes = dirige
-    ? await prisma.loyaltyAccrual.count({ where: { status: 'PENDIENTE' } })
-    : 0;
-  const insignia = (id: string) => (id === 'pendientes' && pendientes > 0 ? pendientes : null);
+  const administra = ROLES_USUARIOS.includes(sesion.rol);
+  const [pendientes, avisos] = await Promise.all([
+    dirige ? prisma.loyaltyAccrual.count({ where: { status: 'PENDIENTE' } }) : 0,
+    administra ? avisosSinLeer() : 0,
+  ]);
+  const insignia = (id: string) => {
+    if (id === 'pendientes' && pendientes > 0) return pendientes;
+    if (id === 'avisos' && avisos > 0) return avisos;
+    return null;
+  };
   const grupos: GrupoSeccion[] = ['principal', 'programa', 'clientes', 'negocio'];
 
   const enlaceMenu = (s: (typeof secciones)[number]) => {
@@ -301,7 +307,7 @@ export async function MarcoPanel({
           // Lo que vive en «Más» marca «Más»: así se sabe dónde se está.
           const enMas = activa !== null && !pestanas.some((x) => x.id === activa && x.id !== 'mas');
           const on = t.id === activa || (t.id === 'mas' && enMas);
-          const n = t.id === 'mas' ? (pendientes > 0 ? pendientes : null) : null;
+          const n = t.id === 'mas' && pendientes + avisos > 0 ? pendientes + avisos : null;
           return (
             <a
               key={t.id}

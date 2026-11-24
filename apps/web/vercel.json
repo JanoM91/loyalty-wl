@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/regalos",
       "schedule": "10 16 * * *"
+    },
+    {
+      "path": "/api/cron/avisos-plataforma",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
