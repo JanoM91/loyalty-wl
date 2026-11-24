@@ -145,6 +145,9 @@ export async function darRegalo(
         period: periodo,
         title: r.titulo.slice(0, 80),
         expiresAt: vence,
+        // Sigue al reloj recibido (en producción, la hora actual): así «dado el»
+        // y «vence el» salen de la misma fecha y las pruebas no dependen del día.
+        createdAt: ahora,
       },
       select: { id: true },
     });

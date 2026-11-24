@@ -185,52 +185,64 @@ describe.skipIf(!CON_BD)('regalos automáticos', () => {
   });
 
   it('la caja ve el regalo y lo entrega una sola vez, solo con la tarjeta verificada', async () => {
-    const vista = await en(a, () => db.vistaCaja(codigos.ausente!, sucursal));
+    const vista = await en(a, () => db.vistaCaja(codigos.ausente!, sucursal, ahora));
     const regalo = vista?.premiosDisponibles.find((p) => p.regalo);
     expect(regalo).toMatchObject({ nombre: 'Te extrañamos: Un café', tipo: 'REGALO_REGRESO' });
     const id = regalo!.id.slice(db.PREFIJO_REGALO.length);
 
     const ajena = await en(a, () =>
-      db.entregarRegalo({
-        regaloId: id,
-        codigo: codigos.reciente!,
-        sucursalId: sucursal,
-        usuarioId: usuario,
-      }),
+      db.entregarRegalo(
+        {
+          regaloId: id,
+          codigo: codigos.reciente!,
+          sucursalId: sucursal,
+          usuarioId: usuario,
+        },
+        ahora,
+      ),
     );
     expect(ajena).toMatchObject({ ok: false });
 
     const ok = await en(a, () =>
-      db.entregarRegalo({
-        regaloId: id,
-        codigo: codigos.ausente!,
-        sucursalId: sucursal,
-        usuarioId: usuario,
-      }),
+      db.entregarRegalo(
+        {
+          regaloId: id,
+          codigo: codigos.ausente!,
+          sucursalId: sucursal,
+          usuarioId: usuario,
+        },
+        ahora,
+      ),
     );
     expect(ok).toEqual({ ok: true, tipo: 'REGALO_REGRESO', nombre: 'Te extrañamos: Un café' });
     const otraVez = await en(a, () =>
-      db.entregarRegalo({
-        regaloId: id,
-        codigo: codigos.ausente!,
-        sucursalId: sucursal,
-        usuarioId: usuario,
-      }),
+      db.entregarRegalo(
+        {
+          regaloId: id,
+          codigo: codigos.ausente!,
+          sucursalId: sucursal,
+          usuarioId: usuario,
+        },
+        ahora,
+      ),
     );
     expect(otraVez).toMatchObject({ ok: false });
 
     // El de cumpleaños de una tarjeta sin verificar se conserva.
-    const sinVerificar = await en(a, () => db.regalosDeTarjeta(ids.cumpleSinCorreo!));
+    const sinVerificar = await en(a, () => db.regalosDeTarjeta(ids.cumpleSinCorreo!, ahora));
     const r = await en(a, () =>
-      db.entregarRegalo({
-        regaloId: sinVerificar[0]!.id,
-        codigo: codigos.cumpleSinCorreo!,
-        sucursalId: sucursal,
-        usuarioId: usuario,
-      }),
+      db.entregarRegalo(
+        {
+          regaloId: sinVerificar[0]!.id,
+          codigo: codigos.cumpleSinCorreo!,
+          sucursalId: sucursal,
+          usuarioId: usuario,
+        },
+        ahora,
+      ),
     );
     expect(r).toMatchObject({ ok: false });
-    expect(await en(a, () => db.regalosDeTarjeta(ids.cumpleSinCorreo!))).toHaveLength(1);
+    expect(await en(a, () => db.regalosDeTarjeta(ids.cumpleSinCorreo!, ahora))).toHaveLength(1);
   });
 
   it('un regalo vencido ya no aparece ni se entrega', async () => {
