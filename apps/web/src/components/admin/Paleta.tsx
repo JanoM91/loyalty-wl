@@ -31,6 +31,9 @@ export function Paleta({
   buscarClientes,
   claseBoton,
   variante = 'acciones',
+  etiqueta = 'Buscar cliente o acción',
+  marcador = 'Sumar sello, buscar cliente, premio, cartel…',
+  sugerencia = 'Prueba «sello», «premio» o «cartel».',
 }: {
   comandos: readonly ComandoPaleta[];
   /** Dirección de la lista de clientes, para «Buscar cliente…». Null: sin búsqueda. */
@@ -38,9 +41,16 @@ export function Paleta({
   claseBoton?: string;
   /**
    * «buscar»: lupa sola en el celular y barra de búsqueda en la computadora.
+   * «barra»: barra de búsqueda a todo lo ancho, también en el celular.
    * Debe haber una sola paleta por pantalla: cada una escucha ⌘K.
    */
-  variante?: 'acciones' | 'buscar';
+  variante?: 'acciones' | 'buscar' | 'barra';
+  /** Texto del botón que la abre (variantes «buscar» y «barra»). */
+  etiqueta?: string;
+  /** Texto de ejemplo dentro del campo. */
+  marcador?: string;
+  /** Qué probar cuando no hay resultados. */
+  sugerencia?: string;
 }) {
   const router = useRouter();
   const [abierta, setAbierta] = useState(false);
@@ -117,13 +127,43 @@ export function Paleta({
 
   return (
     <>
-      {variante === 'buscar' ? (
+      {variante === 'barra' ? (
         <button
           ref={boton}
           type="button"
           onClick={() => setAbierta(true)}
           aria-haspopup="dialog"
-          aria-label="Buscar cliente o acción"
+          aria-label={etiqueta}
+          className={
+            claseBoton ??
+            'flex min-h-[60px] w-full items-center gap-3 rounded-[18px] border-[1.5px] border-[#E8D8C6] bg-white pr-3 pl-5 text-left text-[17px] text-[#5A4F63] transition-shadow hover:shadow-[0_14px_30px_-18px_rgba(18,10,42,.55)]'
+          }
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            aria-hidden="true"
+            className="flex-none text-ink"
+          >
+            <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14M20 20l-4-4" />
+          </svg>
+          <span className="min-w-0 flex-1 truncate">{etiqueta}</span>
+          <kbd className="hidden rounded-md bg-crumb px-1.5 py-0.5 font-sans text-[12px] font-semibold text-ink lg:inline">
+            ⌘K
+          </kbd>
+        </button>
+      ) : variante === 'buscar' ? (
+        <button
+          ref={boton}
+          type="button"
+          onClick={() => setAbierta(true)}
+          aria-haspopup="dialog"
+          aria-label={etiqueta}
           className={
             claseBoton ??
             'inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-[#E8D8C6] bg-white text-ink transition-shadow hover:shadow-[0_10px_24px_-16px_rgba(6,35,28,.6)] lg:w-[320px] lg:justify-start lg:pr-2 lg:pl-3.5 lg:text-[15px] lg:text-[#5A4F63]'
@@ -141,7 +181,7 @@ export function Paleta({
           >
             <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14M20 20l-4-4" />
           </svg>
-          <span className="hidden flex-1 text-left lg:inline">Buscar cliente o acción</span>
+          <span className="hidden flex-1 text-left lg:inline">{etiqueta}</span>
           <kbd className="hidden rounded-md bg-crumb px-1.5 py-0.5 font-sans text-[12px] font-semibold text-ink lg:inline">
             ⌘K
           </kbd>
@@ -205,7 +245,7 @@ export function Paleta({
                 aria-controls={idLista}
                 aria-activedescendant={resultados[activo] ? `${idLista}-${activo}` : undefined}
                 aria-label="Escribe una acción o el nombre de un cliente"
-                placeholder="Sumar sello, buscar cliente, premio, cartel…"
+                placeholder={marcador}
                 className="min-h-[58px] flex-1 border-0 bg-transparent text-[17px] text-ink outline-none"
               />
               <button
@@ -233,7 +273,7 @@ export function Paleta({
               ))}
               {resultados.length === 0 && (
                 <li className="px-3 py-3.5 text-[14px] text-muted">
-                  Nada con «{q}». Prueba «sello», «premio» o «cartel».
+                  Nada con «{q}». {sugerencia}
                 </li>
               )}
             </ul>

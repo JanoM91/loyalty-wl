@@ -16,6 +16,7 @@ import {
   pesos,
 } from '@wl/domain';
 
+import { RUTA_CLUBES } from '@/lib/plataforma/panel';
 import { exigirPlataforma } from '@/lib/plataforma/sesion';
 
 import { CamposPermisos } from '../FormPermisos';
@@ -33,7 +34,7 @@ import {
   suspender,
 } from '../acciones';
 
-export const metadata: Metadata = { title: 'Negocio' };
+export const metadata: Metadata = { title: 'Club' };
 export const dynamic = 'force-dynamic';
 
 const BOTON =
@@ -88,6 +89,9 @@ export default async function NegocioPage({
   return (
     <MarcoPlataforma
       sesion={sesion}
+      actual="clubes"
+      enTarjeta
+      miga={{ texto: 'Clubes', ruta: RUTA_CLUBES }}
       titulo={negocio.nombre}
       descripcion={`${privada ? 'Privada' : 'Lite'}${negocio.activo ? '' : ', suspendido'}. ${fila.sucursales} ${fila.sucursales === 1 ? 'sucursal' : 'sucursales'}, ${fila.tarjetas} ${fila.tarjetas === 1 ? 'tarjeta' : 'tarjetas'}, ${fila.usuarios} ${fila.usuarios === 1 ? 'cuenta' : 'cuentas'} de panel.`}
     >
