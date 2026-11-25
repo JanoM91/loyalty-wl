@@ -1,4 +1,7 @@
+import { sellosCercaDelPremio } from '@wl/domain';
+
 import { prisma, negocioActual } from '../index';
+import { programaVigente } from './programa';
 
 /**
  * Analítica del programa de lealtad para Administración, Dueño y Gerencia.
@@ -93,6 +96,15 @@ export interface AnaliticaLealtad {
   readonly porSucursal: readonly SucursalAnalitica[];
   readonly captura: readonly CategoriaCaptura[];
   readonly premios: readonly PremioAnalitica[];
+  /** Posiciones (sellos) en las que el programa vigente da premio. */
+  readonly posicionesPremio: readonly number[];
+  /** Sellos con los que a la tarjeta le falta una visita para un premio. */
+  readonly cercaDelPremio: readonly number[];
+  /**
+   * Días (mediana) entre la tarjeta nueva y su primer premio, de quienes ya
+   * lo ganaron; null si nadie ha llegado.
+   */
+  readonly diasAlPrimerPremio: number | null;
 }
 
 interface FilaResumen {
@@ -124,7 +136,12 @@ export const DIAS_ANALITICA = 28;
 
 export async function analiticaLealtad(dias = DIAS_ANALITICA): Promise<AnaliticaLealtad> {
   const zona = (await negocioActual()).zonaHoraria;
-  const [resumen, porDia, verificacion, estampas, porSucursal, captura, premios] =
+  const programa = await programaVigente();
+  const posicionesPremio = [...new Set(programa.hitos.map((h) => h.posicion))].sort(
+    (a, b) => a - b,
+  );
+  const cerca = sellosCercaDelPremio(posicionesPremio);
+  const [resumen, porDia, verificacion, estampas, porSucursal, captura, premios, primerPremio] =
     await Promise.all([
       prisma.$queryRaw<FilaResumen[]>`
         WITH hoy AS (SELECT (now() AT TIME ZONE ${zona}::text)::date AS d),
@@ -153,7 +170,7 @@ export async function analiticaLealtad(dias = DIAS_ANALITICA): Promise<Analitica
           (SELECT count(*) FROM loyalty_accrual WHERE status = 'PENDIENTE')::int AS pendientes_revision,
           (SELECT count(*) FROM a WHERE photo_url IS NOT NULL OR ticket_folio NOT LIKE 'SF-%')::int AS visitas_con_comprobante,
           (SELECT coalesce(sum(stamps), 0) FROM c)::int AS estampas_en_circulacion,
-          (SELECT count(*) FROM c WHERE stamps IN (4, 9))::int AS tarjetas_cerca_premio`,
+          (SELECT count(*) FROM c WHERE stamps = ANY(${cerca}::int[]))::int AS tarjetas_cerca_premio`,
       prisma.$queryRaw<DiaAnalitica[]>`
         WITH hoy AS (SELECT (now() AT TIME ZONE ${zona}::text)::date AS d),
         dias AS (SELECT (hoy.d - g)::date AS dia FROM hoy, generate_series((${dias}::int) - 1, 0, -1) AS g),
@@ -211,6 +228,12 @@ export async function analiticaLealtad(dias = DIAS_ANALITICA): Promise<Analitica
           count(*) FILTER (WHERE r.redeemed_at IS NOT NULL)::int AS entregados,
           count(*) FILTER (WHERE r.redeemed_at IS NULL)::int AS disponibles
         FROM loyalty_reward r GROUP BY 1, 2 ORDER BY 2`,
+      prisma.$queryRaw<{ dias: number | null }[]>`
+        SELECT percentile_cont(0.5) WITHIN GROUP (
+                 ORDER BY extract(epoch FROM (r.primero - c.created_at)) / 86400
+               )::float8 AS dias
+          FROM (SELECT card_id, min(created_at) AS primero FROM loyalty_reward GROUP BY 1) r
+          JOIN loyalty_card c ON c.id = r.card_id`,
     ]);
 
   const r = resumen[0];
@@ -246,5 +269,9 @@ export async function analiticaLealtad(dias = DIAS_ANALITICA): Promise<Analitica
     porSucursal,
     captura,
     premios,
+    posicionesPremio,
+    cercaDelPremio: cerca,
+    diasAlPrimerPremio:
+      typeof primerPremio[0]?.dias === 'number' ? Math.round(primerPremio[0].dias * 10) / 10 : null,
   };
 }

@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
-import { borradoAutomaticoEncendido, clubesEnPausa, type NegocioEnLista } from '@wl/database';
+import {
+  borradoAutomaticoEncendido,
+  clubesEnPausa,
+  solicitudesPrivadaPendientes,
+  type NegocioEnLista,
+} from '@wl/database';
 import { diasRestantesDePrueba } from '@wl/domain';
 
 import { Icono } from '@/components/admin/Icono';
@@ -161,7 +166,10 @@ export default async function PlataformaPage({
     );
   }
 
-  const pausados = await clubesEnPausa(ahora, negocios);
+  const [pausados, quierenPrivada] = await Promise.all([
+    clubesEnPausa(ahora, negocios),
+    solicitudesPrivadaPendientes(),
+  ]);
   const listos = pausados.filter((c) => c.listo);
   const enPrueba = por('prueba')
     .map((f) => ({ fila: f, dias: diasRestantesDePrueba(f.negocio.ajustes.pruebaVence, ahora) }))
@@ -249,6 +257,40 @@ export default async function PlataformaPage({
       </div>
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
+        {quierenPrivada.length > 0 && (
+          <Panel
+            icono="plan"
+            titulo="Quieren pasar a Privada"
+            contador={String(quierenPrivada.length)}
+            aviso
+          >
+            <ul className="grid text-[15px]">
+              {quierenPrivada.slice(0, 6).map((p) => (
+                <li key={p.clubId} className="border-t border-[#EFE3D3] first:border-t-0">
+                  <a href={`/plataforma/${p.slug}`} className="grid min-h-[48px] gap-0.5 py-2">
+                    <span className="flex flex-wrap items-center justify-between gap-x-3">
+                      <span className="font-semibold text-ink underline decoration-[#E8D8C6] underline-offset-4">
+                        {p.nombre}
+                      </span>
+                      <span className="text-[#5A4F63]">
+                        {p.fecha.toLocaleDateString('es-MX', {
+                          timeZone: 'America/Mexico_City',
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                        {p.quien ? ` · ${p.quien}` : ''}
+                      </span>
+                    </span>
+                    {p.nota && <span className="text-[14px] text-[#5A4F63]">«{p.nota}»</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-[13px] text-[#5A4F63]">
+              Desaparece de aquí cuando el club pasa a Privada en su ficha.
+            </p>
+          </Panel>
+        )}
         <Panel
           icono="reloj"
           titulo="Pruebas por terminar"

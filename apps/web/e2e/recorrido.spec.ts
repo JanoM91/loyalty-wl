@@ -106,4 +106,16 @@ test('alta → panel → tarjeta del cliente → caja suma la visita → premio'
   await tel.goto(`/${slug}/lealtad/premios`);
   await expect(tel.getByText('Ya entregados')).toBeVisible();
   await cliente.close();
+
+  // 8. Números: el Resumen es para todos; las vistas por periodo son de
+  //    Privada, y el dueño la pide desde «Mi plan».
+  await page.goto(`/${slug}/admin/lealtad/analitica`);
+  await expect(page.getByRole('heading', { name: 'Camino al premio' })).toBeVisible();
+  await page.getByRole('link', { name: /^Tendencias/ }).click();
+  await page.waitForURL(/tab=tendencias/);
+  await expect(page.getByText('Esta vista es parte de Privada')).toBeVisible();
+  await page.getByRole('link', { name: 'Ver Privada en Mi plan' }).click();
+  await page.waitForURL(/\/admin\/plan/);
+  await page.getByRole('button', { name: 'Quiero pasar a Privada' }).click();
+  await expect(page.getByText(/Recibimos tu solicitud/)).toBeVisible();
 });

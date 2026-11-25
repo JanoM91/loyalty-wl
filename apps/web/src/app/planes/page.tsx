@@ -9,6 +9,7 @@ import {
 } from '@/components/sitio/Marco';
 import { pesos, type PrecioPeriodo } from '@wl/domain';
 
+import { PRIVADA } from '@/lib/planes';
 import { precios } from '@/lib/precios';
 import { exigirSitioDelServicio, metadatosDelSitio } from '@/lib/sitio';
 
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = metadatosDelSitio(
   'Planes',
-  'Lite: tu club dentro de club-lealtad.com. Privada: tu propio dominio, diseño a la medida y acompañamiento.',
+  `Lite: tu club dentro de club-lealtad.com. Privada: ${PRIVADA.frase.charAt(0).toLowerCase()}${PRIVADA.frase.slice(1)}`,
 );
 
 const planes = (lite: PrecioPeriodo) =>
@@ -37,16 +38,10 @@ const planes = (lite: PrecioPeriodo) =>
     },
     {
       nombre: 'Privada',
-      precio: 'Cotización en la demo',
-      nota: 'Según tu marca y tus sucursales.',
+      precio: PRIVADA.precio,
+      nota: PRIVADA.nota,
       oscuro: true,
-      incluye: [
-        'Tu propio dominio y página de inicio',
-        'Diseño a la medida',
-        'Instalación solo para ti',
-        'Mensajes a tus clientes por correo',
-        'Reportes completos y acompañamiento',
-      ],
+      incluye: PRIVADA.incluye,
     },
   ] as const;
 
@@ -136,11 +131,7 @@ export default async function Planes() {
             pie="Mi marca ya pesa"
             detras="Varias sucursales, tu sitio, un diseño que nadie más tiene."
           />
-          <Revela
-            titulo="Empezar en Lite"
-            pie="Y crecer después"
-            detras="Pasas a Privada cuando quieras. La migración la planeamos contigo."
-          />
+          <Revela titulo="Empezar en Lite" pie="Y crecer después" detras={PRIVADA.migracion} />
         </div>
       </Seccion>
       <Cierre titulo="Lo decidimos juntos en la demo" />
