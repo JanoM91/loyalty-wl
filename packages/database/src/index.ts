@@ -38,8 +38,9 @@ export class RolInseguroError extends Error {
   constructor(detalle: string) {
     super(
       `La aplicación está conectada a la base con un rol que se salta el aislamiento entre negocios (${detalle}). ` +
-        'DATABASE_URL debe usar un rol miembro de wl_app que no sea dueño de las tablas ni tenga BYPASSRLS. ' +
-        'El rol dueño va solo en DIRECT_URL, para las migraciones.',
+        'DATABASE_URL debe usar un rol miembro de wl_app que no sea dueño de las tablas, no tenga BYPASSRLS ' +
+        'ni sea del panel de plataforma (wl_plataforma). El rol dueño va solo en DIRECT_URL, para las migraciones; ' +
+        'el de plataforma, en DATABASE_URL_PLATAFORMA.',
     );
     this.name = 'RolInseguroError';
   }
@@ -52,18 +53,28 @@ export class RolInseguroError extends Error {
  */
 export function comprobarRolDeConexion(): Promise<void> {
   candado ??= (async () => {
-    const filas = await base.$queryRaw<{ salta: boolean; duenio: boolean; usuario: string }[]>`
+    const filas = await base.$queryRaw<
+      { salta: boolean; duenio: boolean; plataforma: boolean; usuario: string }[]
+    >`
       SELECT
         (SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user) AS salta,
         EXISTS (
           SELECT 1 FROM pg_tables
           WHERE schemaname = 'public' AND tablename = 'loyalty_card' AND tableowner = current_user
         ) AS duenio,
+        EXISTS (
+          SELECT 1 FROM pg_roles r
+          WHERE r.rolname = 'wl_plataforma' AND pg_has_role(current_user, r.oid, 'MEMBER')
+        ) AS plataforma,
         current_user::text AS usuario`;
     const f = filas[0];
     if (!f) throw new RolInseguroError('no se pudo leer el rol');
     if (f.salta) throw new RolInseguroError(`«${f.usuario}» es superusuario o tiene BYPASSRLS`);
     if (f.duenio) throw new RolInseguroError(`«${f.usuario}» es dueño de las tablas`);
+    // El rol de plataforma ve todos los clubes por diseño: la app no puede usarlo.
+    if (f.plataforma) {
+      throw new RolInseguroError(`«${f.usuario}» es del panel de plataforma (wl_plataforma)`);
+    }
   })().catch((e) => {
     candado = null;
     throw e;
