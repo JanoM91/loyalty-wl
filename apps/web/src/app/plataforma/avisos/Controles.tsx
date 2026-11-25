@@ -1,18 +1,17 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState } from 'react';
+
+import { recargarAlTerminar } from '@/lib/recargar-al-terminar';
 
 import { actualizarEstados, borrarPlantilla, cancelarAviso, type EstadoEntregas } from './acciones';
 
 const INICIAL: EstadoEntregas = { mensaje: null };
+const cancelarYRecargar = recargarAlTerminar(cancelarAviso, (e) => e.recargar);
+const borrarYRecargar = recargarAlTerminar(borrarPlantilla, (e) => e.recargar);
+const actualizarYRecargar = recargarAlTerminar(actualizarEstados, (e) => e.recargar);
 const BOTON =
   'min-h-[40px] rounded-full border-[1.5px] border-[#E8D8C6] bg-white px-4 text-[14px] font-semibold text-ink hover:border-ink disabled:opacity-50';
-
-function useRecargar(estado: EstadoEntregas) {
-  useEffect(() => {
-    if (estado.recargar) window.location.assign(estado.recargar);
-  }, [estado]);
-}
 
 function Mensaje({ estado }: { estado: EstadoEntregas }) {
   return estado.mensaje ? (
@@ -23,8 +22,7 @@ function Mensaje({ estado }: { estado: EstadoEntregas }) {
 }
 
 export function CancelarAviso({ id }: { id: string }) {
-  const [estado, accion, enviando] = useActionState(cancelarAviso, INICIAL);
-  useRecargar(estado);
+  const [estado, accion, enviando] = useActionState(cancelarYRecargar, INICIAL);
   return (
     <form action={accion} className="grid gap-2">
       <input type="hidden" name="id" value={id} />
@@ -37,8 +35,7 @@ export function CancelarAviso({ id }: { id: string }) {
 }
 
 export function BorrarPlantilla({ id, nombre }: { id: string; nombre: string }) {
-  const [estado, accion, enviando] = useActionState(borrarPlantilla, INICIAL);
-  useRecargar(estado);
+  const [estado, accion, enviando] = useActionState(borrarYRecargar, INICIAL);
   return (
     <form action={accion}>
       <input type="hidden" name="id" value={id} />
@@ -56,8 +53,7 @@ export function BorrarPlantilla({ id, nombre }: { id: string; nombre: string }) 
 }
 
 export function ActualizarEstados({ id }: { id: string }) {
-  const [estado, accion, enviando] = useActionState(actualizarEstados, INICIAL);
-  useRecargar(estado);
+  const [estado, accion, enviando] = useActionState(actualizarYRecargar, INICIAL);
   return (
     <form action={accion} className="grid gap-2">
       <input type="hidden" name="id" value={id} />

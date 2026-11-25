@@ -15,23 +15,14 @@ import { COMBINACIONES, girosOrdenados, type CombinacionMarca, type GrupoGiro } 
 import { crearClub, type EstadoAlta } from '@/app/empezar/acciones';
 import { ImagenIlegible, prepararLogo, type LogoPreparado } from '@/lib/logo-en-navegador';
 import { medir } from '@/lib/medicion';
+import { recargarAlTerminar } from '@/lib/recargar-al-terminar';
 
 const INICIAL: EstadoAlta = { error: null, paso: null };
 
-/**
- * Crea el club y, si salió bien, abre la pantalla final con una carga
- * completa en cuanto llega la respuesta.
- *
- * Por qué así: al abrir la sesión, la acción le pide a Next que vuelva a
- * pintar esta página, y a veces el navegador se quedaba esperando ese repintado
- * para siempre: el club ya existía, pero el dueño seguía viendo «Creando tu
- * club…». Ir a la página final aquí mismo no depende de ese repintado.
- */
-async function crearYAbrir(previo: EstadoAlta, form: FormData): Promise<EstadoAlta> {
-  const estado = await crearClub(previo, form);
-  if (estado.listo) window.location.assign(estado.listo);
-  return estado;
-}
+// Club creado: se abre la pantalla final con una carga completa en cuanto
+// llega la respuesta (ver `recargarAlTerminar`). Antes, a veces el dueño se
+// quedaba en «Creando tu club…» aunque el club ya existía.
+const crearYAbrir = recargarAlTerminar(crearClub, (e) => e.listo);
 
 /** Mínimo de la contraseña; debe coincidir con `LONGITUD_MINIMA_CONTRASENA`. */
 const MINIMO_CLAVE = 10;

@@ -1,18 +1,17 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useState } from 'react';
+
+import { recargarAlTerminar } from '@/lib/recargar-al-terminar';
 
 import { anularPago, borrar, pago, reinvitar, type EstadoFicha } from './acciones';
 
 const CAMPO = 'min-h-[44px] border border-rule bg-cream px-3.5 text-[15px] text-ink';
 const INICIAL: EstadoFicha = { error: null, listo: null };
 
-/** Si la acción pide recargar, carga completa de la página (ver `EstadoFicha.recargar`). */
-function useRecargar(estado: EstadoFicha) {
-  useEffect(() => {
-    if (estado.recargar) window.location.assign(estado.recargar);
-  }, [estado]);
-}
+// Pago y anulación cambian datos de la ficha: carga completa al terminar.
+const pagoYRecargar = recargarAlTerminar(pago, (e) => e.recargar);
+const anularYRecargar = recargarAlTerminar(anularPago, (e) => e.recargar);
 
 /** Lo que pasó con el formulario, ahí mismo (y el enlace de un solo uso, si hay). */
 function Resultado({ estado }: { estado: EstadoFicha }) {
@@ -72,8 +71,7 @@ export function FormularioPago({
   /** Precio vigente en pesos; null si no está fijado. */
   precios: { readonly mes: number | null; readonly anio: number | null };
 }) {
-  const [estado, accion, enviando] = useActionState(pago, INICIAL);
-  useRecargar(estado);
+  const [estado, accion, enviando] = useActionState(pagoYRecargar, INICIAL);
   const [periodo, setPeriodo] = useState<'MES' | 'ANIO'>('MES');
   const precio = periodo === 'MES' ? precios.mes : precios.anio;
   const [importe, setImporte] = useState(precio === null ? '' : String(precio));
@@ -165,8 +163,7 @@ export function AnularPago({
   /** A qué página volver al terminar. */
   desde: 'ingresos' | 'ficha';
 }) {
-  const [estado, accion, enviando] = useActionState(anularPago, INICIAL);
-  useRecargar(estado);
+  const [estado, accion, enviando] = useActionState(anularYRecargar, INICIAL);
   if (estado.listo) return <Resultado estado={estado} />;
   return (
     <details>

@@ -1,6 +1,8 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useState } from 'react';
+
+import { recargarAlTerminar } from '@/lib/recargar-al-terminar';
 
 import {
   cambiarEstado,
@@ -18,13 +20,7 @@ const ETIQUETA = 'grid gap-1.5 text-[14px] text-muted';
 const PRINCIPAL =
   'min-h-[48px] rounded-full bg-ink px-6 text-[15px] font-semibold text-cream disabled:opacity-50';
 const INICIAL: EstadoEquipo = { error: null, listo: null };
-
-/** Si la acción pide recargar, carga completa de la página. */
-function useRecargar(estado: EstadoEquipo) {
-  useEffect(() => {
-    if (estado.recargar) window.location.assign(estado.recargar);
-  }, [estado]);
-}
+const cambiarEstadoYRecargar = recargarAlTerminar(cambiarEstado, (e) => e.recargar);
 
 function Resultado({ estado }: { estado: EstadoEquipo }) {
   const [copiado, setCopiado] = useState(false);
@@ -226,8 +222,7 @@ export function FormularioNuevaContrasena({ token, email }: { token: string; ema
 
 /** Dar de baja o reactivar una cuenta del equipo. */
 export function CambiarEstadoCuenta({ id, activa }: { id: string; activa: boolean }) {
-  const [estado, accion, enviando] = useActionState(cambiarEstado, INICIAL);
-  useRecargar(estado);
+  const [estado, accion, enviando] = useActionState(cambiarEstadoYRecargar, INICIAL);
   return (
     <form action={accion} className="grid gap-2">
       <input type="hidden" name="id" value={id} />
