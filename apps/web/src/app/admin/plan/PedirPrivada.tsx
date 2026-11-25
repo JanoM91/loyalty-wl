@@ -1,8 +1,9 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState } from 'react';
 
 import { Alerta, BotonEnviar } from '@/components/admin/Formulario';
+import { recargarAlTerminar } from '@/lib/recargar-al-terminar';
 
 import { pedirPrivada, type EstadoPrivada } from './acciones';
 
@@ -27,16 +28,14 @@ export function SolicitudRecibida({ fechaIso, whatsapp }: { fechaIso: string; wh
   );
 }
 
+// Con éxito, carga completa de Mi plan, que ya trae la solicitud desde la base.
+const pedirYRecargar = recargarAlTerminar(pedirPrivada, (e) =>
+  e.ok ? `${window.location.pathname}?privada=1#privada` : null,
+);
+
 /** «Quiero pasar a Privada»: una nota opcional y un botón. */
 export function PedirPrivada({ whatsapp }: { whatsapp: string }) {
-  const [estado, enviar] = useActionState<EstadoPrivada | null, FormData>(pedirPrivada, null);
-
-  // Next 15.5 a veces no actualiza la pantalla tras una acción en la misma
-  // página (visto también en la plataforma): con éxito, carga completa, que ya
-  // trae la solicitud desde la base.
-  useEffect(() => {
-    if (estado?.ok) window.location.assign(`${window.location.pathname}?privada=1#privada`);
-  }, [estado]);
+  const [estado, enviar] = useActionState<EstadoPrivada | null, FormData>(pedirYRecargar, null);
 
   if (estado?.ok && estado.fecha) {
     return <SolicitudRecibida fechaIso={estado.fecha} whatsapp={whatsapp} />;

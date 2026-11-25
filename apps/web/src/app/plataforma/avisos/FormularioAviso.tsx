@@ -1,8 +1,12 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useState } from 'react';
+
+import { recargarAlTerminar } from '@/lib/recargar-al-terminar';
 
 import { enviarAviso, type EstadoAviso } from './acciones';
+
+const enviarYRecargar = recargarAlTerminar(enviarAviso, (e) => e.recargar);
 
 const CAMPO =
   'w-full rounded-[14px] border-[1.5px] border-[#E8D8C6] bg-white px-4 text-[16px] text-ink outline-none focus:border-ink';
@@ -43,7 +47,7 @@ export function FormularioAviso({
   largoAsunto: number;
   largoMensaje: number;
 }) {
-  const [estado, accion, enviando] = useActionState<EstadoAviso, FormData>(enviarAviso, {
+  const [estado, accion, enviando] = useActionState<EstadoAviso, FormData>(enviarYRecargar, {
     error: null,
     listo: null,
     asunto: '',
@@ -57,10 +61,6 @@ export function FormularioAviso({
   const elegida = [...grupos, ...clubes].find((o) => o.valor === valor);
   // Un aviso programado calcula su audiencia al salir: puede estar vacía hoy.
   const sinNadie = cuando === 'ahora' && (!elegida || elegida.correos === 0);
-
-  useEffect(() => {
-    if (estado.recargar) window.location.assign(estado.recargar);
-  }, [estado]);
 
   return (
     <form action={accion} className="grid gap-5">
