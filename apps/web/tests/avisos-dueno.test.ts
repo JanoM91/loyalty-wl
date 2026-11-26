@@ -36,6 +36,31 @@ describe('correos al dueño', () => {
     expect(c.texto).toContain('https://club-lealtad.com/barberia-leon/admin/plan');
   });
 
+  it('en la prueba avisa que con ella termina Juega y gana', () => {
+    const base = {
+      para: 'ana@ejemplo.mx',
+      nombre: 'Ana',
+      club,
+      aviso: {
+        tipo: 'por-vencer' as const,
+        referencia: '2026-11-28T18:00:00.000Z',
+        pagado: false,
+        fecha: new Date('2026-11-28T18:00:00.000Z'),
+      },
+      cifras,
+      borrarDesde: null,
+      diasEnPausa: 0,
+    };
+    expect(correoDeCiclo({ ...base, juegosEnPrueba: true }).texto).toContain(
+      'Con la prueba también termina Juega y gana',
+    );
+    expect(correoDeCiclo(base).texto).not.toContain('Juega y gana');
+    expect(
+      correoDeCiclo({ ...base, aviso: { ...base.aviso, pagado: true }, juegosEnPrueba: true })
+        .texto,
+    ).not.toContain('Juega y gana');
+  });
+
   it('en pausa dice hasta cuándo se guarda solo si hay borrado automático', () => {
     const aviso = {
       tipo: 'pausa' as const,

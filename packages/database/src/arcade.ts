@@ -2,7 +2,6 @@ import { randomInt } from 'node:crypto';
 
 import {
   PERMISOS_POR_OMISION,
-  arcadeVigente,
   avanceReto,
   clavePeriodo,
   codigoCupon,
@@ -18,6 +17,7 @@ import {
   lunesDe,
   nombrePublico,
   normalizarCodigoCupon,
+  origenArcade,
   puntajeCreible,
   racha,
   sumarDias,
@@ -25,6 +25,7 @@ import {
   type ConfigArcade,
   type IdJuego,
   type ModoLista,
+  type OrigenArcade,
   type PartidaResumen,
   type PeriodoPago,
   type PermisosArcade,
@@ -113,31 +114,83 @@ export async function registrarPagoArcade(negocio: Negocio, periodo: PeriodoPago
 export interface ArcadeDelNegocio {
   /** Los clientes pueden jugar hoy. */
   readonly vigente: boolean;
+  /** Por qué se juega hoy: pagado o incluido en la prueba. Null si hoy no se juega. */
+  readonly origen: OrigenArcade | null;
+  /**
+   * Hasta cuándo se juega: fin de lo pagado o de la prueba. Si ya no se juega,
+   * la última de esas fechas (para decir cuándo terminó).
+   */
+  readonly hasta: string | null;
+  /**
+   * Lo que puede usar el club: los permisos que le fijó la plataforma o, si
+   * nunca se los fijó y el club tuvo prueba, los de la plantilla. Null: el
+   * club nunca ha tenido Arcade.
+   */
   readonly permisos: PermisosArcade | null;
   /** La configuración con la que se juega (recortada a los permisos). */
   readonly config: ConfigArcade;
+  /**
+   * La que ve el dueño en su formulario. Es `config`, salvo en la prueba sin
+   * configurar: ahí trae los retos sugeridos, que aún no se dan.
+   */
+  readonly propuesta: ConfigArcade;
   /** Lo que guardó el dueño, sin recortar: para mostrarle su formulario. */
   readonly guardada: Partial<ConfigArcade>;
+  /** El dueño ya guardó su configuración alguna vez. */
+  readonly configurado: boolean;
+}
+
+/**
+ * Permisos con los que juega un club: los suyos o, en la prueba, los de la
+ * plantilla (encendidos y sin periodo pagado).
+ */
+async function permisosDelClub(negocio: Negocio): Promise<PermisosArcade | null> {
+  const { arcade, pruebaVence } = negocio.ajustes;
+  if (arcade) return arcade;
+  if (!pruebaVence) return null;
+  return { ...(await plantillaArcade()), activo: true, pagadoHasta: null };
 }
 
 export async function arcadeDelNegocio(ahora: Date = new Date()): Promise<ArcadeDelNegocio> {
   const negocio = await negocioActual();
-  const permisos = negocio.ajustes.arcade;
-  const fila = await prisma.arcadeConfig.findUnique({
-    where: { tenantId: negocio.id },
-    select: { config: true },
-  });
+  const { arcade, pruebaVence } = negocio.ajustes;
+  const [permisos, fila] = await Promise.all([
+    permisosDelClub(negocio),
+    prisma.arcadeConfig.findUnique({ where: { tenantId: negocio.id }, select: { config: true } }),
+  ]);
+  const origen = origenArcade(arcade, pruebaVence, ahora);
   const guardada = leerConfigArcade(fila?.config);
-  const config = configEfectiva(
+  const efectiva = configEfectiva(
     guardada,
     permisos ?? PERMISOS_POR_OMISION,
     negocio.ajustes.alta?.giro,
   );
+  // En la prueba los clientes ya juegan, pero no ganan promociones que el
+  // dueño no ha visto: los retos empiezan cuando guarda su configuración.
+  const config = origen === 'PRUEBA' && !fila ? { ...efectiva, retos: [] } : efectiva;
   const vigente =
-    negocio.activo &&
-    estadoComercialDe(negocio, ahora) !== 'PAUSADO' &&
-    arcadeVigente(permisos, ahora);
-  return { vigente, permisos, config, guardada };
+    negocio.activo && estadoComercialDe(negocio, ahora) !== 'PAUSADO' && origen !== null;
+  const hasta =
+    origen === 'PRUEBA'
+      ? pruebaVence
+      : origen === 'PAGADO'
+        ? (arcade?.pagadoHasta ?? null)
+        : ultimaFecha(arcade?.pagadoHasta ?? null, pruebaVence);
+  return {
+    vigente,
+    origen,
+    hasta,
+    permisos,
+    config,
+    propuesta: efectiva,
+    guardada,
+    configurado: fila !== null,
+  };
+}
+
+function ultimaFecha(a: string | null, b: string | null): string | null {
+  if (!a || !b) return a ?? b;
+  return Date.parse(a) >= Date.parse(b) ? a : b;
 }
 
 export type ResultadoArcade =
@@ -152,7 +205,7 @@ export async function guardarConfigArcade(
   userId: string,
 ): Promise<ResultadoArcade> {
   const negocio = await negocioActual();
-  const p = negocio.ajustes.arcade;
+  const p = await permisosDelClub(negocio);
   if (!p?.activo) return { ok: false, error: 'Tu club no tiene el Arcade activo.' };
   const c = leerConfigArcade(entrada);
   const juegos = c.juegos ?? [];

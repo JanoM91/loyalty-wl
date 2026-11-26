@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-import { arcadeVigente } from '@wl/domain';
+import { conArcade } from '@wl/domain';
 
 import { exigirNegocio } from '@/lib/negocio';
 
@@ -24,7 +24,8 @@ export default async function PrivacidadPage() {
   const correo = legal.correoPrivacidad ?? negocio.marca.contacto.correo;
   const dias = negocio.ajustes.diasConservacionFotos;
   const pideTicket = negocio.ajustes.comprobanteConQr !== 'NO_PEDIR';
-  const conJuegos = arcadeVigente(negocio.ajustes.arcade);
+  // Si el club tiene o tuvo «Juega y gana» (pagado o en su prueba), sus datos de juego se mencionan.
+  const conJuegos = conArcade(negocio.ajustes.arcade, negocio.ajustes.pruebaVence);
 
   return (
     <article className="grid gap-5 text-sm leading-relaxed text-ink-soft">

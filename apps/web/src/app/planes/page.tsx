@@ -25,7 +25,7 @@ const planes = (lite: PrecioPeriodo) =>
     {
       nombre: 'Lite',
       precio: lite.mes !== null ? `${pesos(lite.mes)} al mes` : 'Pregúntanos',
-      nota: `${lite.anio !== null ? `o ${pesos(lite.anio)} al año. ` : ''}IVA incluido. 7 días gratis.`,
+      nota: `${lite.anio !== null ? `o ${pesos(lite.anio)} al año. ` : ''}IVA incluido. 7 días gratis, con Juega y gana.`,
       oscuro: false,
       incluye: [
         'club-lealtad.com/tu-negocio',
@@ -51,7 +51,7 @@ const COMPARA = [
   ['Mensajes a clientes', 'Por correo, desde tu panel', 'Por correo, desde tu panel'],
   ['Reportes', 'Esenciales', 'Completos'],
   ['Datos', 'Compartida, aislados', 'Solo tuyos'],
-  ['Juega y gana', 'Servicio adicional', 'Servicio adicional'],
+  ['Juega y gana', 'Adicional · gratis en la prueba', 'Servicio adicional'],
 ] as const;
 
 export default async function Planes() {

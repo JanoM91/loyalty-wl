@@ -608,10 +608,44 @@ export function leerPermisosArcade(json: unknown): PermisosArcade | null {
   };
 }
 
-/** ¿Pueden jugar hoy los clientes de este club? */
+/** ¿Tiene este club el Arcade pagado y encendido hoy? (Sin contar la prueba: ver `origenArcade`.) */
 export function arcadeVigente(p: PermisosArcade | null, ahora: Date = new Date()): boolean {
   if (!p || !p.activo || !p.pagadoHasta) return false;
   return Date.parse(p.pagadoHasta) > ahora.getTime();
+}
+
+/** Por qué pueden jugar hoy los clientes de un club. */
+export type OrigenArcade = 'PAGADO' | 'PRUEBA';
+
+/**
+ * Por qué pueden jugar hoy los clientes de un club, o null si no pueden.
+ *
+ * «PAGADO»: la plataforma registró el pago y sigue vigente. «PRUEBA»: el club
+ * sigue en sus días de prueba, que incluyen «Juega y gana»; termina con la
+ * fecha de la prueba aunque el club pague Lite antes. Si la plataforma lo
+ * apagó, la prueba no lo enciende.
+ *
+ * No mira si el club está suspendido o en pausa: eso lo agrega quien abre la
+ * partida (`arcadeDelNegocio`).
+ */
+export function origenArcade(
+  p: PermisosArcade | null,
+  pruebaVence: string | null,
+  ahora: Date = new Date(),
+): OrigenArcade | null {
+  if (arcadeVigente(p, ahora)) return 'PAGADO';
+  if (p && !p.activo) return null;
+  const fin = pruebaVence ? Date.parse(pruebaVence) : Number.NaN;
+  return Number.isFinite(fin) && ahora.getTime() < fin ? 'PRUEBA' : null;
+}
+
+/**
+ * ¿El club tiene o tuvo «Juega y gana», pagado o en su prueba? Sirve para
+ * cobrar en caja las promociones que sus clientes ya ganaron, aunque el
+ * Arcade haya terminado después.
+ */
+export function conArcade(p: PermisosArcade | null, pruebaVence: string | null): boolean {
+  return p !== null || pruebaVence !== null;
 }
 
 function leerReto(v: unknown, i: number): Reto | null {

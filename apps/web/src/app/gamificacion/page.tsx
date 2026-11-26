@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = metadatosDelSitio(
   'Juega y gana',
-  'Juegos de habilidad dentro de la tarjeta de tus clientes, con tus productos y tus colores. Completan retos y ganan promociones que cobras en caja. Servicio adicional para Lite y Privada.',
+  'Juegos de habilidad dentro de la tarjeta de tus clientes, con tus productos y tus colores. Completan retos y ganan promociones que cobras en caja. Gratis en la prueba de 7 días; después, servicio adicional para Lite y Privada.',
 );
 
 /** Un ícono distinto por juego para que la lista no se vea repetida. */
@@ -49,7 +49,7 @@ export default async function JuegaYGana() {
       <Hero
         iconos={['control', 'diana', 'regalo', 'fuego']}
         oscuro
-        etiqueta="Servicio adicional · Lite y Privada"
+        etiqueta="Servicio adicional · Gratis en la prueba"
         titulo="Juega y gana"
         texto="Tus clientes juegan en su tarjeta, con tus productos. Completan retos y ganan promociones que cobras en caja."
       >
@@ -206,14 +206,20 @@ export default async function JuegaYGana() {
       <Seccion separacion={28}>
         <h2 className="d h2 rise">Cuánto cuesta</h2>
         <p className="lead">
+          Viene incluido en los 7 días de prueba de tu club.{' '}
           {precio
-            ? `Juega y gana cuesta ${precio}, además de tu plan.`
-            : 'Es un servicio adicional a tu plan. Pregúntanos el precio por WhatsApp.'}{' '}
-          Lo activamos para tu club y lo configuras en minutos.
+            ? `Para seguir después, cuesta ${precio}, además de tu plan.`
+            : 'Para seguir después, es un servicio adicional a tu plan: pregúntanos el precio por WhatsApp.'}{' '}
+          Lo configuras en minutos.
         </p>
-        <a href={enlaceWhatsApp()} className="btn" style={{ alignSelf: 'flex-start' }}>
-          Quiero Juega y gana
-        </a>
+        <div className="row" style={{ gap: '12px 26px' }}>
+          <a href="/empezar" className="btn">
+            Crea tu club gratis
+          </a>
+          <a href={enlaceWhatsApp()} className="lk">
+            Pregúntanos por WhatsApp
+          </a>
+        </div>
       </Seccion>
 
       <Cierre titulo="Dale a tus clientes un motivo para abrir tu tarjeta cada día" />

@@ -54,3 +54,14 @@ No hay: verificación de que el WhatsApp o el correo sean de quien los escribe, 
 - Cuenta de cobro (Mercado Pago o Stripe) y activos de Meta (página, Instagram, cuenta publicitaria).
 - Guion del video, creativos y plantillas de WhatsApp.
 - Nada de esto se ha visto en un celular real.
+
+## «Juega y gana» en la prueba (26 nov 2026)
+
+Decisión de Jano: la prueba de 7 días incluye «Juega y gana».
+
+- Regla en `origenArcade` (`packages/domain/src/arcade/arcade.ts`): se juega si el Arcade está pagado (`PAGADO`) o si el club sigue antes de `pruebaVence` (`PRUEBA`), aunque haya pagado Lite antes. Si la plataforma lo apagó, la prueba no lo enciende. No se guarda nada nuevo: los clubes que ya estaban en prueba lo tienen desde que se publica.
+- En la prueba, sin permisos propios, el club usa la plantilla de la plataforma (`arcadeDelNegocio`). No aparece en Ingresos ni en la exportación: ahí solo cuenta lo pagado.
+- Los clientes juegan desde el primer día, pero **los retos (y sus promociones) empiezan cuando el dueño guarda su configuración**: no se regalan promociones que no ha visto. El inicio del panel y «Juega y gana» se lo piden.
+- Al terminar la prueba se apaga, aunque el club pague Lite. Para seguir se contrata aparte ($299 al mes o $2,999 al año). Las promociones ya ganadas se cobran en caja hasta que venzan (`conArcade`).
+- Textos: páginas de alta, Planes, Juega y gana, Términos (apartado 4), Mi plan y el correo de «tu prueba termina».
+- Pendiente igual que en Lite: si paga el Arcade durante la prueba, su mes empieza ese día (pierde los días de prueba que le quedaban).

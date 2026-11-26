@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cuponesArcadePorCodigo, detalleTarjeta, programaVigente } from '@wl/database';
+import { conArcade } from '@wl/domain';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { TarjetaSellos } from '@/components/lealtad/TarjetaSellos';
@@ -33,7 +34,9 @@ export default async function DetalleTarjetaPage({
   if (!t) notFound();
   const [programa, cupones] = await Promise.all([
     programaVigente(),
-    negocio.ajustes.arcade ? cuponesArcadePorCodigo(t.codigo) : Promise.resolve([]),
+    conArcade(negocio.ajustes.arcade, negocio.ajustes.pruebaVence)
+      ? cuponesArcadePorCodigo(t.codigo)
+      : Promise.resolve([]),
   ]);
 
   return (

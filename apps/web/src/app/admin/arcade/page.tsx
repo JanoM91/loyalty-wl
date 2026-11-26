@@ -36,7 +36,8 @@ export default async function ArcadePage() {
     precios(),
     arcadeDelNegocio(),
   ]);
-  const { permisos, config, vigente } = datos;
+  const { permisos, config, propuesta, vigente, origen, hasta, configurado } = datos;
+  const pagado = Boolean(negocio.ajustes.arcade?.pagadoHasta);
   const pedir = (texto: string) =>
     enlaceWhatsAppServicio(`${texto} (${negocio.nombre}, ${sitio}/${negocio.slug}).`);
   const ahorro = ahorroAnual(precio);
@@ -93,25 +94,50 @@ export default async function ArcadePage() {
     >
       <div className="grid gap-8">
         <section className={`${TARJETA} grid max-w-3xl gap-3`}>
-          {vigente ? (
+          {vigente && origen === 'PRUEBA' ? (
+            <div className="grid gap-2">
+              <p className="text-[15px] text-[#5A4F63]">
+                <b className="text-ink">Incluido en tu prueba</b>
+                {hasta ? ` hasta el ${fecha(hasta)}` : ''}. Tus clientes lo ven en su tarjeta, en
+                «Juega y gana». Al terminar la prueba dejan de verlo si no lo activas.
+              </p>
+              {!configurado && (
+                <p className="rounded-[14px] bg-[#ECFFBF] px-4 py-3 text-[15px] text-ink">
+                  Tus clientes ya pueden jugar. Revisa los retos y sus promociones abajo y toca{' '}
+                  <b>Guardar</b>: desde ese momento empiezan a ganarlas.
+                </p>
+              )}
+              <p className="text-[14px] text-[#5A4F63]">Para seguir después: {precioTexto}</p>
+              <a
+                href={pedir('Hola, quiero activar «Juega y gana» en mi club')}
+                className="inline-flex min-h-[48px] items-center justify-center justify-self-start rounded-[16px] bg-ink px-6 font-semibold text-cream"
+              >
+                Lo quiero
+              </a>
+            </div>
+          ) : vigente ? (
             <p className="text-[15px] text-[#5A4F63]">
               <b className="text-ink">Activo</b>
-              {permisos.pagadoHasta ? ` · pagado hasta el ${fecha(permisos.pagadoHasta)}` : ''}. Tus
-              clientes lo ven en su tarjeta, en «Juega y gana».
+              {hasta ? ` · pagado hasta el ${fecha(hasta)}` : ''}. Tus clientes lo ven en su
+              tarjeta, en «Juega y gana».
             </p>
           ) : (
             <div className="grid gap-2">
               <p className="text-[15px] text-[#5A4F63]">
-                <b className="text-ink">Vencido</b>
-                {permisos.pagadoHasta ? ` el ${fecha(permisos.pagadoHasta)}` : ''}. Tus clientes ya
-                no ven los juegos; las promociones que ganaron se pueden cobrar hasta que venzan.
+                <b className="text-ink">{pagado ? 'Vencido' : 'Tu prueba terminó'}</b>
+                {hasta ? ` el ${fecha(hasta)}` : ''}. Tus clientes ya no ven los juegos; las
+                promociones que ganaron se pueden cobrar hasta que venzan.
               </p>
               <p className="text-[14px] text-[#5A4F63]">{precioTexto}</p>
               <a
-                href={pedir('Hola, quiero renovar «Juega y gana» en mi club')}
+                href={pedir(
+                  pagado
+                    ? 'Hola, quiero renovar «Juega y gana» en mi club'
+                    : 'Hola, quiero activar «Juega y gana» en mi club',
+                )}
                 className="inline-flex min-h-[48px] items-center justify-center justify-self-start rounded-[16px] bg-ink px-6 font-semibold text-cream"
               >
-                Renovar por WhatsApp
+                {pagado ? 'Renovar por WhatsApp' : 'Activar por WhatsApp'}
               </a>
             </div>
           )}
@@ -135,7 +161,7 @@ export default async function ArcadePage() {
           <p className="text-[13px] text-[#5A4F63]">Esta semana, desde el lunes.</p>
         </section>
 
-        <FormularioArcade permisos={permisos} config={config} tema={tema} />
+        <FormularioArcade permisos={permisos} config={propuesta} tema={tema} />
       </div>
     </MarcoPanel>
   );

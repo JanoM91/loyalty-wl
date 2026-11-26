@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { NegocioEnLista, PagoRegistrado } from '@wl/database';
-import { arcadeVigente, diasEnPausa, diasRestantesDePrueba } from '@wl/domain';
+import { diasEnPausa, diasRestantesDePrueba, origenArcade } from '@wl/domain';
 
 import { Icono, type NombreIcono } from '@/components/admin/Icono';
 import { estadoDelClub } from '@/lib/plataforma/panel';
@@ -150,6 +150,7 @@ const ETIQUETA = 'rounded-full px-2.5 py-1 text-[12px] font-semibold whitespace-
 function Etiquetas({ fila }: { fila: NegocioEnLista }) {
   const { ajustes } = fila.negocio;
   const estado = estadoDelClub(fila);
+  const juegos = origenArcade(ajustes.arcade, ajustes.pruebaVence);
   return (
     <span className="flex w-full flex-wrap items-center gap-1.5 pl-[60px] sm:w-auto sm:pl-0">
       {estado === 'activo' && (
@@ -171,8 +172,10 @@ function Etiquetas({ fila }: { fila: NegocioEnLista }) {
       <span className={`${ETIQUETA} border border-[#E8D8C6] text-ink`}>
         {ajustes.plan === 'PRIVADA' ? 'Privada' : 'Lite'}
       </span>
-      {arcadeVigente(ajustes.arcade) && (
-        <span className={`${ETIQUETA} border border-[#E8D8C6] text-ink`}>Arcade</span>
+      {juegos && (
+        <span className={`${ETIQUETA} border border-[#E8D8C6] text-ink`}>
+          {juegos === 'PRUEBA' ? 'Arcade en prueba' : 'Arcade'}
+        </span>
       )}
     </span>
   );

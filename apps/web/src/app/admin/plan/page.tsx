@@ -3,9 +3,9 @@ import { redirect } from 'next/navigation';
 import { estadoComercialDe, solicitudPrivada } from '@wl/database';
 import {
   ahorroAnual,
-  arcadeVigente,
   diasRestantesDePrueba,
   fechaDeBorrado,
+  origenArcade,
   pesos,
 } from '@wl/domain';
 
@@ -63,13 +63,22 @@ export default async function PlanPage() {
   if (estado === 'PRUEBA') {
     titulo = dias === 1 ? 'Te queda 1 día de prueba' : `Te quedan ${dias} días de prueba`;
     texto =
-      'Durante la prueba tienes todo: caja, tarjetas en el celular, premios y números. Actívalo antes de que termine para no pausar tu caja.';
+      'Durante la prueba tienes todo: caja, tarjetas en el celular, premios, números y Juega y gana. Actívalo antes de que termine para no pausar tu caja.';
   } else if (estado === 'PAUSADO') {
     titulo = 'Tu club está en pausa';
     texto = `La caja no suma sellos y no se crean tarjetas nuevas. Tus clientes y sus sellos siguen guardados${borrado ? ` hasta el ${fecha(borrado)}` : ''}.`;
   } else if (pagadoHasta) {
     texto = `Pagado hasta el ${fecha(new Date(pagadoHasta))}.`;
   }
+
+  const origenJuegos = origenArcade(negocio.ajustes.arcade, pruebaVence);
+  const pagadoJuegos = negocio.ajustes.arcade?.pagadoHasta;
+  const textoJuegos =
+    origenJuegos === 'PAGADO' && pagadoJuegos
+      ? `Activo, pagado hasta el ${fecha(new Date(pagadoJuegos))}.`
+      : origenJuegos === 'PRUEBA' && pruebaVence
+        ? `Incluido en tu prueba hasta el ${fecha(new Date(pruebaVence))}. Al terminar, tus clientes dejan de ver los juegos si no lo activas.`
+        : 'Juegos con tu marca dentro de la tarjeta de tus clientes, con retos y promociones que se cobran en tu caja.';
 
   return (
     <MarcoPanel sesion={sesion} titulo="Mi plan" sinAviso>
@@ -114,19 +123,29 @@ export default async function PlanPage() {
           <span className="text-[14px] font-semibold text-[#5A4F63]">Servicio adicional</span>
           <h2 className="text-[22px]">Juega y gana</h2>
           <p className="text-[15px] text-[#5A4F63]">
-            {arcadeVigente(negocio.ajustes.arcade) && negocio.ajustes.arcade?.pagadoHasta
-              ? `Activo, pagado hasta el ${fecha(new Date(negocio.ajustes.arcade.pagadoHasta))}.`
-              : 'Juegos con tu marca dentro de la tarjeta de tus clientes, con retos y promociones que se cobran en tu caja.'}{' '}
+            {textoJuegos}{' '}
             {arcade.mes !== null
-              ? `${pesos(arcade.mes)} al mes${arcade.anio !== null ? ` o ${pesos(arcade.anio)} al año` : ''}.`
+              ? `${origenJuegos === 'PRUEBA' ? 'Para seguir después: ' : ''}${pesos(arcade.mes)} al mes${arcade.anio !== null ? ` o ${pesos(arcade.anio)} al año` : ''}.`
               : ''}
           </p>
-          <a
-            href={`${base}/admin/arcade`}
-            className="inline-flex min-h-[48px] items-center justify-center justify-self-start rounded-[16px] border-[1.5px] border-ink px-5 font-semibold text-ink"
-          >
-            Ver Juega y gana
-          </a>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={`${base}/admin/arcade`}
+              className="inline-flex min-h-[48px] items-center justify-center rounded-[16px] border-[1.5px] border-ink px-5 font-semibold text-ink"
+            >
+              Ver Juega y gana
+            </a>
+            {origenJuegos !== 'PAGADO' && (
+              <a
+                href={enlaceWhatsAppServicio(
+                  `Hola, quiero activar «Juega y gana» en el club de ${negocio.nombre} (${sitio}/${negocio.slug}).`,
+                )}
+                className="inline-flex min-h-[48px] items-center justify-center rounded-[16px] bg-ink px-5 font-semibold text-cream"
+              >
+                Lo quiero
+              </a>
+            )}
+          </div>
         </section>
 
         {negocio.ajustes.plan !== 'PRIVADA' && (

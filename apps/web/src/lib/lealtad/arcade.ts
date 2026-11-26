@@ -1,4 +1,4 @@
-import { arcadeVigente } from '@wl/domain';
+import { origenArcade } from '@wl/domain';
 import type { Negocio } from '@wl/database';
 
 import type { TemaSinFuente } from '@/components/lealtad/arcade/Arcade';
@@ -7,12 +7,12 @@ import { exigirNegocio } from '@/lib/negocio';
 /**
  * El Arcade del club en la tarjeta del cliente.
  *
- * Solo aparece si la plataforma lo activó y está pagado: el cliente no ve una
- * sección que el negocio no contrató.
+ * Solo aparece si el club lo tiene pagado o sigue en su prueba (que lo
+ * incluye): el cliente no ve una sección que el negocio no tiene.
  */
 export async function arcadeVisible(): Promise<boolean> {
   const negocio = await exigirNegocio();
-  return arcadeVigente(negocio.ajustes.arcade);
+  return origenArcade(negocio.ajustes.arcade, negocio.ajustes.pruebaVence) !== null;
 }
 
 /** La inicial del negocio para charolas y reversos: la primera letra o número del nombre. */

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { listarSolicitudesAcceso, operacionesDeHoy, prisma, programaVigente } from '@wl/database';
-import { fechaLocal, haceCuanto } from '@wl/domain';
+import { conArcade, fechaLocal, haceCuanto } from '@wl/domain';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { ROLES_CAJA, alcanceSolicitudes, sucursalDeCaja } from '@/lib/admin/lealtad';
@@ -117,7 +117,11 @@ export default async function CajaPage({
           sucursal: x.sucursal,
         }))}
         verSucursalSolicitudes={alcance.todas}
-        cupones={negocio.ajustes.arcade ? { prefijo: negocio.prefijoCodigo } : null}
+        cupones={
+          conArcade(negocio.ajustes.arcade, negocio.ajustes.pruebaVence)
+            ? { prefijo: negocio.prefijoCodigo }
+            : null
+        }
         operaciones={operaciones.map((o) => ({
           cuando: hora(o.cuando),
           quien: o.quien,
