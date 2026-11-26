@@ -432,7 +432,9 @@ export async function arcadePermisos(form: FormData): Promise<void> {
   const sesion = await exigirPlataforma();
   const negocio = await negocioPorSlug(String(form.get('slug') ?? ''));
   if (!negocio) redirect('/plataforma');
-  const actual = negocio.ajustes.arcade ?? (await plantillaArcade());
+  // Fijar permisos no apaga el Arcade: si nunca los tuvo, quedan encendidos
+  // (sin pago solo se juega en la prueba).
+  const actual = negocio.ajustes.arcade ?? { ...(await plantillaArcade()), activo: true };
   await fijarPermisosArcade(negocio.id, permisosDelFormulario(form, actual));
   await anotar(sesion, 'club.arcade_permisos', { club: negocio });
   revalidatePath('/plataforma');

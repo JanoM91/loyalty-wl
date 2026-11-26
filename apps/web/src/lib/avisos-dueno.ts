@@ -71,6 +71,8 @@ export function correoDeCiclo(datos: {
   /** Día en que se borra si sigue en pausa; null si el borrado automático está apagado. */
   readonly borrarDesde: Date | null;
   readonly diasEnPausa: number;
+  /** «Juega y gana» viene de la prueba y termina con ella. */
+  readonly juegosEnPrueba?: boolean;
 }): Correo {
   const { club, aviso, cifras } = datos;
   const plan = `${origenDelServicio()}/${club.slug}/admin/plan`;
@@ -92,6 +94,11 @@ export function correoDeCiclo(datos: {
         `${saludo(datos.nombre)} ${aviso.pagado ? `el plan de ${club.nombre} vence` : `la prueba gratis de ${club.nombre} termina`} el ${dia}.`,
         llevas,
         `${aviso.pagado ? 'Renueva' : 'Activa tu plan'} antes de esa fecha para que tu caja siga sumando sellos y tus clientes no se queden sin su tarjeta.`,
+        ...(!aviso.pagado && datos.juegosEnPrueba
+          ? [
+              'Con la prueba también termina Juega y gana: tus clientes dejan de ver los juegos. Si quieres que sigan jugando, pídelo cuando actives tu plan.',
+            ]
+          : []),
         ayuda(),
       ],
       { texto: aviso.pagado ? 'Renovar mi plan' : 'Activar mi club', url: plan },

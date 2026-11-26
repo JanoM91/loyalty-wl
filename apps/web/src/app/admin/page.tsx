@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import {
   ROLES_DIRECCION,
+  arcadeDelNegocio,
   bitacoraLealtad,
   estadoComercialDe,
   prisma,
   resumenArcade,
   resumenLealtad,
 } from '@wl/database';
-import { arcadeVigente, diasRestantesDePrueba, fechaDeBorrado, pesos } from '@wl/domain';
+import { diasRestantesDePrueba, fechaDeBorrado, origenArcade, pesos } from '@wl/domain';
 
 import { Icono, type NombreIcono } from '@/components/admin/Icono';
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
@@ -79,7 +80,12 @@ export default async function AdminInicioPage() {
   const { pruebaVence, pagadoHasta, alta } = negocio.ajustes;
   const comercial = estadoComercialDe(negocio);
   const liteMes = (await precios()).lite.mes;
-  const juegos = arcadeVigente(negocio.ajustes.arcade) ? await resumenArcade() : null;
+  const origenJuegos = origenArcade(negocio.ajustes.arcade, pruebaVence);
+  const [juegos, arcade] = origenJuegos
+    ? await Promise.all([resumenArcade(), arcadeDelNegocio()])
+    : [null, null];
+  // En la prueba, mientras el dueño no elige los premios, los clientes juegan sin ganar promociones.
+  const elegirPremios = origenJuegos === 'PRUEBA' && arcade !== null && !arcade.configurado;
   let estado: { texto: string; boton: string } | null = null;
   if (comercial === 'PRUEBA') {
     const dias = diasRestantesDePrueba(pruebaVence);
@@ -349,13 +355,20 @@ export default async function AdminInicioPage() {
                 <span className="grid size-9 flex-none place-items-center rounded-[12px] bg-[#ECFFBF] text-[#120A2A]">
                   <Icono nombre="juegos" tam={20} />
                 </span>
-                <span className="flex-1 text-[15px]">
-                  <b>Juega y gana:</b> {juegos.partidas.toLocaleString('es-MX')}{' '}
-                  {juegos.partidas === 1 ? 'partida' : 'partidas'} y{' '}
-                  {juegos.cuponesCobrados.toLocaleString('es-MX')}{' '}
-                  {juegos.cuponesCobrados === 1 ? 'promoción cobrada' : 'promociones cobradas'} esta
-                  semana
-                </span>
+                {elegirPremios ? (
+                  <span className="flex-1 text-[15px]">
+                    <b>Juega y gana viene en tu prueba.</b> Tus clientes ya pueden jugar; elige los
+                    premios para que empiecen a ganar promociones.
+                  </span>
+                ) : (
+                  <span className="flex-1 text-[15px]">
+                    <b>Juega y gana:</b> {juegos.partidas.toLocaleString('es-MX')}{' '}
+                    {juegos.partidas === 1 ? 'partida' : 'partidas'} y{' '}
+                    {juegos.cuponesCobrados.toLocaleString('es-MX')}{' '}
+                    {juegos.cuponesCobrados === 1 ? 'promoción cobrada' : 'promociones cobradas'}{' '}
+                    esta semana
+                  </span>
+                )}
                 <Icono nombre="chevron" tam={20} />
               </a>
             )}

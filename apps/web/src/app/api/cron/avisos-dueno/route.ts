@@ -10,13 +10,13 @@ import {
   type Negocio,
 } from '@wl/database';
 import {
-  arcadeVigente,
   avisoDeCiclo,
   diasEnPausa,
   fechaDeBorrado,
   fechaLocal,
   inicioDelDia,
   lunesDe,
+  origenArcade,
   sumarDias,
   type AvisoPendiente,
 } from '@wl/domain';
@@ -69,6 +69,7 @@ async function avisarCiclo(
       cifras,
       borrarDesde: borradoAutomatico ? fechaDeBorrado(pruebaVence, pagadoHasta, ahora) : null,
       diasEnPausa: diasEnPausa(pruebaVence, pagadoHasta, ahora),
+      juegosEnPrueba: origenArcade(club.ajustes.arcade, pruebaVence, ahora) === 'PRUEBA',
     }),
   );
   if (!ok) return null;
@@ -99,7 +100,7 @@ async function resumirSemana(
       cifras,
       desde,
       hasta: domingo,
-      conJuegos: arcadeVigente(club.ajustes.arcade, ahora),
+      conJuegos: origenArcade(club.ajustes.arcade, club.ajustes.pruebaVence, ahora) !== null,
     }),
   );
   if (ok) await marcarAvisos(club.id, { semana: hoy });

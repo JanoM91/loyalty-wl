@@ -76,8 +76,8 @@ export default async function Terminos() {
         <Apartado titulo="4. Prueba gratis">
           <ul>
             <li>
-              Dura 7 días naturales desde que creas tu club, incluye todo Lite y no pide tarjeta
-              bancaria.
+              Dura 7 días naturales desde que creas tu club, incluye todo Lite y el servicio
+              adicional «Juega y gana», y no pide tarjeta bancaria.
             </li>
             <li>
               Durante la prueba: una sucursal y hasta 200 tarjetas. Un club por correo y por
@@ -86,6 +86,11 @@ export default async function Terminos() {
             <li>
               Si al terminar no has pagado, tu club se pausa: la caja deja de sellar y no se crean
               tarjetas nuevas. Lo reactivas al pagar.
+            </li>
+            <li>
+              «Juega y gana» termina con la prueba aunque pagues Lite; para seguir con él se
+              contrata aparte. Las promociones que tus clientes ya ganaron se pueden cobrar en tu
+              caja hasta que venzan.
             </li>
             <li>
               Si pasan 30 días naturales con el club pausado, lo borramos de forma definitiva, con

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { programaVigente } from '@wl/database';
+import { conArcade } from '@wl/domain';
 
 import { MarcoPanel } from '@/components/admin/MarcoPanel';
 import { exigirSesion } from '@/lib/admin/sesion';
@@ -76,7 +77,7 @@ export default async function AyudaPage() {
             desde la misma pantalla.
           </p>
 
-          {negocio.ajustes.arcade && (
+          {conArcade(negocio.ajustes.arcade, negocio.ajustes.pruebaVence) && (
             <Tarea titulo="Cobrar una promoción de «Juega y gana»">
               <li>Toca «Cobrar promoción del juego».</li>
               <li>

@@ -6,6 +6,7 @@ import {
   ahorroAnual,
   arcadeVigente,
   avanceReto,
+  conArcade,
   clavePeriodo,
   codigoCupon,
   configEfectiva,
@@ -17,6 +18,7 @@ import {
   lunesDe,
   nombrePublico,
   normalizarPalabra,
+  origenArcade,
   puntajeCreible,
   racha,
   textoReto,
@@ -76,6 +78,35 @@ describe('arcade: permisos y configuración', () => {
     expect(arcadeVigente({ ...pagado, activo: false })).toBe(false);
     expect(arcadeVigente({ ...pagado, pagadoHasta: '2020-01-01T00:00:00.000Z' })).toBe(false);
     expect(arcadeVigente(pagado)).toBe(true);
+  });
+
+  it('la prueba incluye «Juega y gana» hasta su fecha, aunque el club pague Lite antes', () => {
+    const ahora = new Date('2026-11-26T12:00:00.000Z');
+    const vence = '2026-11-30T12:00:00.000Z';
+    expect(origenArcade(null, vence, ahora)).toBe('PRUEBA');
+    expect(origenArcade(null, '2026-11-26T11:59:59.000Z', ahora)).toBeNull();
+    expect(origenArcade(null, null, ahora)).toBeNull();
+    expect(origenArcade(null, 'no es fecha', ahora)).toBeNull();
+    // Permisos fijados sin pago (encendidos): sigue la prueba.
+    expect(origenArcade({ ...pagado, pagadoHasta: null }, vence, ahora)).toBe('PRUEBA');
+    // Pagado manda sobre la prueba.
+    expect(origenArcade(pagado, vence, ahora)).toBe('PAGADO');
+    // Un pago vencido no quita lo que queda de prueba.
+    expect(origenArcade({ ...pagado, pagadoHasta: '2026-11-01T00:00:00.000Z' }, vence, ahora)).toBe(
+      'PRUEBA',
+    );
+  });
+
+  it('si la plataforma lo apagó, ni la prueba lo enciende', () => {
+    const ahora = new Date('2026-11-26T12:00:00.000Z');
+    const apagado = { ...PERMISOS_POR_OMISION, activo: false, pagadoHasta: null };
+    expect(origenArcade(apagado, '2026-11-30T12:00:00.000Z', ahora)).toBeNull();
+  });
+
+  it('las promociones ganadas se cobran si el club tiene o tuvo Arcade', () => {
+    expect(conArcade(null, null)).toBe(false);
+    expect(conArcade(null, '2026-11-01T00:00:00.000Z')).toBe(true);
+    expect(conArcade(PERMISOS_POR_OMISION, null)).toBe(true);
   });
 
   it('lee permisos con límites y siempre deja «sin lista»', () => {

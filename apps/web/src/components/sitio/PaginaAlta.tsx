@@ -52,6 +52,10 @@ export async function PaginaAlta({
               <li>
                 <b>7 días gratis.</b> Sin tarjeta bancaria.
               </li>
+              <li>
+                <b>Con Juega y gana en la prueba:</b> juegos con tu marca que hacen volver a tus
+                clientes.
+              </li>
               {lite.mes !== null && (
                 <li>
                   <b>{pesos(lite.mes)} al mes</b> después

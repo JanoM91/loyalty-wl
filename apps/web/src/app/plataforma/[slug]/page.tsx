@@ -14,11 +14,11 @@ import {
 } from '@wl/database';
 import {
   TEXTO_MOTIVO,
-  arcadeVigente,
   diasEnPausa,
   diasRestantesDePrueba,
   fechaDeBorrado,
   motivoDeLlamada,
+  origenArcade,
   ultimaActividad,
 } from '@wl/domain';
 
@@ -97,9 +97,16 @@ export default async function NegocioPage({
   const ultima = usoClub ? ultimaActividad(usoClub) : null;
   const arcade = negocio.ajustes.arcade;
   const arcadeVence = arcade?.pagadoHasta ?? null;
-  const arcadeAlDia = arcadeVigente(arcade);
+  const origenJuegos = origenArcade(arcade, negocio.ajustes.pruebaVence);
+  const arcadeAlDia = origenJuegos !== null;
+  // En la prueba se puede apagar aunque nunca se le hayan fijado permisos.
+  const arcadeEncendido = arcade ? arcade.activo : origenJuegos === 'PRUEBA';
   let arcadeEstado = 'Sin activar. Al registrar el primer pago se activa con la plantilla.';
-  if (arcade && arcadeVence) {
+  if (origenJuegos === 'PRUEBA' && negocio.ajustes.pruebaVence) {
+    arcadeEstado = `Incluido en la prueba hasta el ${fecha(negocio.ajustes.pruebaVence)}${arcade ? '' : ', con los permisos de la plantilla'}. Si no se paga, se apaga con la prueba.`;
+  } else if (arcade && !arcade.activo && diasRestantesDePrueba(negocio.ajustes.pruebaVence) > 0) {
+    arcadeEstado = 'Apagado: los clientes no juegan, ni en la prueba.';
+  } else if (arcade && arcadeVence) {
     const vencido = Date.parse(arcadeVence) <= Date.now();
     arcadeEstado = vencido
       ? `Vencido el ${fecha(arcadeVence)}: los clientes no pueden jugar.`
@@ -259,12 +266,12 @@ export default async function NegocioPage({
           <p className="text-[15px] text-ink">{arcadeEstado}</p>
           <FormularioPago slug={negocio.slug} concepto="ARCADE" precios={precios.arcade} />
           <div className="flex flex-wrap gap-3">
-            {arcade && (
+            {(arcade || origenJuegos === 'PRUEBA') && (
               <form action={arcadeActivo}>
                 <input type="hidden" name="slug" value={negocio.slug} />
-                <input type="hidden" name="activo" value={arcade.activo ? '0' : '1'} />
+                <input type="hidden" name="activo" value={arcadeEncendido ? '0' : '1'} />
                 <button type="submit" className={BOTON}>
-                  {arcade.activo ? 'Apagar' : 'Encender'}
+                  {arcadeEncendido ? 'Apagar' : 'Encender'}
                 </button>
               </form>
             )}
